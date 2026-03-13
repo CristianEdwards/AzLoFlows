@@ -150,7 +150,7 @@ function inRect(point: Point, x: number, y: number, width: number, height: numbe
   return point.x >= x && point.x <= x + width && point.y >= y && point.y <= y + height;
 }
 
-function closestByCenter(entities: { x: number; y: number; width: number; height: number }[], point: Point) {
+function closestByCenter<T extends { x: number; y: number; width: number; height: number }>(entities: T[], point: Point): T {
   return entities.reduce((best, e) => {
     const d = Math.hypot(point.x - (e.x + e.width / 2), point.y - (e.y + e.height / 2));
     const bd = Math.hypot(point.x - (best.x + best.width / 2), point.y - (best.y + best.height / 2));
