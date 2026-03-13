@@ -1,0 +1,77 @@
+import { companionPalette, palette } from '@/lib/rendering/tokens';
+import type { DiagramDocument } from '@/types/document';
+import { DOCUMENT_VERSION } from '@/types/document';
+
+export function createStarterTemplate(): DiagramDocument {
+  return {
+    version: DOCUMENT_VERSION,
+    id: crypto.randomUUID(),
+    name: 'Starter Diagram',
+    areas: [
+      {
+        id: crypto.randomUUID(),
+        type: 'area',
+        x: -280,
+        y: -140,
+        width: 320,
+        height: 260,
+        label: 'Application Zone',
+        fill: companionPalette.cyan,
+        borderColor: palette.cyan,
+        glowColor: palette.cyan,
+        locked: false,
+        zIndex: 1,
+      },
+    ],
+    nodes: [
+      {
+        id: crypto.randomUUID(),
+        type: 'node',
+        x: -220,
+        y: -80,
+        width: 120,
+        height: 90,
+        title: 'Web Tier',
+        subtitle: 'Edge',
+        fill: companionPalette.blue,
+        glowColor: palette.blue,
+        parentAreaId: undefined,
+        parentLayout: undefined,
+        zIndex: 10,
+      },
+      {
+        id: crypto.randomUUID(),
+        type: 'node',
+        x: -40,
+        y: 20,
+        width: 120,
+        height: 90,
+        title: 'API Tier',
+        subtitle: 'Service',
+        fill: companionPalette.green,
+        glowColor: palette.green,
+        parentAreaId: undefined,
+        parentLayout: undefined,
+        zIndex: 11,
+      },
+      {
+        id: crypto.randomUUID(),
+        type: 'node',
+        x: 160,
+        y: 80,
+        width: 140,
+        height: 100,
+        title: 'Data Store',
+        subtitle: 'Private',
+        fill: companionPalette.purple,
+        glowColor: palette.purple,
+        parentAreaId: undefined,
+        parentLayout: undefined,
+        zIndex: 12,
+      },
+    ],
+    connectors: [],
+    texts: [],
+    pipes: [],
+  };
+}

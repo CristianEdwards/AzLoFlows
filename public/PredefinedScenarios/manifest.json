@@ -1,0 +1,10 @@
+[
+  {
+    "file": "azure-local-private-path.json",
+    "label": "Azure Local Private Path"
+  },
+  {
+    "file": "public-path-proxy-with-arc-gateway-traffic-flows.json",
+    "label": "Azure Local Public Path"
+  }
+]

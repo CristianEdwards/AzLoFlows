@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure Local Network Flow — Interactive Public Path v7 (3D Isometric)</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #020210;
+            overflow: hidden;
+            height: 100vh;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+        }
+        canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; }
+        .perf {
+            position: fixed; bottom: 10px; right: 16px;
+            color: rgba(0,229,255,0.25); font-size: 11px; z-index: 10;
+            font-family: 'JetBrains Mono', 'Cascadia Code', Consolas, monospace;
+        }
+        /* ─── Title Bar ─── */
+        .title-bar {
+            position: fixed; top: 0; left: 0; right: 0; height: 52px;
+            background: rgba(2,2,16,0.88);
+            backdrop-filter: blur(24px) saturate(1.6);
+            border-bottom: 1px solid rgba(191,90,242,0.1);
+            display: flex; align-items: center; padding: 0 28px; z-index: 10;
+        }
+        .title-bar::after {
+            content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+            background: #d8b4fe; opacity: 0.6;
+        }
+        .title-bar .dot {
+            width: 10px; height: 10px; border-radius: 50%;
+            background: #bf5af2; margin-right: 14px;
+            box-shadow: 0 0 14px #bf5af2, 0 0 4px #bf5af2;
+            animation: neonPulse 1.8s ease-in-out infinite;
+        }
+        @keyframes neonPulse {
+            0%, 100% { box-shadow: 0 0 8px #bf5af2, 0 0 2px #bf5af2; }
+            50% { box-shadow: 0 0 22px #bf5af2, 0 0 8px #bf5af2, 0 0 40px rgba(191,90,242,0.3); }
+        }
+        .title-bar span {
+            font-family: 'Rajdhani', 'Inter', sans-serif;
+            font-size: 16px; font-weight: 700; letter-spacing: 1.2px; color: #d8b4fe;
+        }
+        /* ─── Button Bar ─── */
+        .flow-bar {
+            position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+            display: flex; flex-direction: column; gap: 8px; z-index: 20;
+            background: rgba(2,2,16,0.88);
+            backdrop-filter: blur(28px) saturate(1.6);
+            padding: 14px 18px; border-radius: 18px;
+            border: 1px solid rgba(0,229,255,0.12);
+            box-shadow: 0 0 40px rgba(0,229,255,0.06), 0 12px 48px rgba(0,0,0,0.7),
+                        inset 0 1px 0 rgba(255,255,255,0.03);
+            align-items: center;
+        }
+        .flow-main-row, .flow-sub-row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; align-items: center; }
+        .sub-group { display: none; gap: 6px; align-items: center; padding: 4px 10px; border-radius: 10px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); }
+        .sub-group.visible { display: flex; }
+        .sub-label { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; margin-right: 4px; white-space: nowrap; text-transform: uppercase; font-family: 'Rajdhani', sans-serif; }
+        .sub-btn { padding: 4px 12px !important; font-size: 11px !important; }
+        .flow-sep { display: none; width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(0,229,255,0.2), rgba(191,90,242,0.2), transparent); }
+        .flow-sep.visible { display: block; }
+        .flow-btn {
+            position: relative; padding: 8px 20px;
+            border: 1px solid rgba(255,255,255,0.08); border-radius: 10px;
+            background: rgba(255,255,255,0.03);
+            color: rgba(200,215,255,0.6); font-size: 13px; font-weight: 600;
+            cursor: pointer; white-space: nowrap; letter-spacing: 0.4px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden;
+        }
+        .flow-btn::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent); }
+        .flow-btn:hover { background: rgba(255,255,255,0.06); color: #fff; border-color: rgba(255,255,255,0.15); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.4); }
+        .flow-btn.active { border-color: var(--btn-color, rgba(0,229,255,0.5)); background: color-mix(in srgb, var(--btn-color, #00e5ff) 12%, transparent); color: #fff; box-shadow: 0 0 24px color-mix(in srgb, var(--btn-color, #00e5ff) 20%, transparent), 0 0 6px color-mix(in srgb, var(--btn-color, #00e5ff) 30%, transparent), inset 0 1px 0 rgba(255,255,255,0.06); }
+        .flow-btn .btn-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--btn-color, #00e5ff); margin-right: 8px; vertical-align: middle; opacity: 0.4; transition: all 0.3s; }
+        .flow-btn.active .btn-dot { opacity: 1; box-shadow: 0 0 10px var(--btn-color, #00e5ff); }
+        .flow-btn.show-all { border-color: rgba(0,229,255,0.2); font-weight: 700; letter-spacing: 0.8px; font-family: 'Rajdhani', sans-serif; font-size: 14px; }
+        .flow-btn.show-all.active { border-color: rgba(0,229,255,0.4); background: rgba(0,229,255,0.1); box-shadow: 0 0 24px rgba(0,229,255,0.15); }
+        /* ─── Legend Panel (HTML overlay) ─── */
+        .legend-panel {
+            position: fixed; bottom: 100px; right: 16px; z-index: 10;
+            background: rgba(2,2,16,0.85); backdrop-filter: blur(20px) saturate(1.4);
+            border: 1px solid rgba(0,229,255,0.1); border-radius: 14px;
+            padding: 14px 18px;
+            box-shadow: 0 0 30px rgba(0,229,255,0.04), 0 8px 32px rgba(0,0,0,0.6);
+        }
+        .legend-item { display: flex; align-items: center; gap: 10px; padding: 4px 0; font-size: 11px; font-weight: 500; color: rgba(160,190,240,0.55); font-family: 'Inter', sans-serif; }
+        .legend-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--lc); flex-shrink: 0; box-shadow: 0 0 6px var(--lc), 0 0 2px var(--lc); }
+        .legend-line { width: 28px; height: 2px; flex-shrink: 0; background: var(--lc); opacity: 0.6; border-radius: 1px; }
+    </style>
+</head>
+<body>
+    <canvas id="c"></canvas>
+    <div class="title-bar">
+        <div class="dot"></div>
+        <span>AZURE LOCAL — OUTBOUND CONNECTIVITY: PUBLIC PATH WITH PROXY &amp; ARC GATEWAY &nbsp; [3D ISOMETRIC VIEW]</span>
+    </div>
+    <div class="perf" id="fps">-- fps</div>
+    <div class="legend-panel">
+        <div class="legend-item" style="--lc:#4d8dff"><span class="legend-dot"></span><span class="legend-line"></span>HTTP/HTTPS outbound to proxy</div>
+        <div class="legend-item" style="--lc:#00e5ff"><span class="legend-dot"></span><span class="legend-line"></span>Arc Gateway (HTTPS allowed)</div>
+        <div class="legend-item" style="--lc:#00ff88"><span class="legend-dot"></span><span class="legend-line"></span>Internet (non Arc GW traffic)</div>
+        <div class="legend-item" style="--lc:#ff0066"><span class="legend-dot"></span><span class="legend-line"></span>Proxy bypassed endpoints</div>
+        <div class="legend-item" style="--lc:#bf5af2"><span class="legend-dot"></span><span class="legend-line"></span>Private Endpoints (ExpressRoute)</div>
+        <div class="legend-item" style="--lc:#ffb800"><span class="legend-dot"></span><span class="legend-line"></span>VMs direct traffic</div>
+    </div>
+    <div class="flow-bar">
+        <div class="flow-sub-row" id="sub-row">
+            <div class="sub-group" id="sub-hosts"><span class="sub-label" style="color:#00e5ff">Nodes:</span>
+                <button class="flow-btn sub-btn" style="--btn-color:#00e5ff" onclick="toggleSub('hosts','arcgw')" id="btn-hosts-arcgw"><span class="btn-dot"></span>HTTPS Allowed</button>
+                <button class="flow-btn sub-btn" style="--btn-color:#00ff88" onclick="toggleSub('hosts','internet')" id="btn-hosts-internet"><span class="btn-dot"></span>Internet</button>
+                <button class="flow-btn sub-btn" style="--btn-color:#ff0066" onclick="toggleSub('hosts','bypassed')" id="btn-hosts-bypassed"><span class="btn-dot"></span>Bypassed</button></div>
+            <div class="sub-group" id="sub-arb"><span class="sub-label" style="color:#4d8dff">ARB:</span>
+                <button class="flow-btn sub-btn" style="--btn-color:#00e5ff" onclick="toggleSub('arb','arcgw')" id="btn-arb-arcgw"><span class="btn-dot"></span>HTTPS Allowed</button>
+                <button class="flow-btn sub-btn" style="--btn-color:#00ff88" onclick="toggleSub('arb','internet')" id="btn-arb-internet"><span class="btn-dot"></span>Internet</button>
+                <button class="flow-btn sub-btn" style="--btn-color:#ff0066" onclick="toggleSub('arb','bypassed')" id="btn-arb-bypassed"><span class="btn-dot"></span>Bypassed</button></div>
+            <div class="sub-group" id="sub-aks"><span class="sub-label" style="color:#00e5ff">AKS:</span>
+                <button class="flow-btn sub-btn" style="--btn-color:#00e5ff" onclick="toggleSub('aks','arcgw')" id="btn-aks-arcgw"><span class="btn-dot"></span>HTTPS Allowed</button>
+                <button class="flow-btn sub-btn" style="--btn-color:#00ff88" onclick="toggleSub('aks','internet')" id="btn-aks-internet"><span class="btn-dot"></span>Internet</button>
+                <button class="flow-btn sub-btn" style="--btn-color:#ff0066" onclick="toggleSub('aks','bypassed')" id="btn-aks-bypassed"><span class="btn-dot"></span>Bypassed</button></div>
+            <div class="sub-group" id="sub-vms"><span class="sub-label" style="color:#ffb800">VMs:</span>
+                <button class="flow-btn sub-btn" style="--btn-color:#ffb800" onclick="toggleSub('vms','direct')" id="btn-vms-direct"><span class="btn-dot"></span>Direct</button></div>
+        </div>
+        <div class="flow-sep" id="flow-sep"></div>
+        <div class="flow-main-row">
+            <button class="flow-btn show-all active" onclick="toggleAll()" id="btn-all">SHOW ALL</button>
+            <button class="flow-btn" style="--btn-color:#4d8dff" onclick="toggleSource('hosts')" id="btn-hosts"><span class="btn-dot"></span>Azure Local Nodes</button>
+            <button class="flow-btn" style="--btn-color:#6366f1" onclick="toggleSource('arb')" id="btn-arb"><span class="btn-dot"></span>ARB</button>
+            <button class="flow-btn" style="--btn-color:#00e5ff" onclick="toggleSource('aks')" id="btn-aks"><span class="btn-dot"></span>AKS</button>
+            <button class="flow-btn" style="--btn-color:#ffb800" onclick="toggleSource('vms')" id="btn-vms"><span class="btn-dot"></span>VMs</button>
+        </div>
+    </div>
+
+    <script>
+    // ════════════════════════════════════════════════════════════════════════
+    // Azure Local Network Flow v7 — TRUE 3D ISOMETRIC Public Path
+    // All coordinates projected through isometric transform. Shapes drawn
+    // as parallelograms with real 3D depth faces. Text stays horizontal.
+    // ════════════════════════════════════════════════════════════════════════
+
+    const canvas = document.getElementById('c');
+    const dpr = Math.min(window.devicePixelRatio, 2);
+    let W, H;
+    function resize() {
+        W = window.innerWidth; H = window.innerHeight;
+        canvas.width = W * dpr; canvas.height = H * dpr;
+        canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+    }
+    window.addEventListener('resize', () => { resize(); layoutNodes(); });
+    resize();
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+
+    // ══════════════════════════════════════════════════════════════════
+    // ISOMETRIC PROJECTION — Manual coordinate transformation
+    // No CSS transform on canvas! Every point is projected individually.
+    // ══════════════════════════════════════════════════════════════════
+    const ISO_ANGLE = (38 - 90) * Math.PI / 180;  // -52°: bottom-left to top-right flow
+    const ISO_COS = Math.cos(ISO_ANGLE);
+    const ISO_SIN = Math.sin(ISO_ANGLE);
+    const ISO_YSCALE = 0.50;
+    const ISO_SCALE = 1.15;
+    const ISO_TEXT_ANGLE = Math.atan2(ISO_SIN * ISO_YSCALE, ISO_COS);  // angle of top-face edge in screen space
+    // Full isometric surface transform components (for painting text/icons onto the top face)
+    const ISO_TX_A = ISO_COS;                    // x→screenX
+    const ISO_TX_B = ISO_SIN * ISO_YSCALE;       // x→screenY
+    const ISO_TX_C = -ISO_SIN;                   // y→screenX
+    const ISO_TX_D = ISO_COS * ISO_YSCALE;       // y→screenY
+    // Front (depth) face transform: x-axis follows bottom edge, y-axis goes straight down
+    const FRONT_EDGE_LEN = Math.hypot(ISO_COS, ISO_SIN * ISO_YSCALE);
+    const FRONT_TX_A = ISO_COS / FRONT_EDGE_LEN;           // x→screenX (along bottom edge, normalized)
+    const FRONT_TX_B = (ISO_SIN * ISO_YSCALE) / FRONT_EDGE_LEN;  // x→screenY
+    const FRONT_TX_C = 0;                                   // y→screenX (straight down)
+    const FRONT_TX_D = 1;                                   // y→screenY
+    // Left (depth) face transform: x-axis follows left edge (iso Y-axis), y-axis goes straight down
+    const LEFT_EDGE_LEN = Math.hypot(-ISO_SIN, ISO_COS * ISO_YSCALE);
+    const LEFT_TX_A = -ISO_SIN / LEFT_EDGE_LEN;             // x→screenX (along left edge, normalized)
+    const LEFT_TX_B = (ISO_COS * ISO_YSCALE) / LEFT_EDGE_LEN;  // x→screenY
+    const LEFT_TX_C = 0;                                    // y→screenX (straight down)
+    const LEFT_TX_D = 1;                                    // y→screenY
+
+    /** Project a flat 2D coordinate to isometric screen coordinates */
+    function iso(x, y) {
+        const cx = W * 0.50, cy = H * 0.48;
+        const dx = x - cx, dy = y - cy;
+        return {
+            x: cx + (dx * ISO_COS - dy * ISO_SIN) * ISO_SCALE,
+            y: cy + (dx * ISO_SIN + dy * ISO_COS) * ISO_YSCALE * ISO_SCALE
+        };
+    }
+
+    /** Inverse-project screen coordinates back to flat space (for mouse hover) */
+    function isoInverse(sx, sy) {
+        const cx = W * 0.50, cy = H * 0.48;
+        const rx = (sx - cx) / ISO_SCALE;
+        const ry = (sy - cy) / (ISO_YSCALE * ISO_SCALE);
+        return {
+            x: cx + rx * ISO_COS + ry * ISO_SIN,
+            y: cy - rx * ISO_SIN + ry * ISO_COS
+        };
+    }
+
+    // ── Isometric Drawing Helpers ───────────────────────────────────────
+
+    /** Draw projected parallelogram path (from a flat rectangle) */
+    function isoQuadPath(x, y, w, h) {
+        const tl = iso(x, y), tr = iso(x+w, y), br = iso(x+w, y+h), bl = iso(x, y+h);
+        ctx.beginPath();
+        ctx.moveTo(tl.x, tl.y); ctx.lineTo(tr.x, tr.y);
+        ctx.lineTo(br.x, br.y); ctx.lineTo(bl.x, bl.y);
+        ctx.closePath();
+        return { tl, tr, br, bl };
+    }
+
+    /** Draw 3D box depth faces (front + right sides extending straight down) */
+    function drawBoxDepth(x, y, w, h, depth, fillHex, glowHex, pulse) {
+        const tl = iso(x, y), tr = iso(x+w, y), br = iso(x+w, y+h), bl = iso(x, y+h);
+        const fc = hexRgb(fillHex), gc = hexRgb(glowHex);
+        const d = depth;
+        // Front face (BL→BR edge extending straight down)
+        ctx.beginPath();
+        ctx.moveTo(bl.x, bl.y); ctx.lineTo(br.x, br.y);
+        ctx.lineTo(br.x, br.y + d); ctx.lineTo(bl.x, bl.y + d);
+        ctx.closePath();
+        ctx.fillStyle = `rgba(${fc.r*0.30|0},${fc.g*0.30|0},${fc.b*0.30|0},0.7)`;
+        ctx.fill();
+        ctx.strokeStyle = `rgba(${gc.r},${gc.g},${gc.b},${0.12 * pulse})`;
+        ctx.lineWidth = 0.5; ctx.stroke();
+        // Right face (TR→BR edge extending straight down)
+        ctx.beginPath();
+        ctx.moveTo(tr.x, tr.y); ctx.lineTo(br.x, br.y);
+        ctx.lineTo(br.x, br.y + d); ctx.lineTo(tr.x, tr.y + d);
+        ctx.closePath();
+        ctx.fillStyle = `rgba(${fc.r*0.20|0},${fc.g*0.20|0},${fc.b*0.20|0},0.55)`;
+        ctx.fill();
+        ctx.strokeStyle = `rgba(${gc.r},${gc.g},${gc.b},${0.08 * pulse})`;
+        ctx.lineWidth = 0.5; ctx.stroke();
+    }
+
+    /** Draw text on the isometric top-face surface (full perspective transform) */
+    function isoText(text, sx, sy) {
+        ctx.save();
+        ctx.translate(sx, sy);
+        ctx.transform(ISO_TX_A, ISO_TX_B, ISO_TX_C, ISO_TX_D, 0, 0);
+        ctx.fillText(text, 0, 0);
+        ctx.restore();
+    }
+
+    /** Draw text on the front depth face — skewed to match front face geometry */
+    function frontText(text, sx, sy) {
+        ctx.save();
+        ctx.translate(sx, sy);
+        ctx.transform(FRONT_TX_A, FRONT_TX_B, FRONT_TX_C, FRONT_TX_D, 0, 0);
+        ctx.fillText(text, 0, 0);
+        ctx.restore();
+    }
+
+    /** Draw text on the left depth face — skewed to match left face geometry */
+    function leftText(text, sx, sy) {
+        ctx.save();
+        ctx.translate(sx, sy);
+        ctx.transform(LEFT_TX_A, LEFT_TX_B, LEFT_TX_C, LEFT_TX_D, 0, 0);
+        ctx.fillText(text, 0, 0);
+        ctx.restore();
+    }
+
+    /** Draw image on the isometric top-face surface, rotated 90° right to match flow direction */
+    function isoDrawImage(img, sx, sy, w, h) {
+        ctx.save();
+        ctx.translate(sx, sy);
+        ctx.transform(ISO_TX_A, ISO_TX_B, ISO_TX_C, ISO_TX_D, 0, 0);
+        ctx.rotate(Math.PI / 2);   // 90° clockwise
+        ctx.drawImage(img, -w/2, -h/2, w, h);
+        ctx.restore();
+    }
+
+    /** Draw a raised isometric platform with grid lines */
+    function drawIsoPlatform(x, y, w, h, depth, glowCol, fillAlpha, time) {
+        const rc = hexRgb(glowCol);
+        const pulse = 0.7 + 0.3 * Math.sin(time * 0.5);
+        const tl = iso(x, y), tr = iso(x+w, y), br = iso(x+w, y+h), bl = iso(x, y+h);
+        const d = depth;
+        // Front depth face
+        ctx.beginPath();
+        ctx.moveTo(bl.x, bl.y); ctx.lineTo(br.x, br.y);
+        ctx.lineTo(br.x, br.y + d); ctx.lineTo(bl.x, bl.y + d);
+        ctx.closePath();
+        ctx.fillStyle = `rgba(${rc.r*0.15|0},${rc.g*0.15|0},${rc.b*0.15|0},${fillAlpha * 2.5})`;
+        ctx.fill();
+        ctx.strokeStyle = `rgba(${rc.r},${rc.g},${rc.b},${0.06 * pulse})`;
+        ctx.lineWidth = 0.5; ctx.stroke();
+        // Right depth face
+        ctx.beginPath();
+        ctx.moveTo(tr.x, tr.y); ctx.lineTo(br.x, br.y);
+        ctx.lineTo(br.x, br.y + d); ctx.lineTo(tr.x, tr.y + d);
+        ctx.closePath();
+        ctx.fillStyle = `rgba(${rc.r*0.10|0},${rc.g*0.10|0},${rc.b*0.10|0},${fillAlpha * 2})`;
+        ctx.fill();
+        ctx.strokeStyle = `rgba(${rc.r},${rc.g},${rc.b},${0.04 * pulse})`;
+        ctx.lineWidth = 0.5; ctx.stroke();
+        // Top face surface
+        isoQuadPath(x, y, w, h);
+        const fg = ctx.createLinearGradient(tl.x, tl.y, br.x, br.y);
+        fg.addColorStop(0, `rgba(${rc.r},${rc.g},${rc.b},${fillAlpha * 1.2})`);
+        fg.addColorStop(0.5, `rgba(${rc.r*0.5|0},${rc.g*0.5|0},${rc.b*0.5|0},${fillAlpha * 0.5})`);
+        fg.addColorStop(1, `rgba(${rc.r},${rc.g},${rc.b},${fillAlpha * 0.7})`);
+        ctx.fillStyle = fg; ctx.fill();
+        // Glowing border
+        isoQuadPath(x, y, w, h);
+        ctx.strokeStyle = `rgba(${rc.r},${rc.g},${rc.b},${0.15 * pulse})`;
+        ctx.lineWidth = 1;
+        ctx.shadowColor = `rgba(${rc.r},${rc.g},${rc.b},${0.2 * pulse})`;
+        ctx.shadowBlur = 14; ctx.stroke(); ctx.shadowBlur = 0;
+        // Grid lines on top face (clipped)
+        ctx.save();
+        isoQuadPath(x, y, w, h); ctx.clip();
+        ctx.strokeStyle = `rgba(${rc.r},${rc.g},${rc.b},0.025)`;
+        ctx.lineWidth = 0.5;
+        const gs = 40;
+        for (let gx = x + gs; gx < x + w; gx += gs) {
+            const a = iso(gx, y), b = iso(gx, y + h);
+            ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+        }
+        for (let gy = y + gs; gy < y + h; gy += gs) {
+            const a = iso(x, gy), b = iso(x + w, gy);
+            ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+        }
+        ctx.restore();
+    }
+
+    // ── Mouse (inverse-projected for flat-space hover detection) ────────
+    let mouseX = W / 2, mouseY = H / 2, flatMouseX = W / 2, flatMouseY = H / 2, hoveredNode = null;
+    canvas.addEventListener('mousemove', e => {
+        mouseX = e.clientX; mouseY = e.clientY;
+        const fm = isoInverse(mouseX, mouseY);
+        flatMouseX = fm.x; flatMouseY = fm.y;
+    });
+
+    // ── Responsive font scaling ─────────────────────────────────────────
+    let fontScale = Math.max(0.5, Math.min(1, W / 1920));
+    function S(px) { return Math.round(px * fontScale); }
+    window.addEventListener('resize', () => { fontScale = Math.max(0.5, Math.min(1, W / 1920)); });
+
+    // ── Neon Color Palette ──────────────────────────────────────────────
+    const C = {
+        bg: '#020210', nCyan: '#00e5ff', nPink: '#ff0066', nGreen: '#00ff88',
+        nPurple: '#bf5af2', nBlue: '#4d8dff', nOrange: '#ff8800', nGold: '#ffb800', nRed: '#ff3355',
+        dBlue: '#1a3a8a', dCyan: '#0a5e6e', dGreen: '#0a6e3a', dPink: '#8a1a4a',
+        dPurple: '#5a2a8a', dOrange: '#8a4a0a', dRed: '#6a1a1a', dGold: '#6a5a0a',
+        text: '#e0eaff', textDim: 'rgba(160,190,240,0.55)',
+    };
+
+    // ── SVG Icon Loader ─────────────────────────────────────────────────
+    const svgIconImages = {};
+    ['azureLocalMachine:AzureLocalMachine', 'azureFirewall:AzureFirewall', 'arcGateway:ArcGateway',
+     'expressRoute:ExpressRouteCircuits', 'privateEndpoints:PrivateEndpoints',
+     'lnet:AzureLocalLNET', 'vnet:VNET', 'azureLocalVM:AzureLocalVM', 'azureLocalAKS:AzureLocalAKS',
+     'azureLocalCluster:AzureLocalCluster', 'azure:azure'].forEach(entry => {
+        const [name, file] = entry.split(':');
+        const img = new Image();
+        img.onload = () => { svgIconImages[name] = img; };
+        img.src = 'icons/' + file + '.svg';
+    });
+
+    // ── Flow State (identical logic to base version) ────────────────────
+    const flowState = {
+        hosts: { expanded: false, subs: { arcgw: { visible: false, opacity: 0, target: 0 }, internet: { visible: false, opacity: 0, target: 0 }, bypassed: { visible: false, opacity: 0, target: 0 } }},
+        arb:   { expanded: false, subs: { arcgw: { visible: false, opacity: 0, target: 0 }, internet: { visible: false, opacity: 0, target: 0 }, bypassed: { visible: false, opacity: 0, target: 0 } }},
+        aks:   { expanded: false, subs: { arcgw: { visible: false, opacity: 0, target: 0 }, internet: { visible: false, opacity: 0, target: 0 }, bypassed: { visible: false, opacity: 0, target: 0 } }},
+        vms:   { expanded: false, subs: { direct: { visible: false, opacity: 0, target: 0 } }},
+    };
+    let showAll = true, showAllOpacity = 1, showAllTarget = 1;
+    function updateSubRowVisibility() { document.getElementById('flow-sep').classList.toggle('visible', Object.values(flowState).some(s => s.expanded)); }
+    function toggleSource(srcId) {
+        if (showAll) { showAll = false; showAllTarget = 0; document.getElementById('btn-all').classList.remove('active'); }
+        const src = flowState[srcId]; src.expanded = !src.expanded;
+        document.getElementById('btn-' + srcId).classList.toggle('active', src.expanded);
+        document.getElementById('sub-' + srcId).classList.toggle('visible', src.expanded);
+        if (!src.expanded) { for (const sub in src.subs) { src.subs[sub].visible = false; src.subs[sub].target = 0; document.getElementById('btn-' + srcId + '-' + sub).classList.remove('active'); } }
+        updateSubRowVisibility();
+    }
+    function toggleSub(srcId, subType) { const sub = flowState[srcId].subs[subType]; sub.visible = !sub.visible; sub.target = sub.visible ? 1 : 0; document.getElementById('btn-' + srcId + '-' + subType).classList.toggle('active', sub.visible); }
+    function toggleAll() {
+        showAll = !showAll; showAllTarget = showAll ? 1 : 0; document.getElementById('btn-all').classList.toggle('active', showAll);
+        if (showAll) { for (const srcId in flowState) { flowState[srcId].expanded = false; document.getElementById('btn-' + srcId).classList.remove('active'); document.getElementById('sub-' + srcId).classList.remove('visible'); for (const sub in flowState[srcId].subs) { flowState[srcId].subs[sub].visible = false; flowState[srcId].subs[sub].target = 0; document.getElementById('btn-' + srcId + '-' + sub).classList.remove('active'); } } }
+        updateSubRowVisibility();
+    }
+    function updateGroupOpacities() {
+        const sp = 0.08;
+        showAllOpacity += (showAllTarget - showAllOpacity) * sp; if (Math.abs(showAllOpacity - showAllTarget) < 0.005) showAllOpacity = showAllTarget;
+        for (const s in flowState) for (const b in flowState[s].subs) { const o = flowState[s].subs[b]; o.opacity += (o.target - o.opacity) * sp; if (Math.abs(o.opacity - o.target) < 0.005) o.opacity = o.target; }
+    }
+    function getGroupOpacity(groups) {
+        if (!groups || !groups.length) return 1; let m = showAllOpacity;
+        for (const g of groups) { const d = g.indexOf('.'); if (d < 0) continue; const s = g.substring(0, d), b = g.substring(d + 1); if (flowState[s] && flowState[s].subs[b]) m = Math.max(m, flowState[s].subs[b].opacity); }
+        return m;
+    }
+
+    // ── Star Field (removed — using dark grid instead) ──
+
+    // ── Pulse Rings ─────────────────────────────────────────────────────
+    const pulseRings = []; let lastPulseTime = 0;
+
+    // ── Topology ────────────────────────────────────────────────────────
+    const zones = [], nodes = [], edges = [];
+    function defineTopology() {
+        zones.push({ id: 'azlocal', label: 'AZURE LOCAL INSTANCE', x: 0.02, y: 0.05, w: 0.30, h: 0.72, borderColor: C.nCyan, labelColor: '#00e5ff', fill: 'rgba(0,229,255,0.02)', dashed: true });
+        nodes.push({ id: 'hosts',     label: 'Azure Local host', sub: 'Mgmt LNET',     zone: 'azlocal', lx: 0.06, ly: 0.19, w: 0.065, h: 0.14, fill: C.dBlue,   glow: C.nBlue,   textColor: '#fff', svgIcon: 'azureLocalMachine', zOrder: 1 });
+        nodes.push({ id: 'arcproxy',  label: 'Arc Proxy',    sub: '',              zone: 'azlocal', lx: 0.22, ly: 0.19, w: 0.06, h: 0.10,  fill: C.dGreen,  glow: C.nGreen,  textColor: '#fff' });
+        nodes.push({ id: 'clusterip', label: 'Cluster IP:40343', sub: '',          zone: 'azlocal', lx: 0.095, ly: 0.32, w: 0.035, h: 0.06, fill: C.dGreen,  glow: C.nGreen,  textColor: '#fff', badge: true });
+        nodes.push({ id: 'arb',       label: 'ARB',          sub: 'Mgmt LNET',     zone: 'azlocal', lx: 0.04, ly: 0.43, w: 0.06, h: 0.12, fill: C.dBlue,   glow: C.nBlue,   textColor: '#fff', svgIcon: 'lnet' });
+        nodes.push({ id: 'aks',       label: 'AKS',          sub: 'AKS LNET',      zone: 'azlocal', lx: 0.16, ly: 0.43, w: 0.06, h: 0.12, fill: C.dCyan,   glow: C.nCyan,   textColor: '#fff', svgIcon: 'azureLocalAKS' });
+        nodes.push({ id: 'vms',       label: 'VMs',          sub: 'VMs LNET',      zone: 'azlocal', lx: 0.08, ly: 0.60, w: 0.065, h: 0.14, fill: C.dGold,   glow: C.nGold,   textColor: '#fff', svgIcon: 'azureLocalVM' });
+        nodes.push({ id: 'corpproxy', label: 'Corporate',    sub: 'Infra Proxy',   zone: null, lx: 0.33, ly: 0.14, w: 0.08, h: 0.22, fill: C.dOrange,  glow: C.nOrange,  textColor: '#fff', icon: '⟳', cardStyle: true });
+        nodes.push({ id: 'firewall',  label: 'Corporate',    sub: 'Firewall',      zone: null, lx: 0.425, ly: 0.14, w: 0.08, h: 0.22, fill: C.dRed,    glow: C.nRed,    textColor: '#fff', icon: '🛡', svgIcon: 'azureFirewall', cardStyle: true });
+        nodes.push({ id: 'corpproxy2',label: 'Corporate',    sub: 'Workloads Proxy', zone: null, lx: 0.34, ly: 0.55, w: 0.06, h: 0.14, fill: C.dOrange, glow: C.nOrange, textColor: '#fff', icon: '⟳', cardStyle: true });
+        nodes.push({ id: 'arcgw',     label: 'Arc',          sub: 'gateway',       zone: null, lx: 0.62, ly: 0.185, w: 0.06, h: 0.11, fill: '#0a4a5e', glow: C.nCyan,   textColor: C.nCyan, icon: '⮕', svgIcon: 'arcGateway', bigLabel: true });
+        nodes.push({ id: 'express',   label: 'ExpressRoute Path', sub: '',          zone: null, lx: 0.55, ly: 0.53, w: 0.06, h: 0.09, fill: C.dPurple, glow: C.nPurple, textColor: '#fff', icon: '📡', svgIcon: 'expressRoute' });
+        nodes.push({ id: 'azpubep',   label: 'Azure',        sub: 'Public Endpoints',   zone: null, lx: 0.72, ly: 0.10, w: 0.10, h: 0.18, fill: C.dBlue,   glow: C.nBlue,   textColor: '#fff', icon: '☁', svgIcon: 'azure', cardStyle: true });
+        nodes.push({ id: 'pubendpt',  label: 'Internet',     sub: 'Public Endpoints',   zone: null, lx: 0.72, ly: 0.32, w: 0.10, h: 0.18, fill: C.dCyan,   glow: C.nGreen,  textColor: '#fff', icon: '🌐', cardStyle: true });
+        nodes.push({ id: 'privendpt', label: 'Azure VNET',   sub: 'Private Endpoints',  zone: null, lx: 0.72, ly: 0.60, w: 0.10, h: 0.18, fill: C.dPurple, glow: C.nPurple, textColor: '#fff', icon: '⊕', svgIcon: 'privateEndpoints', cardStyle: true });
+        // ── Edges ──
+        edges.push({ from: 'hosts', to: 'arcproxy', color: C.nBlue, label: '', dashed: false, animated: true, speed: 1.0, groups: ['hosts.arcgw', 'hosts.internet'] });
+        edges.push({ from: 'hosts', to: 'firewall', color: C.nPink, label: 'Arc proxy bypassed\nendpoints', labelColor: '#ff99bb', dashed: false, animated: true, speed: 0.7, sourceAnchor: 'top', targetAnchor: 'top', groups: ['hosts.bypassed'], waypoints: [{ lx: 0.12, ly: 0.10 }, { lx: 0.465, ly: 0.10 }] });
+        edges.push({ from: 'arb', to: 'clusterip', color: C.nBlue, label: 'ARB HTTP/HTTPS\noutbound traffic', labelT: 0.3, labelColor: '#99bbff', labelAlign: 'right', dashed: false, animated: true, speed: 0.7, sourceAnchor: 'top', groups: ['arb.arcgw', 'arb.internet'], waypoints: [{ lx: 0.09, ly: 0.41 }, { lx: 0.10, ly: 0.41 }, { lx: 0.10, ly: 0.325 }] });
+        edges.push({ from: 'arb', to: 'firewall', color: C.nPink, label: 'ARB proxy bypassed\nendpoints', labelColor: '#ff99bb', dashed: false, animated: true, speed: 0.6, sourceAnchor: 'bottom', targetAnchor: 'bottom', labelT: 0.3, groups: ['arb.bypassed'], waypoints: [{ lx: 0.09, ly: 0.57 }, { lx: 0.48, ly: 0.57 }, { lx: 0.48, ly: 0.36 }] });
+        edges.push({ from: 'aks', to: 'clusterip', color: C.nCyan, label: 'AKS HTTP/HTTPS\noutbound traffic', labelT: 0.3, labelColor: '#99ffee', dashed: false, animated: true, speed: 0.6, sourceAnchor: 'top', groups: ['aks.arcgw', 'aks.internet'], waypoints: [{ lx: 0.21, ly: 0.41 }, { lx: 0.14, ly: 0.41 }, { lx: 0.14, ly: 0.325 }] });
+        edges.push({ from: 'aks', to: 'firewall', color: C.nPink, label: 'AKS proxy bypassed\nendpoints', labelColor: '#ff99bb', dashed: false, animated: true, speed: 0.6, sourceAnchor: 'right', targetAnchor: 'bottom', groups: ['aks.bypassed'], waypoints: [{ lx: 0.45, ly: 0.50 }, { lx: 0.45, ly: 0.36 }] });
+        edges.push({ from: 'vms', to: 'firewall', color: C.nPink, label: 'VMs proxy bypassed\nprivate endpoints', dashed: false, animated: true, speed: 0.5, labelColor: '#ff99bb', sourceAnchor: 'bottom', targetAnchor: 'bottom', labelT: 0.25, groups: ['vms.direct'], waypoints: [{ lx: 0.14, ly: 0.77 }, { lx: 0.44, ly: 0.77 }, { lx: 0.44, ly: 0.36 }] });
+        edges.push({ from: 'vms', to: 'firewall', color: C.nGold, label: '', dashed: false, animated: true, speed: 0.6, labelColor: '#ffe680', sourceAnchor: 'right', targetAnchor: 'bottom', labelT: 0.15, groups: ['vms.direct'], waypoints: [{ lx: 0.465, ly: 0.66 }, { lx: 0.465, ly: 0.36 }] });
+        edges.push({ from: 'clusterip', to: 'arcproxy', color: C.nGreen, label: '', dashed: false, animated: true, speed: 0.8, groups: ['arb.arcgw', 'arb.internet', 'aks.arcgw', 'aks.internet'] });
+        edges.push({ from: 'arcproxy', to: 'arcgw', color: C.nCyan, label: 'HTTPS Azure allowed endpoints\nby Arc gateway', dashed: false, animated: true, speed: 0.7, labelColor: '#99eeff', labelT: 0.85, labelYOffset: -35, groups: ['hosts.arcgw', 'arb.arcgw', 'aks.arcgw'] });
+        edges.push({ from: 'arcgw', to: 'azpubep', color: C.nCyan, label: 'Azure backbone\ntraffic', dashed: false, animated: true, speed: 0.8, labelColor: '#99eeff', labelYOffset: -45, groups: ['hosts.arcgw', 'arb.arcgw', 'aks.arcgw'] });
+        edges.push({ from: 'arcproxy', to: 'pubendpt', color: C.nGreen, label: 'All HTTP and any HTTPS endpoint\nnot allowed by Arc gateway', dashed: false, animated: true, speed: 0.7, sourceAnchor: 'bottom', targetAnchor: 'left', labelColor: '#99ffcc', labelT: 0.75, groups: ['hosts.internet', 'arb.internet', 'aks.internet'], waypoints: [{ lx: 0.25, ly: 0.30 }, { lx: 0.37, ly: 0.30 }, { lx: 0.465, ly: 0.30 }, { lx: 0.51, ly: 0.30 }, { lx: 0.51, ly: 0.39 }] });
+        edges.push({ from: 'firewall', to: 'privendpt', color: C.nPurple, label: 'ExpressRoute\ntraffic', dashed: false, animated: true, speed: 0.5, labelColor: '#d8aaff', sourceAnchor: 'bottom', targetAnchor: 'left', labelT: 0.3, groups: ['hosts.bypassed', 'arb.bypassed', 'aks.bypassed', 'vms.direct'], waypoints: [{ lx: 0.50, ly: 0.40 }, { lx: 0.57, ly: 0.50 }, { lx: 0.57, ly: 0.67 }] });
+    }
+    defineTopology();
+
+    // ── Layout (computes flat + isometric projected positions) ───────────
+    let laidOut = { zones: [], nodes: [], edges: [] };
+    function layoutNodes() {
+        const pad = 50, topOff = 60, aw = W - pad * 2, ah = H - pad - topOff;
+        laidOut.zones = zones.map(z => {
+            const px = pad + z.x * aw, py = topOff + z.y * ah, pw = z.w * aw, ph = z.h * ah;
+            return { ...z, px, py, pw, ph };
+        });
+        laidOut.nodes = nodes.map(n => {
+            const px = pad + n.lx * aw, py = topOff + n.ly * ah, pw = n.w * aw, ph = n.h * ah;
+            const cx = px + pw * 0.5, cy = py + ph * 0.5;
+            return { ...n, px, py, pw, ph, cx, cy };
+        });
+        laidOut.edges = edges.map(e => {
+            const fromN = laidOut.nodes.find(n => n.id === e.from), toN = laidOut.nodes.find(n => n.id === e.to);
+            if (!fromN || !toN) return null;
+            const yOff = e.yOffset || 0, sa = e.sourceAnchor || null;
+            let fx = fromN.cx, fy = fromN.cy + yOff;
+            if (sa === 'top') fy = fromN.py; else if (sa === 'bottom') fy = fromN.py + fromN.ph; else if (sa === 'right') { fx = fromN.px + fromN.pw; fy = fromN.cy; } else if (sa === 'left') { fx = fromN.px; fy = fromN.cy; }
+            const ta = e.targetAnchor || null; let tx = toN.cx, ty = toN.cy + yOff;
+            if (ta === 'bottom') ty = toN.py + toN.ph; else if (ta === 'top') ty = toN.py; else if (ta === 'right') { tx = toN.px + toN.pw; ty = toN.cy; } else if (ta === 'left') { tx = toN.px; ty = toN.cy; }
+            let points;
+            if (e.waypoints && e.waypoints.length > 0) { points = [{ x: fx, y: fy }]; e.waypoints.forEach(wp => points.push({ x: pad + wp.lx * aw, y: topOff + wp.ly * ah })); points.push({ x: tx, y: ty }); }
+            else points = computeOrthogonalPath(fromN, toN, yOff, sa);
+            const smooth = smoothPath(points, 14);
+            // Pre-compute isometric projections for rendering
+            const isoPoints = points.map(p => iso(p.x, p.y));
+            const isoSmooth = (smooth || points).map(p => iso(p.x, p.y));
+            return { ...e, points, smooth, isoPoints, isoSmooth, fx, fy, tx, ty };
+        }).filter(Boolean);
+    }
+    function computeOrthogonalPath(f, t, yOff, sa) {
+        const gap = 12, dx = t.cx - f.cx, dy = t.cy - f.cy; let sx, sy, ex, ey;
+        if (sa === 'top') { sx = f.cx; sy = f.py - gap; ex = t.cx; ey = t.py + t.ph; if (Math.abs(sx - ex) < 5) return [{ x: sx, y: sy }, { x: ex, y: ey }]; const my = (sy + ey) / 2; return [{ x: sx, y: sy }, { x: sx, y: my }, { x: ex, y: my }, { x: ex, y: ey }]; }
+        if (sa === 'bottom') { sx = f.cx; sy = f.py + f.ph + gap; ex = t.px - gap; ey = t.cy; return [{ x: sx, y: sy }, { x: sx, y: ey }, { x: ex, y: ey }]; }
+        if (Math.abs(dx) > Math.abs(dy) * 0.5) { if (dx > 0) { sx = f.px + f.pw + gap; ex = t.px - gap; } else { sx = f.px - gap; ex = t.px + t.pw + gap; } sy = f.cy + (yOff || 0); ey = t.cy + (yOff || 0); }
+        else { if (dy > 0) { sy = f.py + f.ph + gap; ey = t.py - gap; } else { sy = f.py - gap; ey = t.py + t.ph + gap; } sx = f.cx; ex = t.cx; }
+        if (Math.abs(sx - ex) < 5) return [{ x: sx, y: sy }, { x: ex, y: ey }]; if (Math.abs(sy - ey) < 5) return [{ x: sx, y: sy }, { x: ex, y: ey }];
+        const mx = (sx + ex) / 2; return [{ x: sx, y: sy }, { x: mx, y: sy }, { x: mx, y: ey }, { x: ex, y: ey }];
+    }
+    layoutNodes();
+
+    // ── Flow Particles ──────────────────────────────────────────────────
+    const flowDots = [];
+    function initFlowDots() {
+        flowDots.length = 0;
+        edges.forEach((e, ei) => { const c = 3 + Math.floor(Math.random() * 4); for (let i = 0; i < c; i++) flowDots.push({ edgeIdx: ei, t: i / c, speed: (e.speed || 0.7) * (0.6 + Math.random() * 0.7), size: 2 + Math.random() * 2.5, bright: 0.6 + Math.random() * 0.4 }); });
+    }
+    initFlowDots();
+
+    // ── Ambient Particles (removed — using dark grid instead) ──
+
+    // ── Generic Helpers ─────────────────────────────────────────────────
+    function roundRect(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r); ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h); ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r); ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.closePath(); }
+    function hexRgb(hex) { return { r: parseInt(hex.slice(1,3),16), g: parseInt(hex.slice(3,5),16), b: parseInt(hex.slice(5,7),16) }; }
+    function rgba(hex, a) { const c = hexRgb(hex); return `rgba(${c.r},${c.g},${c.b},${a})`; }
+    function posOnPath(pts, t) {
+        if (pts.length < 2) return pts[0] || { x: 0, y: 0 }; let total = 0; const segs = [];
+        for (let i = 1; i < pts.length; i++) { const dx = pts[i].x - pts[i-1].x, dy = pts[i].y - pts[i-1].y, len = Math.sqrt(dx*dx + dy*dy); segs.push({ s: pts[i-1], e: pts[i], len }); total += len; }
+        const target = t * total; let acc = 0;
+        for (const seg of segs) { if (acc + seg.len >= target) { const f = (target - acc) / seg.len; return { x: seg.s.x + (seg.e.x - seg.s.x) * f, y: seg.s.y + (seg.e.y - seg.s.y) * f }; } acc += seg.len; }
+        return pts[pts.length - 1];
+    }
+    function isoPolyline(pts, r) {
+        if (pts.length < 2) return;
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length - 1; i++) ctx.arcTo(pts[i].x, pts[i].y, pts[i + 1].x, pts[i + 1].y, r);
+        ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
+    }
+    function smoothPath(pts, r) {
+        if (!pts || pts.length < 3) return pts ? [...pts] : [];
+        const out = [{ x: pts[0].x, y: pts[0].y }];
+        for (let i = 1; i < pts.length - 1; i++) {
+            const A = pts[i-1], B = pts[i], CC = pts[i+1];
+            const dxAB = B.x - A.x, dyAB = B.y - A.y, dxCB = B.x - CC.x, dyCB = B.y - CC.y;
+            const lenAB = Math.sqrt(dxAB*dxAB + dyAB*dyAB), lenCB = Math.sqrt(dxCB*dxCB + dyCB*dyCB);
+            const maxR = Math.min(r, lenAB * 0.45, lenCB * 0.45);
+            if (maxR < 1) { out.push({x: B.x, y: B.y}); continue; }
+            const t1x = B.x - (dxAB / lenAB) * maxR, t1y = B.y - (dyAB / lenAB) * maxR;
+            const t2x = B.x - (dxCB / lenCB) * maxR, t2y = B.y - (dyCB / lenCB) * maxR;
+            out.push({x: t1x, y: t1y});
+            for (let s = 1; s < 10; s++) { const t = s / 10, mt = 1 - t; out.push({ x: mt*mt*t1x + 2*mt*t*B.x + t*t*t2x, y: mt*mt*t1y + 2*mt*t*B.y + t*t*t2y }); }
+            out.push({x: t2x, y: t2y});
+        }
+        out.push({ x: pts[pts.length-1].x, y: pts[pts.length-1].y });
+        return out;
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    // RENDER — Isometric projected drawing
+    // ════════════════════════════════════════════════════════════════════
+    let frameCount = 0, lastFpsTime = 0;
+    const t0 = performance.now();
+
+    function render(now) {
+        requestAnimationFrame(render);
+        const time = (now - t0) / 1000;
+        updateGroupOpacities();
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, W, H);
+
+        // ── Dark Background ──
+        ctx.fillStyle = '#0a0a1a';
+        ctx.fillRect(0, 0, W, H);
+
+        // ── Isometric Dark Grid ──
+        const gridSpacing = 50;
+        ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+        ctx.lineWidth = 0.5;
+        // Draw grid lines along both isometric axes
+        const gridExtent = Math.max(W, H) * 2;
+        for (let i = -Math.ceil(gridExtent / gridSpacing); i <= Math.ceil(gridExtent / gridSpacing); i++) {
+            // Lines along flat X-axis (constant y)
+            const a1 = iso(i * gridSpacing, -gridExtent);
+            const a2 = iso(i * gridSpacing, gridExtent);
+            ctx.beginPath(); ctx.moveTo(a1.x, a1.y); ctx.lineTo(a2.x, a2.y); ctx.stroke();
+            // Lines along flat Y-axis (constant x)
+            const b1 = iso(-gridExtent, i * gridSpacing);
+            const b2 = iso(gridExtent, i * gridSpacing);
+            ctx.beginPath(); ctx.moveTo(b1.x, b1.y); ctx.lineTo(b2.x, b2.y); ctx.stroke();
+        }
+        // Subtle grid intersection dots
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        const dotRange = Math.ceil(gridExtent / gridSpacing);
+        for (let ix = -dotRange; ix <= dotRange; ix++) {
+            for (let iy = -dotRange; iy <= dotRange; iy++) {
+                const p = iso(ix * gridSpacing, iy * gridSpacing);
+                if (p.x >= -10 && p.x <= W + 10 && p.y >= -10 && p.y <= H + 10) {
+                    ctx.beginPath(); ctx.arc(p.x, p.y, 1, 0, Math.PI * 2); ctx.fill();
+                }
+            }
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // 3D PLATFORM LAYERS
+        // ══════════════════════════════════════════════════════════════
+        const pad = 50, topOff = 60, aw = W - pad * 2, ah = H - pad - topOff;
+
+        // Base platform (subtle)
+        drawIsoPlatform(pad - 20, topOff - 10, aw + 40, ah + 20, 32, '#1a3050', 0.02, time);
+        // Cloud destinations (furthest from viewer — drawn first)
+        drawIsoPlatform(pad + 0.69 * aw, topOff + 0.04 * ah, 0.24 * aw, 0.76 * ah, 24, C.nPurple, 0.035, time);
+        // Mid infrastructure (proxy + firewall)
+        drawIsoPlatform(pad + 0.31 * aw, topOff + 0.06 * ah, 0.23 * aw, 0.72 * ah, 20, C.nOrange, 0.028, time);
+        // Azure Local Instance (closest to viewer — drawn last)
+        drawIsoPlatform(pad + 0.005 * aw, topOff + 0.02 * ah, 0.32 * aw, 0.78 * ah, 20, C.nCyan, 0.04, time);
+
+        // ── Zone Borders (isometric parallelogram) ──
+        laidOut.zones.forEach(z => {
+            const pulse = 0.7 + 0.3 * Math.sin(time * 0.6 + z.x * 5);
+            const bc = hexRgb(z.borderColor);
+            isoQuadPath(z.px, z.py, z.pw, z.ph);
+            ctx.strokeStyle = `rgba(${bc.r},${bc.g},${bc.b},${0.35 * pulse})`;
+            ctx.lineWidth = 3;
+            if (z.dashed) { ctx.setLineDash([12, 8]); ctx.lineDashOffset = -time * 15; }
+            ctx.shadowColor = `rgba(${bc.r},${bc.g},${bc.b},${0.2 * pulse})`; ctx.shadowBlur = 16;
+            ctx.stroke(); ctx.setLineDash([]); ctx.shadowBlur = 0;
+            // Zone label (horizontal text at projected position)
+            const labelPos = iso(z.px + z.pw / 2, z.py + 8);
+            ctx.fillStyle = z.labelColor || C.text;
+            ctx.font = `700 ${S(16)}px "Rajdhani", "Inter", sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+            isoText(z.label, labelPos.x, labelPos.y);
+            // Cluster icon
+            if (z.id === 'azlocal' && svgIconImages['azureLocalCluster']) {
+                const cSz = S(36), iconPos = iso(z.px + S(10), z.py + S(4));
+                ctx.save(); ctx.globalAlpha = 0.9; isoDrawImage(svgIconImages['azureLocalCluster'], iconPos.x + cSz/2, iconPos.y + cSz/2, cSz, cSz); ctx.restore();
+            }
+        });
+
+        // ── Pipe / Tunnel (isometric) ──
+        {
+            const pAlpha = getGroupOpacity(['hosts.arcgw', 'arb.arcgw', 'aks.arcgw']);
+            const apN = laidOut.nodes.find(n => n.id === 'arcproxy'), agN = laidOut.nodes.find(n => n.id === 'arcgw');
+            if (apN && agN && pAlpha > 0.01) {
+                const flatY = apN.cy, pH = 24;
+                const px1 = apN.px + apN.pw, px2 = agN.px, pW = px2 - px1;
+                ctx.save(); ctx.globalAlpha = pAlpha;
+                // Pipe body as isometric quad
+                const corners = isoQuadPath(px1, flatY - pH/2, pW, pH);
+                const tg = ctx.createLinearGradient(corners.tl.x, corners.tl.y, corners.br.x, corners.br.y);
+                tg.addColorStop(0, 'rgba(0,229,255,0.06)'); tg.addColorStop(0.4, 'rgba(2,2,16,0.6)');
+                tg.addColorStop(0.6, 'rgba(2,2,16,0.6)'); tg.addColorStop(1, 'rgba(191,90,242,0.04)');
+                ctx.fillStyle = tg; ctx.fill();
+                isoQuadPath(px1, flatY - pH/2, pW, pH);
+                ctx.strokeStyle = 'rgba(0,229,255,0.25)'; ctx.lineWidth = 1;
+                ctx.shadowColor = 'rgba(0,229,255,0.2)'; ctx.shadowBlur = 12;
+                ctx.stroke(); ctx.shadowBlur = 0;
+                // Flowing hex characters
+                ctx.font = '9px "JetBrains Mono", "Cascadia Code", Consolas, monospace'; ctx.textBaseline = 'middle';
+                const chars = '0123456789ABCDEF';
+                for (let i = 0; i < 20; i++) {
+                    const cx = px1 + 10 + ((time * 60 + i * (pW / 20)) % (pW - 20));
+                    const cp = iso(cx, flatY);
+                    const charIdx = Math.floor(time * 3 + i * 7) % chars.length;
+                    const fadeEdge = Math.min(1, Math.min(cx - px1, px2 - cx) / 30);
+                    ctx.fillStyle = `rgba(0,229,255,${0.18 * fadeEdge})`; ctx.textAlign = 'center';
+                    isoText(chars[charIdx], cp.x, cp.y);
+                }
+                // Particle pulses inside pipe
+                for (let p = 0; p < 3; p++) {
+                    const sx = px1 + (((time * 55 + p * pW / 3) % pW));
+                    const sp = iso(sx, flatY);
+                    const sg = ctx.createRadialGradient(sp.x, sp.y, 0, sp.x, sp.y, 28);
+                    sg.addColorStop(0, 'rgba(0,229,255,0.18)'); sg.addColorStop(1, 'rgba(0,229,255,0)');
+                    ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(sp.x, sp.y, 28, 0, Math.PI * 2); ctx.fill();
+                }
+                ctx.restore();
+            }
+        }
+
+        // ── Edges (projected polylines) ──
+        laidOut.edges.forEach(e => {
+            if (!e.isoPoints || e.isoPoints.length < 2) return;
+            const alpha = getGroupOpacity(e.groups); if (alpha < 0.01) return;
+            const rc = hexRgb(e.color), cR = 14;
+            ctx.save(); ctx.globalAlpha = alpha;
+            // Outer glow
+            ctx.beginPath(); isoPolyline(e.isoPoints, cR);
+            ctx.strokeStyle = `rgba(${rc.r},${rc.g},${rc.b},0.04)`; ctx.lineWidth = 14;
+            ctx.shadowColor = `rgba(${rc.r},${rc.g},${rc.b},0.3)`; ctx.shadowBlur = 16;
+            ctx.stroke(); ctx.shadowBlur = 0;
+            // Core line
+            ctx.beginPath(); isoPolyline(e.isoPoints, cR);
+            ctx.strokeStyle = `rgba(${rc.r},${rc.g},${rc.b},0.35)`; ctx.lineWidth = 2.5;
+            if (e.dashed) { ctx.setLineDash([6, 6]); ctx.lineDashOffset = -time * 22 * (e.speed || 0.7); }
+            ctx.stroke(); ctx.setLineDash([]);
+            // Arrowhead at end
+            const last = e.isoPoints[e.isoPoints.length - 1], prev = e.isoPoints[e.isoPoints.length - 2];
+            const angle = Math.atan2(last.y - prev.y, last.x - prev.x), aS = S(9);
+            ctx.fillStyle = `rgba(${rc.r},${rc.g},${rc.b},0.7)`;
+            ctx.beginPath(); ctx.moveTo(last.x, last.y);
+            ctx.lineTo(last.x - aS * Math.cos(angle - 0.35), last.y - aS * Math.sin(angle - 0.35));
+            ctx.lineTo(last.x - aS * Math.cos(angle + 0.35), last.y - aS * Math.sin(angle + 0.35));
+            ctx.closePath(); ctx.fill();
+            // Edge labels (rotated to follow connector direction)
+            if (e.label) {
+                const lt = e.labelT ?? 0.5;
+                const eps = 0.01;
+                const isoP = e.isoSmooth || e.isoPoints;
+                const pA = posOnPath(isoP, Math.max(0, lt - eps));
+                const pB = posOnPath(isoP, Math.min(1, lt + eps));
+                let edgeAngle = Math.atan2(pB.y - pA.y, pB.x - pA.x);
+                // Flip if text would be upside-down
+                if (edgeAngle > Math.PI / 2) edgeAngle -= Math.PI;
+                if (edgeAngle < -Math.PI / 2) edgeAngle += Math.PI;
+                const flatMid = posOnPath(e.points, lt);
+                const mid = iso(flatMid.x, flatMid.y);
+                const lines = e.label.split('\n');
+                ctx.font = `500 ${S(15)}px "Inter", sans-serif`;
+                const align = e.labelAlign || 'center'; ctx.textBaseline = 'middle';
+                ctx.save();
+                ctx.translate(mid.x, mid.y);
+                ctx.rotate(edgeAngle);
+                ctx.textAlign = align;
+                lines.forEach((line, li) => {
+                    const yB = (e.labelYOffset ?? S(-14)), xB = (e.labelXOffset ?? 0);
+                    const ly = yB - (lines.length - 1 - li) * S(16);
+                    const tw = ctx.measureText(line).width + S(16);
+                    let pillX = xB - tw/2, textX = xB;
+                    if (align === 'right') { pillX = -tw; textX = -5; }
+                    else if (align === 'left') { pillX = 0; textX = 5; }
+                    roundRect(pillX, ly - S(10), tw, S(20), S(7));
+                    ctx.fillStyle = 'rgba(2,2,16,0.85)'; ctx.fill();
+                    roundRect(pillX, ly - 10, tw, 20, 7);
+                    ctx.strokeStyle = `rgba(${rc.r},${rc.g},${rc.b},0.15)`; ctx.lineWidth = 0.5; ctx.stroke();
+                    ctx.fillStyle = e.labelColor || `rgba(${rc.r},${rc.g},${rc.b},0.85)`;
+                    ctx.fillText(line, textX, ly);
+                });
+                ctx.restore();
+            }
+            ctx.restore();
+        });
+
+        // ── Flow Dots (along projected smooth paths) ──
+        flowDots.forEach(fd => {
+            const e = laidOut.edges[fd.edgeIdx]; if (!e || !e.isoSmooth) return;
+            const alpha = getGroupOpacity(e.groups); if (alpha < 0.01) return;
+            fd.t += fd.speed * 0.004; if (fd.t > 1) fd.t -= 1;
+            const pos = posOnPath(e.isoSmooth, fd.t), rc = hexRgb(e.color);
+            ctx.save(); ctx.globalAlpha = alpha;
+            // Bloom
+            const bR = fd.size * 8;
+            const bg = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, bR);
+            bg.addColorStop(0, `rgba(${rc.r},${rc.g},${rc.b},${0.45 * fd.bright})`);
+            bg.addColorStop(0.15, `rgba(${rc.r},${rc.g},${rc.b},${0.15 * fd.bright})`);
+            bg.addColorStop(1, `rgba(${rc.r},${rc.g},${rc.b},0)`);
+            ctx.fillStyle = bg; ctx.beginPath(); ctx.arc(pos.x, pos.y, bR, 0, Math.PI * 2); ctx.fill();
+            // Cross-flare
+            const flareLen = fd.size * 14, flareA = 0.12 * fd.bright;
+            const hg = ctx.createLinearGradient(pos.x - flareLen, pos.y, pos.x + flareLen, pos.y);
+            hg.addColorStop(0, `rgba(${rc.r},${rc.g},${rc.b},0)`); hg.addColorStop(0.35, `rgba(${rc.r},${rc.g},${rc.b},${flareA})`);
+            hg.addColorStop(0.5, `rgba(${rc.r},${rc.g},${rc.b},${flareA * 2.5})`); hg.addColorStop(0.65, `rgba(${rc.r},${rc.g},${rc.b},${flareA})`);
+            hg.addColorStop(1, `rgba(${rc.r},${rc.g},${rc.b},0)`);
+            ctx.fillStyle = hg; ctx.fillRect(pos.x - flareLen, pos.y - 0.8, flareLen * 2, 1.6);
+            const vg = ctx.createLinearGradient(pos.x, pos.y - flareLen, pos.x, pos.y + flareLen);
+            vg.addColorStop(0, `rgba(${rc.r},${rc.g},${rc.b},0)`); vg.addColorStop(0.35, `rgba(${rc.r},${rc.g},${rc.b},${flareA})`);
+            vg.addColorStop(0.5, `rgba(${rc.r},${rc.g},${rc.b},${flareA * 2.5})`); vg.addColorStop(0.65, `rgba(${rc.r},${rc.g},${rc.b},${flareA})`);
+            vg.addColorStop(1, `rgba(${rc.r},${rc.g},${rc.b},0)`);
+            ctx.fillStyle = vg; ctx.fillRect(pos.x - 0.8, pos.y - flareLen, 1.6, flareLen * 2);
+            // Core dot
+            ctx.fillStyle = `rgba(${Math.min(255,rc.r+120)},${Math.min(255,rc.g+120)},${Math.min(255,rc.b+120)},${0.95 * fd.bright})`;
+            ctx.beginPath(); ctx.arc(pos.x, pos.y, fd.size * 0.8, 0, Math.PI * 2); ctx.fill();
+            // Comet trail
+            for (let ti = 1; ti <= 7; ti++) {
+                let tt = fd.t - ti * 0.012; if (tt < 0) tt += 1;
+                const tp = posOnPath(e.isoSmooth, tt), ta = (0.35 - ti * 0.045) * fd.bright, ts = fd.size * (1 - ti * 0.1);
+                if (ta > 0 && ts > 0) { ctx.fillStyle = `rgba(${rc.r},${rc.g},${rc.b},${ta})`; ctx.beginPath(); ctx.arc(tp.x, tp.y, ts, 0, Math.PI * 2); ctx.fill(); }
+            }
+            ctx.restore();
+        });
+
+        // ── Pulse Rings ──
+        if (time - lastPulseTime > 1.8 && laidOut.nodes.length > 0) {
+            const rn = laidOut.nodes[Math.floor(Math.random() * laidOut.nodes.length)];
+            const pc = iso(rn.cx, rn.cy);
+            pulseRings.push({ cx: pc.x, cy: pc.y, radius: 0, maxRadius: Math.max(rn.pw, rn.ph) * 1.2, color: rn.glow || rn.fill, born: time });
+            lastPulseTime = time;
+        }
+        for (let i = pulseRings.length - 1; i >= 0; i--) {
+            const pr = pulseRings[i], age = time - pr.born;
+            if (age > 1.5) { pulseRings.splice(i, 1); continue; }
+            const progress = age / 1.5; pr.radius = pr.maxRadius * progress;
+            const prAlpha = (1 - progress) * 0.4, prc = hexRgb(pr.color);
+            ctx.strokeStyle = `rgba(${prc.r},${prc.g},${prc.b},${prAlpha})`; ctx.lineWidth = 1.5 * (1 - progress);
+            ctx.shadowColor = `rgba(${prc.r},${prc.g},${prc.b},${prAlpha * 0.5})`; ctx.shadowBlur = 8;
+            ctx.beginPath(); ctx.arc(pr.cx, pr.cy, pr.radius, 0, Math.PI * 2); ctx.stroke(); ctx.shadowBlur = 0;
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // NODES — Isometric 3D boxes with horizontal text
+        // ══════════════════════════════════════════════════════════════
+
+        // Sort back-to-front for correct overlap (lower flat x+y = further from viewer)
+        const sortedNodes = [...laidOut.nodes].sort((a, b) => {
+            const za = a.zOrder || 0, zb = b.zOrder || 0;
+            if (za !== zb) return za - zb;
+            return (a.cx + a.cy * 0.5) - (b.cx + b.cy * 0.5);
+        });
+
+        // Hover detection (check flat-space bounding boxes with inverse-projected mouse)
+        hoveredNode = null;
+        for (let i = sortedNodes.length - 1; i >= 0; i--) {
+            const n = sortedNodes[i];
+            if (flatMouseX >= n.px && flatMouseX <= n.px + n.pw && flatMouseY >= n.py && flatMouseY <= n.py + n.ph) {
+                hoveredNode = n; break;
+            }
+        }
+        canvas.style.cursor = hoveredNode ? 'pointer' : 'default';
+
+        sortedNodes.forEach(n => {
+            const isHov = (n === hoveredNode);
+            const hoverGlow = isHov ? 2.2 : 1;
+            const pulse = 0.8 + 0.2 * Math.sin(time * 1.4 + n.lx * 22 + n.ly * 17);
+            const fc = hexRgb(n.fill), gc = hexRgb(n.glow || n.fill);
+            const depth = n.cardStyle ? 36 : (n.badge ? 14 : 24);
+
+            // ── 3D Depth faces ──
+            drawBoxDepth(n.px, n.py, n.pw, n.ph, depth, n.fill, n.glow || n.fill, pulse);
+
+            // ── Hover glow halo ──
+            if (isHov) {
+                const hc = iso(n.cx, n.cy);
+                const hgR = Math.max(n.pw, n.ph) * 0.7;
+                const hgGrad = ctx.createRadialGradient(hc.x, hc.y, hgR * 0.3, hc.x, hc.y, hgR);
+                hgGrad.addColorStop(0, `rgba(${gc.r},${gc.g},${gc.b},0.14)`);
+                hgGrad.addColorStop(0.6, `rgba(${gc.r},${gc.g},${gc.b},0.04)`);
+                hgGrad.addColorStop(1, `rgba(${gc.r},${gc.g},${gc.b},0)`);
+                ctx.fillStyle = hgGrad; ctx.beginPath(); ctx.arc(hc.x, hc.y, hgR, 0, Math.PI * 2); ctx.fill();
+            }
+
+            // ── Top face (isometric parallelogram) ──
+            if (n.cardStyle) {
+                // Card-style nodes: tall cards (proxy, firewall, destinations)
+                const corners = isoQuadPath(n.px, n.py, n.pw, n.ph);
+                ctx.shadowColor = `rgba(${gc.r},${gc.g},${gc.b},${0.45 * pulse * hoverGlow})`; ctx.shadowBlur = 22;
+                const fg = ctx.createLinearGradient(corners.tl.x, corners.tl.y, corners.br.x, corners.br.y);
+                const fillBoost = isHov ? 0.15 : 0;
+                fg.addColorStop(0, `rgba(${fc.r+15},${fc.g+15},${fc.b+15},${0.6 + fillBoost})`);
+                fg.addColorStop(0.5, `rgba(${fc.r},${fc.g},${fc.b},${0.35 + fillBoost})`);
+                fg.addColorStop(1, `rgba(${Math.max(0,fc.r-10)},${Math.max(0,fc.g-10)},${Math.max(0,fc.b-10)},${0.25 + fillBoost})`);
+                ctx.fillStyle = fg; ctx.fill();
+                // Neon border
+                isoQuadPath(n.px, n.py, n.pw, n.ph);
+                ctx.strokeStyle = `rgba(${gc.r},${gc.g},${gc.b},${(isHov ? 0.85 : 0.45) * pulse})`; ctx.lineWidth = isHov ? 4 : 2.5; ctx.stroke(); ctx.shadowBlur = 0;
+                // Top edge highlight
+                const htl = iso(n.px, n.py), htr = iso(n.px + n.pw, n.py);
+                ctx.beginPath(); ctx.moveTo(htl.x, htl.y); ctx.lineTo(htr.x, htr.y);
+                ctx.strokeStyle = `rgba(255,255,255,${0.1 * pulse})`; ctx.lineWidth = 1; ctx.stroke();
+                // Icon
+                if (n.svgIcon && svgIconImages[n.svgIcon]) {
+                    const iconSz = Math.min(n.ph * 0.55, S(48));
+                    const iconPos = iso(n.cx, n.cy);
+                    ctx.save(); ctx.globalAlpha = (isHov ? 0.95 : 0.75) * pulse;
+                    isoDrawImage(svgIconImages[n.svgIcon], iconPos.x, iconPos.y, iconSz, iconSz); ctx.restore();
+                } else if (n.icon) {
+                    const iconPos = iso(n.cx, n.cy);
+                    ctx.font = `${Math.min(n.ph * 0.5, S(44))}px "Segoe UI"`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.fillStyle = `rgba(255,255,255,${(isHov ? 0.8 : 0.55) * pulse})`; isoText(n.icon, iconPos.x, iconPos.y);
+                }
+                // Card label — on the left depth face, following left edge with 3D perspective
+                const cTL = iso(n.px, n.py), cBL = iso(n.px, n.py + n.ph);
+                const cLeftMidX = (cTL.x + cBL.x) / 2, cLeftMidY = (cTL.y + cBL.y) / 2 + depth * 0.35;
+                ctx.font = `700 ${Math.min(S(16), n.pw * 0.10)}px "Inter", sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#fff';
+                leftText(n.label, cLeftMidX, cLeftMidY);
+                // Card sub-label — below label on left face
+                if (n.sub) {
+                    ctx.font = `500 ${Math.min(S(13), n.pw * 0.08)}px "Inter", sans-serif`;
+                    ctx.fillStyle = `rgba(${gc.r},${gc.g},${gc.b},1.0)`;
+                    leftText(n.sub, cLeftMidX, cLeftMidY + depth * 0.38);
+                }
+            } else if (n.badge) {
+                // Badge nodes: small (ClusterIP)
+                isoQuadPath(n.px, n.py, n.pw, n.ph);
+                ctx.shadowColor = `rgba(${gc.r},${gc.g},${gc.b},${0.3 * pulse * hoverGlow})`; ctx.shadowBlur = 10;
+                ctx.fillStyle = `rgba(${fc.r},${fc.g},${fc.b},${isHov ? 0.5 : 0.3})`; ctx.fill();
+                isoQuadPath(n.px, n.py, n.pw, n.ph);
+                ctx.strokeStyle = `rgba(${gc.r},${gc.g},${gc.b},${(isHov ? 0.9 : 0.6) * pulse})`; ctx.lineWidth = isHov ? 3.5 : 2.5; ctx.stroke(); ctx.shadowBlur = 0;
+                const cp = iso(n.cx, n.cy);
+                const bTL = iso(n.px, n.py), bBL2 = iso(n.px, n.py + n.ph);
+                const bLeftMidX = (bTL.x + bBL2.x) / 2, bLeftMidY = (bTL.y + bBL2.y) / 2 + depth * 0.5;
+                ctx.font = `700 ${S(11)}px "Inter", sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillStyle = n.textColor || '#fff';
+                leftText(n.label, bLeftMidX, bLeftMidY);
+            } else {
+                // Regular nodes: hosts, ARB, AKS, VMs, ArcProxy, ArcGW, ExpressRoute
+                const corners = isoQuadPath(n.px, n.py, n.pw, n.ph);
+                ctx.shadowColor = `rgba(${gc.r},${gc.g},${gc.b},${0.4 * pulse * hoverGlow})`; ctx.shadowBlur = 16;
+                const fg = ctx.createLinearGradient(corners.tl.x, corners.tl.y, corners.bl.x, corners.bl.y);
+                const fillBoost = isHov ? 0.12 : 0;
+                fg.addColorStop(0, `rgba(${fc.r},${fc.g},${fc.b},${0.3 + fillBoost})`);
+                fg.addColorStop(1, `rgba(${fc.r},${fc.g},${fc.b},${0.08 + fillBoost})`);
+                ctx.fillStyle = fg; ctx.fill();
+                isoQuadPath(n.px, n.py, n.pw, n.ph);
+                ctx.strokeStyle = `rgba(${gc.r},${gc.g},${gc.b},${(isHov ? 0.85 : 0.55) * pulse})`; ctx.lineWidth = isHov ? 3.5 : 2.5; ctx.stroke(); ctx.shadowBlur = 0;
+                // Top edge highlight
+                const htl = iso(n.px, n.py), htr = iso(n.px + n.pw, n.py);
+                ctx.beginPath(); ctx.moveTo(htl.x, htl.y); ctx.lineTo(htr.x, htr.y);
+                ctx.strokeStyle = `rgba(255,255,255,${0.07 * pulse})`; ctx.lineWidth = 1; ctx.stroke();
+                // Icon
+                if (n.svgIcon && svgIconImages[n.svgIcon]) {
+                    const iconSz = Math.min(n.ph * 1.0, S(32));
+                    const iconPos = iso(n.cx, n.cy);
+                    ctx.save(); ctx.globalAlpha = (isHov ? 0.9 : 0.65);
+                    isoDrawImage(svgIconImages[n.svgIcon], iconPos.x, iconPos.y, iconSz, iconSz); ctx.restore();
+                } else if (n.icon) {
+                    const iconPos = iso(n.cx, n.cy);
+                    ctx.font = `${S(18)}px "Segoe UI"`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.fillStyle = `rgba(255,255,255,${isHov ? 0.65 : 0.4})`; isoText(n.icon, iconPos.x, iconPos.y);
+                }
+                // Status LED
+                const ledPos = iso(n.px + n.pw - 8, n.py + 8);
+                const lp = 0.5 + 0.5 * Math.sin(time * 2.5 + n.lx * 30);
+                const lg = ctx.createRadialGradient(ledPos.x, ledPos.y, 0, ledPos.x, ledPos.y, 6);
+                lg.addColorStop(0, `rgba(${gc.r},${gc.g},${gc.b},${(isHov ? 1.0 : 0.9) * lp})`); lg.addColorStop(1, `rgba(${gc.r},${gc.g},${gc.b},0)`);
+                ctx.fillStyle = lg; ctx.beginPath(); ctx.arc(ledPos.x, ledPos.y, 6, 0, Math.PI * 2); ctx.fill();
+                // Label + sublabel — on left depth face with 3D perspective
+                const rTL = iso(n.px, n.py), rBL = iso(n.px, n.py + n.ph);
+                const rLeftMidX = (rTL.x + rBL.x) / 2, rLeftMidY = (rTL.y + rBL.y) / 2 + depth * 0.35;
+                ctx.font = n.bigLabel ? `700 ${S(16)}px "Inter", sans-serif` : `600 ${S(14)}px "Inter", sans-serif`;
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = n.textColor || '#fff';
+                leftText(n.label, rLeftMidX, rLeftMidY);
+                if (n.sub) {
+                    ctx.font = n.bigLabel ? `500 ${S(13)}px "Inter", sans-serif` : `500 ${S(12)}px "Inter", sans-serif`;
+                    ctx.fillStyle = n.bigLabel ? (n.glow || '#99eeff') : `rgba(${gc.r},${gc.g},${gc.b},1.0)`;
+                    leftText(n.sub, rLeftMidX, rLeftMidY + depth * 0.38);
+                }
+            }
+        });
+
+
+
+        // ── FPS Counter ──
+        frameCount++;
+        if (now - lastFpsTime > 500) { document.getElementById('fps').textContent = Math.round(frameCount / ((now - lastFpsTime) / 1000)) + ' fps'; frameCount = 0; lastFpsTime = now; }
+    }
+
+    lastFpsTime = performance.now();
+    requestAnimationFrame(render);
+    </script>
+</body>
+</html>
