@@ -279,7 +279,7 @@ export default function CanvasViewport({ canvasRef, onCursorWorldChange, onViewp
       const selEntities: { x: number; y: number; w: number; h: number }[] = [];
       if (selType === 'area') state.document.areas.filter((e) => selIds.has(e.id)).forEach((e) => selEntities.push({ x: e.x, y: e.y, w: e.width, h: e.height }));
       else if (selType === 'node') state.document.nodes.filter((e) => selIds.has(e.id)).forEach((e) => selEntities.push({ x: e.x, y: e.y, w: e.width, h: e.height }));
-      else if (selType === 'text') (state.document.texts ?? []).filter((e) => selIds.has(e.id)).forEach((e) => selEntities.push({ x: e.x, y: e.y, w: e.width, h: e.height }));
+      else if (selType === 'text') (state.document.texts ?? []).filter((e) => selIds.has(e.id)).forEach((e) => selEntities.push({ x: e.x, y: e.y, w: 0, h: 0 }));
       else if (selType === 'pipe') (state.document.pipes ?? []).filter((e) => selIds.has(e.id)).forEach((e) => selEntities.push({ x: e.x, y: e.y, w: e.width, h: e.height }));
 
       if (selEntities.length > 0) {
@@ -295,7 +295,7 @@ export default function CanvasViewport({ canvasRef, onCursorWorldChange, onViewp
         const others: { x: number; y: number; w: number; h: number }[] = [];
         state.document.areas.filter((e) => !selIds.has(e.id)).forEach((e) => others.push({ x: e.x, y: e.y, w: e.width, h: e.height }));
         state.document.nodes.filter((e) => !selIds.has(e.id)).forEach((e) => others.push({ x: e.x, y: e.y, w: e.width, h: e.height }));
-        (state.document.texts ?? []).filter((e) => !selIds.has(e.id)).forEach((e) => others.push({ x: e.x, y: e.y, w: e.width, h: e.height }));
+        (state.document.texts ?? []).filter((e) => !selIds.has(e.id)).forEach((e) => others.push({ x: e.x, y: e.y, w: 0, h: 0 }));
         (state.document.pipes ?? []).filter((e) => !selIds.has(e.id)).forEach((e) => others.push({ x: e.x, y: e.y, w: e.width, h: e.height }));
 
         // Find the closest alignment snap for each axis
