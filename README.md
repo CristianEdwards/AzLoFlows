@@ -50,19 +50,12 @@ The tool is purpose-built for understanding and communicating how traffic moves 
 - Glassmorphic UI panels with blur and glow effects
 - Color palette with 14 pre-defined swatches
 
-## Getting Started
+## Development
 
 ```bash
 npm install
-npm run dev
-```
-
-Opens at [http://localhost:8125/AzLoFlows/](http://localhost:8125/AzLoFlows/).
-
-## Build
-
-```bash
-npm run build
+npm run dev        # http://localhost:8125/AzLoFlows/
+npm run build      # production build → dist/
 ```
 
 ## Architecture
