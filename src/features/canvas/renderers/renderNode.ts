@@ -2,7 +2,7 @@ import { NODE_DEPTH, DETAIL_ZOOM_THRESHOLD, NODE_ICON_SCALE, DEFAULT_FONT_SIZE }
 import { isoQuad, worldToScreen, type ViewportSize } from '@/lib/geometry/iso';
 import { nodeIconCatalog } from '@/lib/icons/nodeIcons';
 import { drawPolygon, drawTransformedText } from '@/lib/rendering/canvasPrimitives';
-import { hexToRgba, lightenHex, darkenHex, deep950ForGlow } from '@/lib/rendering/tokens';
+import { hexToRgba, lightenHex, darkenHex, deepToneForGlow } from '@/lib/rendering/tokens';
 import type { CameraState, NodeEntity } from '@/types/document';
 
 export function renderNode(
@@ -47,14 +47,13 @@ export function renderNode(
     ? { x: topFaceBasisY.x, y: topFaceBasisY.y }
     : { x: -topFaceBasisX.x, y: -topFaceBasisX.y };
 
-  // In light mode, use 950-tier (deep muted) colors from the palette
-  // for solid, rich fills that aren't overly brilliant.
+  // In light mode, use Tailwind 800-tier colors for solid, rich fills.
   const faceFill = light ? node.glowColor : node.fill;
 
-  // Light-mode palette: 950-level deep tones with subtle lift for 3D gradients
-  const deep950    = light ? deep950ForGlow(node.glowColor) : '';
-  const deep950Lit = light ? lightenHex(deep950, 0.22) : '';  // slightly lifted for highlights
-  const deep950Mid = light ? lightenHex(deep950, 0.12) : '';  // mid highlight
+  // Light-mode palette: 800-level tones with subtle lift for 3D gradients
+  const deepTone    = light ? deepToneForGlow(node.glowColor) : '';
+  const deepToneLit = light ? lightenHex(deepTone, 0.22) : '';  // slightly lifted for highlights
+  const deepToneMid = light ? lightenHex(deepTone, 0.12) : '';  // mid highlight
 
   if (light) {
     // Drop-shadow behind the entire node for depth
@@ -73,8 +72,8 @@ export function renderNode(
   drawPolygon(ctx, [leftTop, leftBottom, frontLeftBottom, leftTopDepth]);
   if (light) {
     const gLeft = ctx.createLinearGradient(leftTop.x, leftTop.y, frontLeftBottom.x, frontLeftBottom.y);
-    gLeft.addColorStop(0, deep950Mid);
-    gLeft.addColorStop(1, deep950);
+    gLeft.addColorStop(0, deepToneMid);
+    gLeft.addColorStop(1, deepTone);
     ctx.fillStyle = gLeft;
   } else {
     ctx.fillStyle = hexToRgba(faceFill, 0.22);
@@ -88,8 +87,8 @@ export function renderNode(
   drawPolygon(ctx, [leftBottom, rightBottom, frontRightBottom, frontLeftBottom]);
   if (light) {
     const gFront = ctx.createLinearGradient(leftBottom.x, leftBottom.y, frontRightBottom.x, frontRightBottom.y);
-    gFront.addColorStop(0, deep950);
-    gFront.addColorStop(1, darkenHex(deep950, 0.8));
+    gFront.addColorStop(0, deepTone);
+    gFront.addColorStop(1, darkenHex(deepTone, 0.8));
     ctx.fillStyle = gFront;
   } else {
     ctx.fillStyle = hexToRgba(faceFill, 0.42);
@@ -103,8 +102,8 @@ export function renderNode(
   drawPolygon(ctx, [rightTop, rightBottom, frontRightBottom, rightTopDepth]);
   if (light) {
     const gRight = ctx.createLinearGradient(rightTop.x, rightTop.y, frontRightBottom.x, frontRightBottom.y);
-    gRight.addColorStop(0, deep950Mid);
-    gRight.addColorStop(1, darkenHex(deep950, 0.85));
+    gRight.addColorStop(0, deepToneMid);
+    gRight.addColorStop(1, darkenHex(deepTone, 0.85));
     ctx.fillStyle = gRight;
   } else {
     ctx.fillStyle = hexToRgba(faceFill, 0.28);
@@ -118,9 +117,9 @@ export function renderNode(
   drawPolygon(ctx, points);
   const gradient = ctx.createLinearGradient(points[0].x, points[0].y, points[2].x, points[2].y);
   if (light) {
-    gradient.addColorStop(0, deep950Lit);
-    gradient.addColorStop(0.5, deep950Mid);
-    gradient.addColorStop(1, deep950);
+    gradient.addColorStop(0, deepToneLit);
+    gradient.addColorStop(0.5, deepToneMid);
+    gradient.addColorStop(1, deepTone);
   } else {
     gradient.addColorStop(0, hexToRgba(faceFill, 0.84));
     gradient.addColorStop(0.5, hexToRgba(faceFill, 0.46));
