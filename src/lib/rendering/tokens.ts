@@ -58,30 +58,30 @@ export function companionFillForGlow(glow: string): string {
   return _glowToFill[glow] ?? darkenHex(glow, 0.28);
 }
 
-/** Tailwind-style 950 colors — deep muted tones for light-mode node fills. */
-export const palette950 = {
-  cyan:      '#083344',   // cyan-950
-  pink:      '#500724',   // pink-950
-  green:     '#052e16',   // green-950
-  darkGreen: '#022c22',   // emerald-950
-  purple:    '#3b0764',   // purple-950
-  blue:      '#172554',   // blue-950
-  orange:    '#431407',   // orange-950
-  gold:      '#451a03',   // amber-950
-  red:       '#450a0a',   // red-950
-  teal:      '#042f2e',   // teal-950
-  amber:     '#451a03',   // amber-950
-  indigo:    '#1e1b4b',   // indigo-950
-  coral:     '#4c0519',   // rose-950
-  lime:      '#1a2e05',   // lime-950
+/** Tailwind 800-tier colors for light-mode node fills. */
+export const palette800 = {
+  cyan:      '#155e75',   // cyan-800
+  pink:      '#9d174d',   // pink-800
+  green:     '#166534',   // green-800
+  darkGreen: '#065f46',   // emerald-800
+  purple:    '#6b21a8',   // purple-800
+  blue:      '#1e40af',   // blue-800
+  orange:    '#9a3412',   // orange-800
+  gold:      '#92400e',   // amber-800
+  red:       '#991b1b',   // red-800
+  teal:      '#115e59',   // teal-800
+  amber:     '#92400e',   // amber-800
+  indigo:    '#3730a3',   // indigo-800
+  coral:     '#9f1239',   // rose-800
+  lime:      '#3f6212',   // lime-800
 } as const;
 
-/** Map a bright glow color → its 950 deep tone for light-mode fills. */
-const _glowTo950: Record<string, string> = {};
-for (const k of _keys) _glowTo950[palette[k]] = palette950[k];
+/** Map a bright glow color → its 800 tone for light-mode fills. */
+const _glowTo800: Record<string, string> = {};
+for (const k of _keys) _glowTo800[palette[k]] = palette800[k];
 
-export function deep950ForGlow(glow: string): string {
-  return _glowTo950[glow] ?? darkenHex(glow, 0.15);
+export function deepToneForGlow(glow: string): string {
+  return _glowTo800[glow] ?? darkenHex(glow, 0.35);
 }
 
 export const uiTokens = {
