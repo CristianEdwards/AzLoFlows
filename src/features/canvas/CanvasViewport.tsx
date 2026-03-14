@@ -15,6 +15,7 @@ interface CanvasViewportProps {
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
   onCursorWorldChange: (point: { x: number; y: number } | null) => void;
   onViewportChange: (viewport: ViewportSize) => void;
+  onEntityHover?: (info: { id: string; screenX: number; screenY: number } | null) => void;
 }
 
 type ReconnectDraft = {
@@ -35,7 +36,7 @@ type InteractionState =
   | { mode: 'reconnect'; draft: ReconnectDraft }
   | { mode: 'marquee'; startScreen: { x: number; y: number }; startWorld: { x: number; y: number }; currentScreen: { x: number; y: number }; currentWorld: { x: number; y: number } };
 
-export default function CanvasViewport({ canvasRef, onCursorWorldChange, onViewportChange }: CanvasViewportProps) {
+export default function CanvasViewport({ canvasRef, onCursorWorldChange, onViewportChange, onEntityHover }: CanvasViewportProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const interactionRef = useRef<InteractionState>({ mode: 'idle' });
   const spacePressedRef = useRef(false);
@@ -137,6 +138,21 @@ export default function CanvasViewport({ canvasRef, onCursorWorldChange, onViewp
         event.preventDefault();
         useEditorStore.getState().pasteClipboard();
       }
+      if ((event.ctrlKey || event.metaKey) && event.key === '0') {
+        event.preventDefault();
+        useEditorStore.getState().fitToScreen(viewport.width, viewport.height);
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key === '1') {
+        event.preventDefault();
+        useEditorStore.getState().setCamera({ zoom: 1 });
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'f') {
+        event.preventDefault();
+        window.dispatchEvent(new CustomEvent('azlo:open-search'));
+      }
+      if (event.key === '?' && !(event.target as HTMLElement)?.closest('input, textarea, [contenteditable]')) {
+        window.dispatchEvent(new CustomEvent('azlo:open-shortcuts'));
+      }
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
         const tag = (event.target as HTMLElement)?.tagName;
         if (tag === 'INPUT' || tag === 'TEXTAREA' || (event.target as HTMLElement)?.isContentEditable) return;
@@ -167,7 +183,7 @@ export default function CanvasViewport({ canvasRef, onCursorWorldChange, onViewp
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, []);
+  }, [viewport]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -260,6 +276,14 @@ export default function CanvasViewport({ canvasRef, onCursorWorldChange, onViewp
     const hoveredNode = hitTestNodeScreen(document.nodes, screen, camera, viewport) ?? hitTestNode(document.nodes, world);
     setHoveredNodeId(hoveredNode?.id ?? null);
     const interaction = interactionRef.current;
+    // Tooltip hover detection — only fire when idle (not dragging/panning)
+    if (onEntityHover) {
+      if (interaction.mode === 'idle' && hoveredNode) {
+        onEntityHover({ id: hoveredNode.id, screenX: event.clientX, screenY: event.clientY });
+      } else {
+        onEntityHover(null);
+      }
+    }
     if (interaction.mode === 'pan') {
       setCamera({ x: interaction.cameraX + (event.clientX - interaction.startX), y: interaction.cameraY + (event.clientY - interaction.startY) });
       return;

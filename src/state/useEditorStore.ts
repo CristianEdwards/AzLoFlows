@@ -1,4 +1,5 @@
 ﻿import { create } from 'zustand';
+import { MIN_ZOOM, MAX_ZOOM } from '@/lib/config';
 import { hitTestArea, hitTestConnector, hitTestNode, hitTestPipe, hitTestText } from '@/lib/geometry/bounds';
 import { snapToGrid } from '@/lib/geometry/grid';
 import { resizeRectFromHandle, type ResizeHandle } from '@/lib/geometry/resize';
@@ -94,6 +95,8 @@ interface EditorStore {
   pasteClipboard: () => void;
   batchUpdate: (patch: { glowColor?: string; fontSize?: number; tags?: string[] }) => void;
   updateDocumentDefs: (patch: { scenarios?: PickerDef[]; flowSources?: PickerDef[]; flowTypes?: PickerDef[] }) => void;
+  fitToScreen: (viewportWidth: number, viewportHeight: number) => void;
+  zoomToSelection: (viewportWidth: number, viewportHeight: number) => void;
 }
 
 const defaultCamera: CameraState = { x: 0, y: 40, zoom: 1 };
@@ -884,6 +887,56 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     set((state) => {
       const document = { ...state.document, ...patch };
       return { document, history: withCommittedHistory(state.history, state.document) };
+    });
+  },
+  fitToScreen: (viewportWidth, viewportHeight) => {
+    const { document } = get();
+    const xs: number[] = [];
+    const ys: number[] = [];
+    for (const a of document.areas) { xs.push(a.x, a.x + a.width); ys.push(a.y, a.y + a.height); }
+    for (const n of document.nodes) { xs.push(n.x, n.x + n.width); ys.push(n.y, n.y + n.height); }
+    for (const t of document.texts ?? []) { xs.push(t.x - 60, t.x + 60); ys.push(t.y - 20, t.y + 20); }
+    for (const p of document.pipes ?? []) { xs.push(p.x, p.x + p.width); ys.push(p.y, p.y + p.height); }
+    if (xs.length === 0) return;
+    const minX = Math.min(...xs), maxX = Math.max(...xs);
+    const minY = Math.min(...ys), maxY = Math.max(...ys);
+    const contentW = maxX - minX || 1;
+    const contentH = maxY - minY || 1;
+    const padding = 80;
+    const zoom = Math.min((viewportWidth - padding * 2) / contentW, (viewportHeight - padding * 2) / contentH, MAX_ZOOM);
+    const clampedZoom = Math.max(MIN_ZOOM, zoom);
+    const cx = (minX + maxX) / 2;
+    const cy = (minY + maxY) / 2;
+    set({
+      camera: { x: -cx * clampedZoom + viewportWidth / 2, y: -cy * clampedZoom + viewportHeight / 2, zoom: clampedZoom },
+    });
+    get().pushToast('Fit to screen', 'info');
+  },
+  zoomToSelection: (viewportWidth, viewportHeight) => {
+    const { document, selection } = get();
+    if (!selection.type || selection.ids.length === 0) {
+      get().fitToScreen(viewportWidth, viewportHeight);
+      return;
+    }
+    const ids = new Set(selection.ids);
+    const xs: number[] = [];
+    const ys: number[] = [];
+    if (selection.type === 'area') for (const a of document.areas) { if (ids.has(a.id)) { xs.push(a.x, a.x + a.width); ys.push(a.y, a.y + a.height); } }
+    if (selection.type === 'node') for (const n of document.nodes) { if (ids.has(n.id)) { xs.push(n.x, n.x + n.width); ys.push(n.y, n.y + n.height); } }
+    if (selection.type === 'text') for (const t of document.texts ?? []) { if (ids.has(t.id)) { xs.push(t.x - 60, t.x + 60); ys.push(t.y - 20, t.y + 20); } }
+    if (selection.type === 'pipe') for (const p of document.pipes ?? []) { if (ids.has(p.id)) { xs.push(p.x, p.x + p.width); ys.push(p.y, p.y + p.height); } }
+    if (xs.length === 0) return;
+    const minX = Math.min(...xs), maxX = Math.max(...xs);
+    const minY = Math.min(...ys), maxY = Math.max(...ys);
+    const contentW = maxX - minX || 1;
+    const contentH = maxY - minY || 1;
+    const padding = 120;
+    const zoom = Math.min((viewportWidth - padding * 2) / contentW, (viewportHeight - padding * 2) / contentH, MAX_ZOOM);
+    const clampedZoom = Math.max(MIN_ZOOM, zoom);
+    const cx = (minX + maxX) / 2;
+    const cy = (minY + maxY) / 2;
+    set({
+      camera: { x: -cx * clampedZoom + viewportWidth / 2, y: -cy * clampedZoom + viewportHeight / 2, zoom: clampedZoom },
     });
   },
 }));

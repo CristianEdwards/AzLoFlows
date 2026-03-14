@@ -714,3 +714,207 @@ async function saveBlobAs(blob: Blob, suggestedName: string, types: FilePickerTy
 function escapeXml(value: string): string {
   return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&apos;');
 }
+
+/* ── PDF Export ─────────────────────────────────────────── */
+
+export async function exportDocumentAsPdf(canvas: HTMLCanvasElement | null, fileName: string): Promise<void> {
+  if (!canvas) return;
+  const dataUrl = canvas.toDataURL('image/png');
+  const width = canvas.width;
+  const height = canvas.height;
+
+  // Build a minimal PDF with the canvas image embedded
+  // Use landscape if wider than tall
+  const isLandscape = width > height;
+  const pageW = isLandscape ? 842 : 595; // A4 in points
+  const pageH = isLandscape ? 595 : 842;
+  const margin = 40;
+  const maxW = pageW - margin * 2;
+  const maxH = pageH - margin * 2;
+  const scale = Math.min(maxW / width, maxH / height);
+  const imgW = Math.round(width * scale);
+  const imgH = Math.round(height * scale);
+  const imgX = Math.round((pageW - imgW) / 2);
+  const imgY = Math.round((pageH - imgH) / 2);
+
+  // Convert data URL to raw binary
+  const base64 = dataUrl.split(',')[1];
+  const binaryStr = atob(base64);
+  const imgBytes = new Uint8Array(binaryStr.length);
+  for (let i = 0; i < binaryStr.length; i++) imgBytes[i] = binaryStr.charCodeAt(i);
+
+  // Simple PDF construction
+  const lines: string[] = [];
+  const offsets: number[] = [];
+  let pos = 0;
+
+  function write(s: string) { lines.push(s); pos += new TextEncoder().encode(s + '\n').length; }
+  function obj(n: number) { offsets[n] = pos; write(`${n} 0 obj`); }
+
+  write('%PDF-1.4');
+  obj(1); write('<< /Type /Catalog /Pages 2 0 R >>'); write('endobj');
+  obj(2); write(`<< /Type /Pages /Kids [3 0 R] /Count 1 >>`); write('endobj');
+  obj(3); write(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageW} ${pageH}] /Contents 4 0 R /Resources << /XObject << /Img 5 0 R >> >> >>`); write('endobj');
+
+  const stream = `q ${imgW} 0 0 ${imgH} ${imgX} ${imgY} cm /Img Do Q`;
+  obj(4); write(`<< /Length ${stream.length} >>`); write('stream'); write(stream); write('endstream'); write('endobj');
+
+  // Image XObject
+  obj(5);
+  write(`<< /Type /XObject /Subtype /Image /Width ${width} /Height ${height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${imgBytes.length} >>`);
+
+  // We need to re-encode as JPEG for DCTDecode
+  // Actually, simpler approach: use canvas.toBlob for JPEG
+  const jpegBlob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.92));
+  if (!jpegBlob) return;
+  const jpegBytes = new Uint8Array(await jpegBlob.arrayBuffer());
+
+  // Rebuild obj 5 with JPEG data
+  lines.length = 0;
+  offsets.length = 0;
+  pos = 0;
+
+  write('%PDF-1.4');
+  write('%\xE2\xE3\xCF\xD3');
+  obj(1); write('<< /Type /Catalog /Pages 2 0 R >>'); write('endobj');
+  obj(2); write('<< /Type /Pages /Kids [3 0 R] /Count 1 >>'); write('endobj');
+  obj(3); write(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageW} ${pageH}] /Contents 4 0 R /Resources << /XObject << /Img 5 0 R >> >> >>`); write('endobj');
+  obj(4); write(`<< /Length ${stream.length} >>`); write('stream'); write(stream); write('endstream'); write('endobj');
+
+  // For the image stream, we need binary handling — use Blob composition instead
+  const pdfParts: (string | Uint8Array)[] = [];
+  const offsets2: number[] = [];
+  let pos2 = 0;
+  function write2(s: string) { const bytes = new TextEncoder().encode(s + '\n'); pdfParts.push(bytes); pos2 += bytes.length; }
+  function obj2(n: number) { offsets2[n] = pos2; write2(`${n} 0 obj`); }
+
+  write2('%PDF-1.4');
+  write2('%\xE2\xE3\xCF\xD3');
+  obj2(1); write2('<< /Type /Catalog /Pages 2 0 R >>'); write2('endobj');
+  obj2(2); write2('<< /Type /Pages /Kids [3 0 R] /Count 1 >>'); write2('endobj');
+  obj2(3); write2(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageW} ${pageH}] /Contents 4 0 R /Resources << /XObject << /Img 5 0 R >> >> >>`); write2('endobj');
+  obj2(4); write2(`<< /Length ${stream.length} >>`); write2('stream'); write2(stream); write2('endstream'); write2('endobj');
+
+  offsets2[5] = pos2;
+  const imgHeader = new TextEncoder().encode(`5 0 obj\n<< /Type /XObject /Subtype /Image /Width ${width} /Height ${height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpegBytes.length} >>\nstream\n`);
+  pdfParts.push(imgHeader); pos2 += imgHeader.length;
+  pdfParts.push(jpegBytes); pos2 += jpegBytes.length;
+  const imgFooter = new TextEncoder().encode('\nendstream\nendobj\n');
+  pdfParts.push(imgFooter); pos2 += imgFooter.length;
+
+  const xrefPos = pos2;
+  write2('xref');
+  write2(`0 6`);
+  write2('0000000000 65535 f ');
+  for (let i = 1; i <= 5; i++) write2(`${String(offsets2[i]).padStart(10, '0')} 00000 n `);
+  write2('trailer');
+  write2('<< /Size 6 /Root 1 0 R >>');
+  write2('startxref');
+  write2(String(xrefPos));
+  write2('%%EOF');
+
+  const pdfBlob = new Blob(pdfParts as BlobPart[], { type: 'application/pdf' });
+  downloadBlob(pdfBlob, fileName);
+}
+
+/* ── Interactive HTML Export ────────────────────────────── */
+
+export function exportDocumentAsHtml(document: DiagramDocument, camera: CameraState, viewport: ViewportSize, tagFilter: TagFilter, theme: 'dark' | 'light' = 'dark'): void {
+  const svgContent = buildSvgString(document, camera, viewport, tagFilter, theme);
+  const docJson = JSON.stringify(document);
+  const html = buildInteractiveHtml(svgContent, docJson, document.name, theme);
+  const blob = new Blob([html], { type: 'text/html' });
+  downloadBlob(blob, `${document.name.toLowerCase().replace(/\s+/g, '-')}.html`);
+}
+
+function buildInteractiveHtml(svgContent: string, docJson: string, title: string, theme: string): string {
+  return `<!DOCTYPE html>
+<html lang="en" data-theme="${theme}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${title} — AzLoFlows Diagram</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; font-family: Inter, -apple-system, sans-serif; }
+  body { background: ${theme === 'dark' ? '#030413' : '#f0f2f8'}; color: ${theme === 'dark' ? '#e6eeff' : '#1a1a2e'}; }
+  .container { width: 100%; height: 100%; display: flex; flex-direction: column; }
+  .toolbar { padding: 8px 16px; display: flex; align-items: center; gap: 12px; background: ${theme === 'dark' ? 'rgba(6,10,28,0.85)' : 'rgba(255,255,255,0.9)'}; border-bottom: 1px solid ${theme === 'dark' ? 'rgba(180,208,255,0.14)' : 'rgba(0,0,0,0.08)'}; backdrop-filter: blur(20px); }
+  .toolbar h1 { font-size: 14px; font-weight: 600; flex: 1; }
+  .toolbar .badge { font-size: 10px; padding: 2px 8px; border-radius: 8px; background: ${theme === 'dark' ? 'rgba(0,229,255,0.12)' : 'rgba(106,27,154,0.1)'}; color: ${theme === 'dark' ? '#00e5ff' : '#6a1b9a'}; }
+  .toolbar button { padding: 4px 12px; border-radius: 8px; border: 1px solid ${theme === 'dark' ? 'rgba(180,208,255,0.2)' : 'rgba(0,0,0,0.12)'}; background: transparent; color: inherit; cursor: pointer; font-size: 12px; }
+  .toolbar button:hover { background: ${theme === 'dark' ? 'rgba(0,229,255,0.1)' : 'rgba(0,0,0,0.05)'}; }
+  .canvas-wrap { flex: 1; overflow: hidden; cursor: grab; position: relative; }
+  .canvas-wrap.grabbing { cursor: grabbing; }
+  .canvas-wrap svg { transform-origin: 0 0; }
+  .zoom-info { position: absolute; bottom: 12px; right: 12px; font-size: 11px; padding: 4px 10px; border-radius: 8px; background: ${theme === 'dark' ? 'rgba(6,10,28,0.8)' : 'rgba(255,255,255,0.8)'}; border: 1px solid ${theme === 'dark' ? 'rgba(180,208,255,0.14)' : 'rgba(0,0,0,0.08)'}; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="toolbar">
+    <h1>${title}</h1>
+    <span class="badge">AzLoFlows Interactive Export</span>
+    <button onclick="resetView()">Reset View</button>
+    <button onclick="zoomIn()">Zoom In</button>
+    <button onclick="zoomOut()">Zoom Out</button>
+  </div>
+  <div class="canvas-wrap" id="canvasWrap">
+    ${svgContent}
+  </div>
+  <div class="zoom-info" id="zoomInfo">100%</div>
+</div>
+<script>
+(function() {
+  const wrap = document.getElementById('canvasWrap');
+  const svg = wrap.querySelector('svg');
+  const zoomInfo = document.getElementById('zoomInfo');
+  let zoom = 1, panX = 0, panY = 0;
+  let isDragging = false, startX = 0, startY = 0, startPanX = 0, startPanY = 0;
+
+  function updateTransform() {
+    svg.style.transform = 'translate(' + panX + 'px,' + panY + 'px) scale(' + zoom + ')';
+    zoomInfo.textContent = Math.round(zoom * 100) + '%';
+  }
+
+  wrap.addEventListener('wheel', function(e) {
+    e.preventDefault();
+    const rect = wrap.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const prevZoom = zoom;
+    zoom = Math.max(0.1, Math.min(5, zoom * (e.deltaY < 0 ? 1.1 : 0.9)));
+    panX = mx - (mx - panX) * (zoom / prevZoom);
+    panY = my - (my - panY) * (zoom / prevZoom);
+    updateTransform();
+  }, { passive: false });
+
+  wrap.addEventListener('mousedown', function(e) {
+    isDragging = true;
+    startX = e.clientX; startY = e.clientY;
+    startPanX = panX; startPanY = panY;
+    wrap.classList.add('grabbing');
+  });
+
+  window.addEventListener('mousemove', function(e) {
+    if (!isDragging) return;
+    panX = startPanX + (e.clientX - startX);
+    panY = startPanY + (e.clientY - startY);
+    updateTransform();
+  });
+
+  window.addEventListener('mouseup', function() {
+    isDragging = false;
+    wrap.classList.remove('grabbing');
+  });
+
+  window.resetView = function() { zoom = 1; panX = 0; panY = 0; updateTransform(); };
+  window.zoomIn = function() { zoom = Math.min(5, zoom * 1.2); updateTransform(); };
+  window.zoomOut = function() { zoom = Math.max(0.1, zoom / 1.2); updateTransform(); };
+
+  updateTransform();
+})();
+</script>
+</body>
+</html>`;
+}
