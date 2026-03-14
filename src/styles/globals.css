@@ -113,14 +113,14 @@ select:focus-visible {
 .toolbar-panel {
   display: flex;
   align-items: center;
-  gap: 14px;
-  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 14px;
 }
 
 .toolbar-group {
   display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+  gap: 2px;
+  align-items: center;
 }
 
 .brand-block {
@@ -180,6 +180,175 @@ select:focus-visible {
 .ui-button:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+/* ── Ghost variant (icon-only toolbar buttons) ────────── */
+.ui-button--ghost {
+  border-color: transparent;
+  background: transparent;
+  padding: 6px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
+
+.ui-button--ghost:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: transparent;
+  box-shadow: none;
+  transform: none;
+}
+
+.ui-button--ghost.is-active {
+  background: rgba(0, 229, 255, 0.14);
+  border-color: rgba(0, 229, 255, 0.25);
+  color: #00e5ff;
+  box-shadow: none;
+  transform: none;
+}
+
+/* ── Toolbar dividers ─────────────────────────────────── */
+.tb-divider {
+  width: 1px;
+  height: 20px;
+  background: rgba(190, 215, 255, 0.12);
+  margin: 0 6px;
+  flex-shrink: 0;
+}
+
+.tb-divider--subtle {
+  width: 1px;
+  height: 14px;
+  background: rgba(190, 215, 255, 0.08);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+.tb-spacer {
+  flex: 1;
+}
+
+/* ── Toolbar dropdown menu ────────────────────────────── */
+.tb-menu {
+  position: relative;
+}
+
+.tb-menu__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: rgba(236, 243, 255, 0.8);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.tb-menu__trigger:hover,
+.tb-menu__trigger.is-open {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ecf3ff;
+}
+
+.tb-menu__trigger.is-open {
+  border-color: rgba(190, 215, 255, 0.15);
+}
+
+.tb-menu__label {
+  white-space: nowrap;
+}
+
+.tb-menu__dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 200px;
+  padding: 4px;
+  background: rgba(12, 16, 32, 0.96);
+  border: 1px solid rgba(190, 215, 255, 0.14);
+  border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(20px);
+  z-index: 1000;
+  animation: tbMenu-in 0.12s ease-out;
+}
+
+@keyframes tbMenu-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.tb-menu__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: rgba(236, 243, 255, 0.85);
+  font-size: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s;
+}
+
+.tb-menu__item:hover:not(:disabled) {
+  background: rgba(0, 229, 255, 0.1);
+  color: #ecf3ff;
+}
+
+.tb-menu__item:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.tb-menu__kbd {
+  font-family: inherit;
+  font-size: 10px;
+  color: rgba(236, 243, 255, 0.35);
+  margin-left: auto;
+}
+
+.tb-menu__sep {
+  height: 1px;
+  margin: 3px 6px;
+  background: rgba(190, 215, 255, 0.1);
+}
+
+/* ── Zoom percentage display ──────────────────────────── */
+.tb-zoom {
+  gap: 0;
+  align-items: center;
+}
+
+.tb-zoom__pct {
+  min-width: 42px;
+  padding: 4px 6px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: rgba(236, 243, 255, 0.7);
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.tb-zoom__pct:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ecf3ff;
 }
 
 .sidebar-stack {
@@ -1875,6 +2044,71 @@ select:focus-visible {
   background: rgba(156, 39, 176, 0.15);
   border-color: #9c27b0;
   color: #4a148c;
+}
+
+/* Toolbar overrides — light theme */
+[data-theme="light"] .ui-button--ghost:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .ui-button--ghost.is-active {
+  background: rgba(106, 27, 154, 0.12);
+  border-color: rgba(106, 27, 154, 0.25);
+  color: #6a1b9a;
+}
+
+[data-theme="light"] .tb-divider {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .tb-divider--subtle {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .tb-menu__trigger {
+  color: rgba(26, 26, 46, 0.75);
+}
+
+[data-theme="light"] .tb-menu__trigger:hover,
+[data-theme="light"] .tb-menu__trigger.is-open {
+  background: rgba(0, 0, 0, 0.05);
+  color: #1a1a2e;
+}
+
+[data-theme="light"] .tb-menu__trigger.is-open {
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .tb-menu__dropdown {
+  background: rgba(255, 255, 255, 0.97);
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light"] .tb-menu__item {
+  color: rgba(26, 26, 46, 0.8);
+}
+
+[data-theme="light"] .tb-menu__item:hover:not(:disabled) {
+  background: rgba(106, 27, 154, 0.06);
+  color: #1a1a2e;
+}
+
+[data-theme="light"] .tb-menu__kbd {
+  color: rgba(26, 26, 46, 0.3);
+}
+
+[data-theme="light"] .tb-menu__sep {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .tb-zoom__pct {
+  color: rgba(26, 26, 46, 0.6);
+}
+
+[data-theme="light"] .tb-zoom__pct:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #1a1a2e;
 }
 
 /* Context menu */
