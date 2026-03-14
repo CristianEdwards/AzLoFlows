@@ -58,6 +58,32 @@ export function companionFillForGlow(glow: string): string {
   return _glowToFill[glow] ?? darkenHex(glow, 0.28);
 }
 
+/** Tailwind-style 950 colors — deep muted tones for light-mode node fills. */
+export const palette950 = {
+  cyan:      '#083344',   // cyan-950
+  pink:      '#500724',   // pink-950
+  green:     '#052e16',   // green-950
+  darkGreen: '#022c22',   // emerald-950
+  purple:    '#3b0764',   // purple-950
+  blue:      '#172554',   // blue-950
+  orange:    '#431407',   // orange-950
+  gold:      '#451a03',   // amber-950
+  red:       '#450a0a',   // red-950
+  teal:      '#042f2e',   // teal-950
+  amber:     '#451a03',   // amber-950
+  indigo:    '#1e1b4b',   // indigo-950
+  coral:     '#4c0519',   // rose-950
+  lime:      '#1a2e05',   // lime-950
+} as const;
+
+/** Map a bright glow color → its 950 deep tone for light-mode fills. */
+const _glowTo950: Record<string, string> = {};
+for (const k of _keys) _glowTo950[palette[k]] = palette950[k];
+
+export function deep950ForGlow(glow: string): string {
+  return _glowTo950[glow] ?? darkenHex(glow, 0.15);
+}
+
 export const uiTokens = {
   appBackground: '#020617',       // Slate 950
   panelBackground: 'rgba(15, 23, 42, 0.8)',  // Slate 900
