@@ -1,6 +1,7 @@
 import GlassPanel from '@/components/ui/GlassPanel';
 import { nodeIconList } from '@/lib/icons/nodeIcons';
 import { colorSwatches, textColorSwatches } from '@/features/palette/paletteData';
+import { companionFillForGlow } from '@/lib/rendering/tokens';
 import { getDocScenarios, getDocFlowSources, getDocFlowTypes } from '@/types/document';
 import type { AreaEntity, PickerDef } from '@/types/document';
 import { getConnectorStyleOptions, getSelectedEntity, useEditorStore } from '@/state/useEditorStore';
@@ -213,7 +214,7 @@ export default function InspectorPanel() {
               <span>Glow</span>
               <div className="swatch-row">
                 {colorSwatches.map((color) => (
-                  <button key={color.id} className={`swatch ${color.className}${selectedNode.glowColor === color.value ? ' is-active' : ''}`} onClick={() => updateNode(selectedNode.id, { glowColor: color.value })} />
+                  <button key={color.id} className={`swatch ${color.className}${selectedNode.glowColor === color.value ? ' is-active' : ''}`} onClick={() => updateNode(selectedNode.id, { glowColor: color.value, fill: companionFillForGlow(color.value) })} />
                 ))}
               </div>
             </label>

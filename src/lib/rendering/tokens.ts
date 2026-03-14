@@ -49,6 +49,15 @@ export const paletteOrder = [
   palette.lime,
 ];
 
+/** Map a bright glow color → its dark companion fill. */
+const _glowToFill: Record<string, string> = {};
+const _keys = Object.keys(palette) as (keyof typeof palette)[];
+for (const k of _keys) _glowToFill[palette[k]] = companionPalette[k];
+
+export function companionFillForGlow(glow: string): string {
+  return _glowToFill[glow] ?? darkenHex(glow, 0.28);
+}
+
 export const uiTokens = {
   appBackground: '#020617',       // Slate 950
   panelBackground: 'rgba(15, 23, 42, 0.8)',  // Slate 900
