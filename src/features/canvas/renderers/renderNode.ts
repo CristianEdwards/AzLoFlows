@@ -2,7 +2,7 @@ import { NODE_DEPTH, DETAIL_ZOOM_THRESHOLD, NODE_ICON_SCALE, DEFAULT_FONT_SIZE }
 import { isoQuad, worldToScreen, type ViewportSize } from '@/lib/geometry/iso';
 import { nodeIconCatalog } from '@/lib/icons/nodeIcons';
 import { drawPolygon, drawTransformedText } from '@/lib/rendering/canvasPrimitives';
-import { hexToRgba } from '@/lib/rendering/tokens';
+import { hexToRgba, lightenHex, darkenHex } from '@/lib/rendering/tokens';
 import type { CameraState, NodeEntity } from '@/types/document';
 
 export function renderNode(
@@ -47,64 +47,89 @@ export function renderNode(
     ? { x: topFaceBasisY.x, y: topFaceBasisY.y }
     : { x: -topFaceBasisX.x, y: -topFaceBasisX.y };
 
-  // In light mode, paint tinted white bases on all 3D faces then use
-  // the bright glowColor (not the dark companion fill) for face tints
-  // so nodes look vibrant instead of muddy.
+  // In light mode, use solid gradient fills derived from the node's glowColor
+  // so each face is vibrant and clearly colored instead of washed-out translucent.
   const faceFill = light ? node.glowColor : node.fill;
+
+  // Light-mode palette: derive a range of tints/shades from the glow color
+  const lightBase    = light ? lightenHex(node.glowColor, 0.72) : '';  // pastel light
+  const lightMid     = light ? lightenHex(node.glowColor, 0.52) : '';  // medium tint
+  const lightAccent  = light ? lightenHex(node.glowColor, 0.35) : '';  // deeper tint
+  const lightShadow  = light ? darkenHex(node.glowColor, 0.85) : '';   // subtle dark
 
   if (light) {
     // Drop-shadow behind the entire node for depth
     drawPolygon(ctx, [leftBottom, rightBottom, frontRightBottom, frontLeftBottom]);
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.18)';
-    ctx.shadowBlur = 14;
-    ctx.shadowOffsetY = 4;
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.22)';
+    ctx.shadowBlur = 18;
+    ctx.shadowOffsetY = 5;
     ctx.fillStyle = 'rgba(0,0,0,0)';
     ctx.fill();
     ctx.shadowColor = 'transparent';
     ctx.shadowBlur = 0;
     ctx.shadowOffsetY = 0;
-
-    for (const face of [
-      [leftTop, leftBottom, frontLeftBottom, leftTopDepth],
-      [leftBottom, rightBottom, frontRightBottom, frontLeftBottom],
-      [rightTop, rightBottom, frontRightBottom, rightTopDepth],
-      points,
-    ]) {
-      drawPolygon(ctx, face);
-      ctx.fillStyle = 'rgba(255,255,255,0.92)';
-      ctx.fill();
-    }
   }
 
+  // ── Left side face ──
   drawPolygon(ctx, [leftTop, leftBottom, frontLeftBottom, leftTopDepth]);
-  ctx.fillStyle = hexToRgba(faceFill, light ? 0.22 : 0.22);
+  if (light) {
+    const gLeft = ctx.createLinearGradient(leftTop.x, leftTop.y, frontLeftBottom.x, frontLeftBottom.y);
+    gLeft.addColorStop(0, lightMid);
+    gLeft.addColorStop(1, lightAccent);
+    ctx.fillStyle = gLeft;
+  } else {
+    ctx.fillStyle = hexToRgba(faceFill, 0.22);
+  }
   ctx.fill();
-  ctx.strokeStyle = hexToRgba(node.glowColor, (light ? 0.22 : 0.14) * pulse);
+  ctx.strokeStyle = hexToRgba(node.glowColor, (light ? 0.30 : 0.14) * pulse);
   ctx.lineWidth = 0.8 * bScale;
   ctx.stroke();
 
+  // ── Front face ──
   drawPolygon(ctx, [leftBottom, rightBottom, frontRightBottom, frontLeftBottom]);
-  ctx.fillStyle = hexToRgba(faceFill, light ? 0.30 : 0.42);
+  if (light) {
+    const gFront = ctx.createLinearGradient(leftBottom.x, leftBottom.y, frontRightBottom.x, frontRightBottom.y);
+    gFront.addColorStop(0, lightAccent);
+    gFront.addColorStop(1, lightenHex(node.glowColor, 0.45));
+    ctx.fillStyle = gFront;
+  } else {
+    ctx.fillStyle = hexToRgba(faceFill, 0.42);
+  }
   ctx.fill();
-  ctx.strokeStyle = hexToRgba(node.glowColor, (light ? 0.22 : 0.14) * pulse);
+  ctx.strokeStyle = hexToRgba(node.glowColor, (light ? 0.30 : 0.14) * pulse);
   ctx.lineWidth = 0.8 * bScale;
   ctx.stroke();
 
+  // ── Right side face ──
   drawPolygon(ctx, [rightTop, rightBottom, frontRightBottom, rightTopDepth]);
-  ctx.fillStyle = hexToRgba(faceFill, light ? 0.25 : 0.28);
+  if (light) {
+    const gRight = ctx.createLinearGradient(rightTop.x, rightTop.y, frontRightBottom.x, frontRightBottom.y);
+    gRight.addColorStop(0, lightMid);
+    gRight.addColorStop(1, lightenHex(node.glowColor, 0.42));
+    ctx.fillStyle = gRight;
+  } else {
+    ctx.fillStyle = hexToRgba(faceFill, 0.28);
+  }
   ctx.fill();
-  ctx.strokeStyle = hexToRgba(node.glowColor, (light ? 0.18 : 0.1) * pulse);
+  ctx.strokeStyle = hexToRgba(node.glowColor, (light ? 0.25 : 0.1) * pulse);
   ctx.lineWidth = 0.8 * bScale;
   ctx.stroke();
 
+  // ── Top face (main visible face) ──
   drawPolygon(ctx, points);
   const gradient = ctx.createLinearGradient(points[0].x, points[0].y, points[2].x, points[2].y);
-  gradient.addColorStop(0, hexToRgba(faceFill, light ? 0.35 : 0.84));
-  gradient.addColorStop(0.5, hexToRgba(faceFill, light ? 0.22 : 0.46));
-  gradient.addColorStop(1, hexToRgba(faceFill, light ? 0.12 : 0.24));
+  if (light) {
+    gradient.addColorStop(0, lightBase);
+    gradient.addColorStop(0.5, lightMid);
+    gradient.addColorStop(1, lightAccent);
+  } else {
+    gradient.addColorStop(0, hexToRgba(faceFill, 0.84));
+    gradient.addColorStop(0.5, hexToRgba(faceFill, 0.46));
+    gradient.addColorStop(1, hexToRgba(faceFill, 0.24));
+  }
   ctx.fillStyle = gradient;
-  ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.25 : 0.4) * pulse);
-  ctx.shadowBlur = light ? (selected ? 16 : 10) : (selected ? 26 : 18);
+  ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.30 : 0.4) * pulse);
+  ctx.shadowBlur = light ? (selected ? 18 : 12) : (selected ? 26 : 18);
   ctx.fill();
   ctx.shadowBlur = 0;
 
@@ -146,7 +171,7 @@ export function renderNode(
   ctx.lineTo(frontRightBottom.x, frontRightBottom.y);
   ctx.moveTo(rightBottom.x, rightBottom.y);
   ctx.lineTo(frontRightBottom.x, frontRightBottom.y);
-  ctx.strokeStyle = light ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.1)';
+  ctx.strokeStyle = light ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.1)';
   ctx.lineWidth = 1 * bScale;
   ctx.stroke();
 
@@ -219,8 +244,8 @@ export function renderNode(
     const scale = iconSize / 32;
     ctx.scale(scale, scale);
     ctx.translate(-16, -16);
-    ctx.globalAlpha = light ? 0.85 : 0.7;
-    ctx.fillStyle = light ? hexToRgba(node.glowColor, 0.7) : hexToRgba(node.glowColor, 1.0);
+    ctx.globalAlpha = light ? 0.92 : 0.7;
+    ctx.fillStyle = light ? darkenHex(node.glowColor, 0.45) : hexToRgba(node.glowColor, 1.0);
     for (const d of iconDef.paths) {
       const p2d = new Path2D(d);
       ctx.fill(p2d);
@@ -258,7 +283,7 @@ export function renderNode(
     titlePoint,
     textDirection,
     textStackDirection,
-    light ? '#ffffff' : '#ffffff',
+    light ? darkenHex(node.glowColor, 0.35) : '#ffffff',
     `${light ? 700 : 600} ${clampedScaledSize}px Inter, sans-serif`,
   );
 
@@ -269,7 +294,7 @@ export function renderNode(
       subtitlePoint,
       textDirection,
       textStackDirection,
-      light ? 'rgba(255,255,255,0.9)' : hexToRgba(node.glowColor, 0.95),
+      light ? hexToRgba(darkenHex(node.glowColor, 0.4), 0.85) : hexToRgba(node.glowColor, 0.95),
       `${light ? 600 : 500} ${clampedSubtitleSize}px Inter, sans-serif`,
     );
   }

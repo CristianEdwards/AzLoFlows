@@ -86,3 +86,13 @@ export function darkenHex(hex: string, factor: number): string {
   const b = Math.round((value & 255) * factor);
   return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)}`;
 }
+
+/** Lerp each RGB channel toward 255 (white) by `factor` (0 = unchanged, 1 = white). */
+export function lightenHex(hex: string, factor: number): string {
+  const normalized = hex.replace('#', '');
+  const value = Number.parseInt(normalized, 16);
+  const r = Math.round(((value >> 16) & 255) + (255 - ((value >> 16) & 255)) * factor);
+  const g = Math.round(((value >> 8) & 255) + (255 - ((value >> 8) & 255)) * factor);
+  const b = Math.round((value & 255) + (255 - (value & 255)) * factor);
+  return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)}`;
+}
