@@ -28,6 +28,12 @@ export function renderNode(
   const pulse = 0.7 + Math.sin(time * 0.0015 + node.zIndex) * 0.18;
   const topEdgeLength = Math.hypot(rightTop.x - leftTop.x, rightTop.y - leftTop.y) || 1;
   const leftEdgeLength = Math.hypot(leftBottom.x - leftTop.x, leftBottom.y - leftTop.y) || 1;
+
+  // Scale border widths relative to the node's screen-space size so that
+  // small nodes don't appear drowned in thick borders.
+  const avgEdge = (topEdgeLength + leftEdgeLength) * 0.5;
+  const bScale = Math.min(1, Math.max(0.35, avgEdge / 120));
+
   const topFaceBasisX = {
     x: (rightTop.x - leftTop.x) / topEdgeLength,
     y: (rightTop.y - leftTop.y) / topEdgeLength,
@@ -59,21 +65,21 @@ export function renderNode(
   ctx.fillStyle = hexToRgba(node.fill, light ? 0.92 : 0.22);
   ctx.fill();
   ctx.strokeStyle = hexToRgba(node.glowColor, (light ? 0.22 : 0.14) * pulse);
-  ctx.lineWidth = 0.8;
+  ctx.lineWidth = 0.8 * bScale;
   ctx.stroke();
 
   drawPolygon(ctx, [leftBottom, rightBottom, frontRightBottom, frontLeftBottom]);
   ctx.fillStyle = hexToRgba(node.fill, light ? 0.98 : 0.42);
   ctx.fill();
   ctx.strokeStyle = hexToRgba(node.glowColor, (light ? 0.22 : 0.14) * pulse);
-  ctx.lineWidth = 0.8;
+  ctx.lineWidth = 0.8 * bScale;
   ctx.stroke();
 
   drawPolygon(ctx, [rightTop, rightBottom, frontRightBottom, rightTopDepth]);
   ctx.fillStyle = hexToRgba(node.fill, light ? 0.95 : 0.28);
   ctx.fill();
   ctx.strokeStyle = hexToRgba(node.glowColor, (light ? 0.18 : 0.1) * pulse);
-  ctx.lineWidth = 0.8;
+  ctx.lineWidth = 0.8 * bScale;
   ctx.stroke();
 
   drawPolygon(ctx, points);
@@ -89,27 +95,27 @@ export function renderNode(
 
   drawPolygon(ctx, points);
   ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.98 : (light ? 0.88 : 0.78));
-  ctx.lineWidth = selected ? 3.2 : 2.4;
+  ctx.lineWidth = (selected ? 3.2 : 2.4) * bScale;
   ctx.stroke();
 
   drawPolygon(ctx, points);
   ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.28 : (light ? 0.12 : 0.18));
-  ctx.lineWidth = selected ? 7 : 5;
+  ctx.lineWidth = (selected ? 7 : 5) * bScale;
   ctx.stroke();
 
   drawPolygon(ctx, [leftTop, leftBottom, frontLeftBottom, leftTopDepth]);
   ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.48 : 0.34);
-  ctx.lineWidth = 1.6;
+  ctx.lineWidth = 1.6 * bScale;
   ctx.stroke();
 
   drawPolygon(ctx, [leftBottom, rightBottom, frontRightBottom, frontLeftBottom]);
   ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.48 : 0.34);
-  ctx.lineWidth = 1.6;
+  ctx.lineWidth = 1.6 * bScale;
   ctx.stroke();
 
   drawPolygon(ctx, [rightTop, rightBottom, frontRightBottom, rightTopDepth]);
   ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.42 : 0.3);
-  ctx.lineWidth = 1.4;
+  ctx.lineWidth = 1.4 * bScale;
   ctx.stroke();
 
   ctx.beginPath();
@@ -126,30 +132,30 @@ export function renderNode(
   ctx.moveTo(rightBottom.x, rightBottom.y);
   ctx.lineTo(frontRightBottom.x, frontRightBottom.y);
   ctx.strokeStyle = light ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.1)';
-  ctx.lineWidth = 1;
+  ctx.lineWidth = 1 * bScale;
   ctx.stroke();
 
   ctx.beginPath();
   ctx.moveTo(leftTop.x, leftTop.y);
   ctx.lineTo(rightTop.x, rightTop.y);
   ctx.strokeStyle = hexToRgba(node.glowColor, 0.72);
-  ctx.lineWidth = 2.2;
+  ctx.lineWidth = 2.2 * bScale;
   ctx.stroke();
 
   ctx.beginPath();
   ctx.moveTo(leftTop.x, leftTop.y);
   ctx.lineTo(rightTop.x, rightTop.y);
   ctx.strokeStyle = light ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.12)';
-  ctx.lineWidth = 1;
+  ctx.lineWidth = 1 * bScale;
   ctx.stroke();
 
   ctx.beginPath();
   ctx.moveTo(leftTop.x, leftTop.y);
   ctx.lineTo(leftBottom.x, leftBottom.y);
   ctx.strokeStyle = hexToRgba(node.glowColor, 0.96);
-  ctx.lineWidth = 2.8;
+  ctx.lineWidth = 2.8 * bScale;
   ctx.shadowColor = hexToRgba(node.glowColor, light ? 0.15 : 0.45);
-  ctx.shadowBlur = light ? 3 : 10;
+  ctx.shadowBlur = (light ? 3 : 10) * bScale;
   ctx.stroke();
   ctx.shadowBlur = 0;
 
@@ -157,21 +163,21 @@ export function renderNode(
   ctx.moveTo(leftTop.x, leftTop.y);
   ctx.lineTo(leftBottom.x, leftBottom.y);
   ctx.strokeStyle = light ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.2)';
-  ctx.lineWidth = 1;
+  ctx.lineWidth = 1 * bScale;
   ctx.stroke();
 
   ctx.beginPath();
   ctx.moveTo(leftBottom.x, leftBottom.y);
   ctx.lineTo(frontLeftBottom.x, frontLeftBottom.y);
   ctx.strokeStyle = hexToRgba(node.glowColor, 0.72);
-  ctx.lineWidth = 2.2;
+  ctx.lineWidth = 2.2 * bScale;
   ctx.stroke();
 
   ctx.beginPath();
   ctx.moveTo(leftBottom.x, leftBottom.y);
   ctx.lineTo(frontLeftBottom.x, frontLeftBottom.y);
   ctx.strokeStyle = light ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.12)';
-  ctx.lineWidth = 1;
+  ctx.lineWidth = 1 * bScale;
   ctx.stroke();
 
   const titlePoint = worldToScreen({ x: node.x + node.width * 0.5, y: node.y + node.height * 0.46 }, camera, viewport);
