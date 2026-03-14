@@ -81,6 +81,7 @@ export interface AreaEntity {
   labelAnchor?: LabelAnchorCorner;
   zIndex: number;
   tags?: string[];
+  notes?: string;
 }
 
 export interface NodeEntity {
@@ -104,6 +105,7 @@ export interface NodeEntity {
   fontSize?: number;
   zIndex: number;
   tags?: string[];
+  notes?: string;
 }
 
 export interface ConnectorEntity {
@@ -120,6 +122,7 @@ export interface ConnectorEntity {
   tunnel?: boolean;
   zIndex: number;
   tags?: string[];
+  notes?: string;
 }
 
 export interface TextEntity {
@@ -133,6 +136,7 @@ export interface TextEntity {
   rotated?: boolean;
   zIndex: number;
   tags?: string[];
+  notes?: string;
 }
 
 export interface PipeEntity {
@@ -145,6 +149,7 @@ export interface PipeEntity {
   color: string;
   zIndex: number;
   tags?: string[];
+  notes?: string;
 }
 
 export const DOCUMENT_VERSION = 1;

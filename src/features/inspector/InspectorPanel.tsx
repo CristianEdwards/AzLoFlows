@@ -168,6 +168,10 @@ export default function InspectorPanel() {
                 })}
               </div>
             </label>
+            <label className="field">
+              <span>Notes</span>
+              <textarea rows={3} value={selectedArea.notes ?? ''} onChange={(e) => updateArea(selectedArea.id, { notes: e.target.value })} placeholder="Add notes…" />
+            </label>
             <div className="toolbar-group toolbar-group--inspector">
               <button className="ui-button" onClick={bringToFront}>Bring to Front</button>
               <button className="ui-button" onClick={sendToBack}>Send to Back</button>
@@ -253,6 +257,10 @@ export default function InspectorPanel() {
                 })}
               </div>
             </label>
+            <label className="field">
+              <span>Notes</span>
+              <textarea rows={3} value={selectedNode.notes ?? ''} onChange={(e) => updateNode(selectedNode.id, { notes: e.target.value })} placeholder="Add notes…" />
+            </label>
             <div className="toolbar-group toolbar-group--inspector">
               <button className="ui-button" onClick={bringToFront}>Bring to Front</button>
               <button className="ui-button" onClick={sendToBack}>Send to Back</button>
@@ -304,6 +312,10 @@ export default function InspectorPanel() {
                 })}
               </div>
             </label>
+            <label className="field">
+              <span>Notes</span>
+              <textarea rows={3} value={selectedConnector.notes ?? ''} onChange={(e) => updateConnector(selectedConnector.id, { notes: e.target.value })} placeholder="Add notes…" />
+            </label>
             <div className="toolbar-group toolbar-group--inspector">
               <button className="ui-button" onClick={bringToFront}>Bring to Front</button>
               <button className="ui-button" onClick={sendToBack}>Send to Back</button>
@@ -346,6 +358,10 @@ export default function InspectorPanel() {
                   );
                 })}
               </div>
+            </label>
+            <label className="field">
+              <span>Notes</span>
+              <textarea rows={3} value={selectedText.notes ?? ''} onChange={(e) => updateText(selectedText.id, { notes: e.target.value })} placeholder="Add notes…" />
             </label>
             <div className="toolbar-group toolbar-group--inspector">
               <button className="ui-button" onClick={bringToFront}>Bring to Front</button>
@@ -397,6 +413,10 @@ export default function InspectorPanel() {
                   );
                 })}
               </div>
+            </label>
+            <label className="field">
+              <span>Notes</span>
+              <textarea rows={3} value={selectedPipe.notes ?? ''} onChange={(e) => updatePipe(selectedPipe.id, { notes: e.target.value })} placeholder="Add notes…" />
             </label>
             <div className="toolbar-group toolbar-group--inspector">
               <button className="ui-button" onClick={bringToFront}>Bring to Front</button>

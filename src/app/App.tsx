@@ -5,8 +5,11 @@ import TopToolbar from '@/app/layout/TopToolbar';
 import MeshBackground from '@/components/ui/MeshBackground';
 import ToastHost from '@/components/ui/ToastHost';
 import CanvasViewport from '@/features/canvas/CanvasViewport';
+import EntityTooltip from '@/features/canvas/EntityTooltip';
 import InspectorPanel from '@/features/inspector/InspectorPanel';
 import LayersPanel from '@/features/layers/LayersPanel';
+import RecentDocumentsPanel from '@/features/canvas/RecentDocumentsPanel';
+import VersionHistoryPanel from '@/features/canvas/VersionHistoryPanel';
 import ShapePalette from '@/features/palette/ShapePalette';
 import ScenarioToolbar from '@/features/scenarios/ScenarioToolbar';
 import type { ViewportSize } from '@/lib/geometry/iso';
@@ -22,6 +25,7 @@ export default function App() {
   const theme = useEditorStore((state) => state.theme);
   const [cursorWorld, setCursorWorld] = useState<{ x: number; y: number } | null>(null);
   const [viewport, setViewport] = useState<ViewportSize>({ width: 1280, height: 720 });
+  const [hoveredEntity, setHoveredEntity] = useState<{ id: string; screenX: number; screenY: number } | null>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
@@ -40,11 +44,14 @@ export default function App() {
       <AppShell
         toolbar={<TopToolbar canvasRef={canvasRef} viewport={viewport} />}
         sidebar={!presentMode ? <ShapePalette /> : <div />}
-        inspector={!presentMode ? <div className="sidebar-stack"><InspectorPanel /><LayersPanel /></div> : <div />}
+        inspector={!presentMode ? <div className="sidebar-stack"><InspectorPanel /><RecentDocumentsPanel /><VersionHistoryPanel /><LayersPanel /></div> : <div />}
         statusbar={!presentMode ? <StatusBar cursorWorld={cursorWorld} /> : <div className="present-pill">Presentation mode</div>}
       >
-        <CanvasViewport canvasRef={canvasRef} onCursorWorldChange={setCursorWorld} onViewportChange={setViewport} />
+        <CanvasViewport canvasRef={canvasRef} onCursorWorldChange={setCursorWorld} onViewportChange={setViewport} onEntityHover={setHoveredEntity} />
         <ScenarioToolbar />
+        {hoveredEntity && !presentMode && (
+          <EntityTooltip entityId={hoveredEntity.id} screenX={hoveredEntity.screenX} screenY={hoveredEntity.screenY} />
+        )}
       </AppShell>
       <ToastHost />
     </>
