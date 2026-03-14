@@ -18,7 +18,11 @@ export default function Minimap() {
     const xs = [...document.areas.flatMap((a) => [a.x, a.x + a.width]), ...document.nodes.flatMap((n) => [n.x, n.x + n.width])];
     const ys = [...document.areas.flatMap((a) => [a.y, a.y + a.height]), ...document.nodes.flatMap((n) => [n.y, n.y + n.height])];
     if (xs.length === 0 || ys.length === 0) return null;
-    return { minX: Math.min(...xs), maxX: Math.max(...xs), minY: Math.min(...ys), maxY: Math.max(...ys) };
+    const minX = xs.reduce((a, b) => Math.min(a, b), Infinity);
+    const maxX = xs.reduce((a, b) => Math.max(a, b), -Infinity);
+    const minY = ys.reduce((a, b) => Math.min(a, b), Infinity);
+    const maxY = ys.reduce((a, b) => Math.max(a, b), -Infinity);
+    return { minX, maxX, minY, maxY };
   }, [document]);
 
   const toWorld = useCallback(

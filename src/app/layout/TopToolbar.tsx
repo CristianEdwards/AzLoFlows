@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { MIN_ZOOM, MAX_ZOOM } from '@/lib/config';
 import Button from '@/components/ui/Button';
 import GlassPanel from '@/components/ui/GlassPanel';
 import ExportPreviewDialog from '@/features/export/ExportPreviewDialog';
@@ -82,11 +83,11 @@ export default function TopToolbar({ canvasRef, viewport }: TopToolbarProps) {
         <Button title="Connect two selected nodes" onClick={connectSelectedNodes} disabled={selection.type !== 'node' || selection.ids.length !== 2}>Connect</Button>
       </div>
       <div className="toolbar-group">
-        <Button title="Zoom out" onClick={() => setCamera({ zoom: Math.max(0.35, camera.zoom - 0.1) })}>-</Button>
-        <Button title="Zoom in" onClick={() => setCamera({ zoom: Math.min(2.5, camera.zoom + 0.1) })}>+</Button>
+        <Button title="Zoom out" aria-label="Zoom out" onClick={() => setCamera({ zoom: Math.max(MIN_ZOOM, camera.zoom - 0.1) })}>-</Button>
+        <Button title="Zoom in" aria-label="Zoom in" onClick={() => setCamera({ zoom: Math.min(MAX_ZOOM, camera.zoom + 0.1) })}>+</Button>
         <Button title="Toggle grid snapping" active={snapEnabled} onClick={toggleSnap}>Snap</Button>
         <Button title="Toggle presentation mode" active={presentMode} onClick={togglePresentMode}>Present</Button>
-        <Button title="Toggle light/dark theme" onClick={toggleTheme}>{theme === 'dark' ? '☀️' : '🌙'}</Button>
+        <Button title="Toggle light/dark theme" aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'} onClick={toggleTheme}>{theme === 'dark' ? '☀️' : '🌙'}</Button>
       </div>
       <input ref={inputRef} hidden type="file" accept="application/json" onChange={onImportFile} />
       {pngPreview && canvasRef.current && (

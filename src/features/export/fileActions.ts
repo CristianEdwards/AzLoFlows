@@ -1,6 +1,8 @@
-import { ISO_ANGLE_DEG, ISO_Y_SCALE, ISO_SCALE, CONNECTOR_STUB, NODE_DEPTH, PIPE_DEPTH, GRID_SIZE } from '@/lib/config';
+﻿import { ISO_ANGLE_DEG, ISO_Y_SCALE, ISO_SCALE, CONNECTOR_STUB, NODE_DEPTH, PIPE_DEPTH, GRID_SIZE } from '@/lib/config';
 import { getScreenAnchorPoint, parseAnchorId } from '@/lib/geometry/anchors';
 import { buildIsoPath, isoQuad, worldToScreen, type ViewportSize } from '@/lib/geometry/iso';
+import { seededRandom, hashString } from '@/lib/hash';
+import { isVisible } from '@/lib/visibility';
 import { nodeIconCatalog } from '@/lib/icons/nodeIcons';
 import { hexToRgba, darkenHex } from '@/lib/rendering/tokens';
 import type { CameraState, ConnectorEntity, DiagramDocument, FlowSource, FlowType, NodeEntity, Point, TagFilter } from '@/types/document';
@@ -27,7 +29,9 @@ export async function importDocumentFromFile(file: File): Promise<DiagramDocumen
   if (!parsed || typeof parsed !== 'object') {
     throw new Error('File does not contain a valid diagram');
   }
-  return parsed as DiagramDocument;
+  // Run through normalizeDocument to validate and sanitize the imported data
+  const { normalizeDocument } = await import('@/lib/serialization/storage');
+  return normalizeDocument(parsed);
 }
 
 export function exportCanvasAsPng(canvas: HTMLCanvasElement | null, fileName: string): void {
@@ -49,7 +53,7 @@ export async function exportCanvasAsPngSaveAs(canvas: HTMLCanvasElement | null, 
   await saveBlobAs(blob, fileName, [{ description: 'PNG Images', accept: { 'image/png': ['.png'] } }]);
 }
 
-/* ── SVG helper utilities ───────────────────────────────────────────── */
+/* â”€â”€ SVG helper utilities â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 function pts(points: Point[]): string {
   return points.map((p) => `${p.x},${p.y}`).join(' ');
@@ -92,23 +96,7 @@ function svgSmoothPath(points: Point[], radius: number, skipFirst: boolean, skip
   return d;
 }
 
-function seededRandom(seed: number): () => number {
-  let s = seed | 0;
-  return () => {
-    s = (s * 1664525 + 1013904223) | 0;
-    return (s >>> 0) / 4294967296;
-  };
-}
-
-function hashString(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
-  }
-  return hash;
-}
-
-/* ── Connector screen-space routing (mirrors canvas renderConnector) ─ */
+/* â”€â”€ Connector screen-space routing (mirrors canvas renderConnector) â”€ */
 
 function buildConnectorScreenPath(connector: ConnectorEntity, source: NodeEntity, target: NodeEntity, camera: CameraState, viewport: ViewportSize): Point[] {
   const start = getScreenAnchorPoint(source, connector.sourceAnchor, camera, viewport);
@@ -161,22 +149,7 @@ function buildConnectorScreenPath(connector: ConnectorEntity, source: NodeEntity
   return screenPath;
 }
 
-/* ── Main SVG export ────────────────────────────────────────────────── */
-
-function isVisibleForExport(tags: string[] | undefined, filter: TagFilter): boolean {
-  if (!tags || tags.length === 0) return true;
-  if (!filter.scenario) return false;
-
-  const entityScenarios = tags.filter((t) => !t.startsWith('flow:') && !t.startsWith('type:'));
-  const entitySources = tags.filter((t) => t.startsWith('flow:')).map((t) => t.slice(5));
-  const entityTypes = tags.filter((t) => t.startsWith('type:')).map((t) => t.slice(5));
-
-  if (entityScenarios.length > 0 && !entityScenarios.includes(filter.scenario)) return false;
-  if (entitySources.length > 0 && !entitySources.some((s) => filter.sources.has(s as any))) return false;
-  if (entityTypes.length > 0 && !entityTypes.some((t) => filter.types.has(t as any))) return false;
-
-  return true;
-}
+/* â”€â”€ Main SVG export â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 export function exportDocumentAsSvg(document: DiagramDocument, camera: CameraState, viewport: ViewportSize, tagFilter: TagFilter, theme: 'dark' | 'light' = 'dark'): void {
   const svgString = buildSvgString(document, camera, viewport, tagFilter, theme);
@@ -191,7 +164,7 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
 
   svg.push(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${viewport.width} ${viewport.height}" width="${viewport.width}" height="${viewport.height}">`);
 
-  // ── Defs: filters, gradients added inline ──
+  // â”€â”€ Defs: filters, gradients added inline â”€â”€
   svg.push('<defs>');
   if (light) {
     svg.push('<filter id="softGlow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>');
@@ -214,12 +187,12 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
     | { kind: 'text'; entity: NonNullable<typeof document.texts>[number] };
 
   const renderItems: SvgRenderItem[] = [];
-  const visibleNodes = document.nodes.filter((e) => isVisibleForExport(e.tags, tagFilter));
-  for (const e of document.areas) if (isVisibleForExport(e.tags, tagFilter)) renderItems.push({ kind: 'area', entity: e });
-  for (const e of document.connectors) if (isVisibleForExport(e.tags, tagFilter)) renderItems.push({ kind: 'connector', entity: e });
+  const visibleNodes = document.nodes.filter((e) => isVisible(e.tags, tagFilter));
+  for (const e of document.areas) if (isVisible(e.tags, tagFilter)) renderItems.push({ kind: 'area', entity: e });
+  for (const e of document.connectors) if (isVisible(e.tags, tagFilter)) renderItems.push({ kind: 'connector', entity: e });
   for (const e of visibleNodes) renderItems.push({ kind: 'node', entity: e });
-  for (const e of (document.pipes ?? [])) if (isVisibleForExport(e.tags, tagFilter)) renderItems.push({ kind: 'pipe', entity: e });
-  for (const e of (document.texts ?? [])) if (isVisibleForExport(e.tags, tagFilter)) renderItems.push({ kind: 'text', entity: e });
+  for (const e of (document.pipes ?? [])) if (isVisible(e.tags, tagFilter)) renderItems.push({ kind: 'pipe', entity: e });
+  for (const e of (document.texts ?? [])) if (isVisible(e.tags, tagFilter)) renderItems.push({ kind: 'text', entity: e });
   renderItems.sort((a, b) => a.entity.zIndex - b.entity.zIndex);
 
   for (const item of renderItems) {
@@ -339,7 +312,7 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
     const gOpen = tunnelClipId ? `<g clip-path="url(#${tunnelClipId})">` : '<g>';
     svg.push(gOpen);
 
-    // Outer glow (dark mode only — match canvas)
+    // Outer glow (dark mode only â€” match canvas)
     if (!light) {
       svg.push(`<path d="${smoothD}" fill="none" stroke="${hexToRgba(color, 0.04)}" stroke-width="14" filter="url(#softGlow)" />`);
     }
@@ -350,7 +323,7 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
     } else {
       svg.push(`<path d="${smoothD}" fill="none" stroke="${hexToRgba(color, light ? 0.72 : 0.35)}" stroke-width="${light ? 3 : 2.5}" />`);
     }
-    // Inner bright stroke — give it an id when animated so dots can follow it
+    // Inner bright stroke â€” give it an id when animated so dots can follow it
     const pathId = connector.style === 'animated' ? `cp${uid()}` : '';
     if (pathId) {
       svg.push(`<path id="${pathId}" d="${smoothD}" fill="none" stroke="${hexToRgba(color, light ? 0.98 : 0.82)}" stroke-width="${light ? 1.6 : 1.2}" />`);
@@ -368,7 +341,7 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
         const bright = 0.6 + rand() * 0.4;
         const speed = 0.7 * (0.6 + rand() * 0.7);
         const size = 2 + rand() * 2.5;
-        // Canvas: t increments by 0.00024*speed per ms → full cycle = 1/(0.00024*speed) ms
+        // Canvas: t increments by 0.00024*speed per ms â†’ full cycle = 1/(0.00024*speed) ms
         const dur = 1 / (0.00024 * speed);
         const durS = (dur / 1000).toFixed(2);
         const beginS = ((-phase * dur) / 1000).toFixed(2);
@@ -539,7 +512,7 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
       const m01 = topFaceBasisY.y * scale;
       const m10 = -topFaceBasisX.x * scale;
       const m11 = -topFaceBasisX.y * scale;
-      // Translate to center the 32×32 viewBox
+      // Translate to center the 32Ã—32 viewBox
       const tx = iconCenter.x - m00 * 16 - m10 * 16;
       const ty = iconCenter.y - m01 * 16 - m11 * 16;
       svg.push(`<g transform="matrix(${m00},${m01},${m10},${m11},${tx},${ty})" fill="${hexToRgba(node.glowColor, light ? 0.5 : 1.0)}" opacity="${light ? 1.0 : 0.7}">`);
@@ -549,12 +522,12 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
       svg.push('</g>');
     }
 
-    // Title text — honour node.fontSize, scale by zoom, and clamp to fit
+    // Title text â€” honour node.fontSize, scale by zoom, and clamp to fit
     const nodeTitleSize = node.fontSize ?? 16;
     const scaledTitleSize = Math.round(nodeTitleSize * camera.zoom);
     const textEdgeLen = node.textRotated ? topEdgeLen : leftEdgeLen;
     const nodeTopEdge = textEdgeLen * 0.85;
-    // Approximate text width: charCount × fontSize × 0.6 (Inter avg) × 0.87 (iso compression)
+    // Approximate text width: charCount Ã— fontSize Ã— 0.6 (Inter avg) Ã— 0.87 (iso compression)
     const approxTitleW = node.title.length * scaledTitleSize * 0.6 * 0.87;
     const clampedTitleSize = approxTitleW > nodeTopEdge
       ? Math.max(8, Math.floor(scaledTitleSize * (nodeTopEdge / approxTitleW)))
@@ -606,8 +579,8 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
     }
   }
 
-  // ── Picker bars — same positions as canvas UI ──
-  // CSS positions: scenario → top:8 left:8, source → top:52 left:8, type → bottom:8 right:8
+  // â”€â”€ Picker bars â€” same positions as canvas UI â”€â”€
+  // CSS positions: scenario â†’ top:8 left:8, source â†’ top:52 left:8, type â†’ bottom:8 right:8
   const pillH = 26;
   const pillR = 12;
   const pillGap = 8;
@@ -671,7 +644,7 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
     `<linearGradient id="pickerRing" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#6a1b9a"/><stop offset="50%" stop-color="#ce93d8"/><stop offset="100%" stop-color="#6a1b9a"/></linearGradient>`,
   );
 
-  // Scenario picker — top: 8, left: 8
+  // Scenario picker â€” top: 8, left: 8
   if (tagFilter.scenario) {
     const docScenarios = getDocScenarios(document);
     const docFlowSources = getDocFlowSources(document);
@@ -679,13 +652,13 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
     const bar = buildPickerBar('Scenario', docScenarios, (id) => tagFilter.scenario === id);
     svg.push(`<g transform="translate(8, 8)">${bar.svg}</g>`);
 
-    // Source picker — top: 52, left: 8
+    // Source picker â€” top: 52, left: 8
     if (tagFilter.sources.size > 0) {
       const srcBar = buildPickerBar('Traffic source', docFlowSources as { id: string; label: string }[], (id) => tagFilter.sources.has(id as FlowSource));
       svg.push(`<g transform="translate(8, 52)">${srcBar.svg}</g>`);
     }
 
-    // Type picker — bottom: 8, right: 8
+    // Type picker â€” bottom: 8, right: 8
     if (tagFilter.sources.size > 0) {
       const scenarioTypes = docFlowTypes.map((ft) => ({ id: ft.id, label: flowTypeLabel(ft.id, tagFilter.scenario, docFlowTypes) }));
       const typeBar = buildPickerBar('Traffic type', scenarioTypes as { id: string; label: string }[], (id) => tagFilter.types.has(id as FlowType));

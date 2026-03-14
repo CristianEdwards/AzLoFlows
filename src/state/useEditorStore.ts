@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+﻿import { create } from 'zustand';
 import { hitTestArea, hitTestConnector, hitTestNode, hitTestPipe, hitTestText } from '@/lib/geometry/bounds';
 import { snapToGrid } from '@/lib/geometry/grid';
 import { resizeRectFromHandle, type ResizeHandle } from '@/lib/geometry/resize';
@@ -135,7 +135,7 @@ function globalMinZIndex(document: DiagramDocument): number {
   return min === Infinity ? 0 : min;
 }
 
-function nextZIndex(document: DiagramDocument, _type?: 'area' | 'node' | 'connector' | 'text' | 'pipe'): number {
+function nextZIndex(document: DiagramDocument): number {
   return globalMaxZIndex(document) + 1;
 }
 
@@ -193,17 +193,6 @@ function clampNodeToArea(node: NodeEntity, area: AreaEntity): NodeEntity {
     y,
     parentAreaId: area.id,
     parentLayout: getParentLayout({ ...node, x, y }, area),
-  };
-}
-
-function syncNodeParents(document: DiagramDocument): DiagramDocument {
-  return {
-    ...document,
-    nodes: document.nodes.map((node) => ({
-      ...node,
-      parentAreaId: findContainingAreaId(node, document.areas),
-      parentLayout: getParentLayout(node, document.areas.find((area) => area.id === findContainingAreaId(node, document.areas))),
-    })),
   };
 }
 
@@ -309,7 +298,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
           borderColor: state.preferredColor,
           glowColor: state.preferredColor,
           locked: false,
-          zIndex: nextZIndex(document, 'area'),
+          zIndex: nextZIndex(document),
         });
       } else if (shape === 'text') {
         const newText: TextEntity = {
@@ -320,7 +309,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
           label: 'Label',
           fontSize: 24,
           color: '#e7f6ff',
-          zIndex: nextZIndex(document, 'text'),
+          zIndex: nextZIndex(document),
         };
         document.texts.push(newText);
       } else if (shape === 'pipe') {
@@ -332,7 +321,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
           width: 200,
           height: 60,
           color: state.preferredColor,
-          zIndex: nextZIndex(document, 'pipe'),
+          zIndex: nextZIndex(document),
         };
         if (!document.pipes) document.pipes = [];
         document.pipes.push(newPipe);
@@ -351,7 +340,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
           icon: templateOverrides?.icon,
           parentAreaId: undefined,
           parentLayout: undefined,
-          zIndex: nextZIndex(document, 'node'),
+          zIndex: nextZIndex(document),
         });
       }
 
@@ -492,26 +481,26 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       if (state.selection.type === 'node') {
         const nextNodes = document.nodes
           .filter((node) => state.selection.ids.includes(node.id))
-          .map((node) => ({ ...node, id: crypto.randomUUID(), x: node.x + offset.x, y: node.y + offset.y, zIndex: nextZIndex(document, 'node') }));
+          .map((node) => ({ ...node, id: crypto.randomUUID(), x: node.x + offset.x, y: node.y + offset.y, zIndex: nextZIndex(document) }));
         document.nodes.push(...nextNodes);
       }
       if (state.selection.type === 'area') {
         const nextAreas = document.areas
           .filter((area) => state.selection.ids.includes(area.id))
-          .map((area) => ({ ...area, id: crypto.randomUUID(), x: area.x + offset.x, y: area.y + offset.y, zIndex: nextZIndex(document, 'area') }));
+          .map((area) => ({ ...area, id: crypto.randomUUID(), x: area.x + offset.x, y: area.y + offset.y, zIndex: nextZIndex(document) }));
         document.areas.push(...nextAreas);
       }
       if (state.selection.type === 'text') {
         const nextTexts = (document.texts ?? [])
           .filter((text) => state.selection.ids.includes(text.id))
-          .map((text) => ({ ...text, id: crypto.randomUUID(), x: text.x + offset.x, y: text.y + offset.y, zIndex: nextZIndex(document, 'text') }));
+          .map((text) => ({ ...text, id: crypto.randomUUID(), x: text.x + offset.x, y: text.y + offset.y, zIndex: nextZIndex(document) }));
         if (!document.texts) document.texts = [];
         document.texts.push(...nextTexts);
       }
       if (state.selection.type === 'pipe') {
         const nextPipes = (document.pipes ?? [])
           .filter((pipe) => state.selection.ids.includes(pipe.id))
-          .map((pipe) => ({ ...pipe, id: crypto.randomUUID(), x: pipe.x + offset.x, y: pipe.y + offset.y, zIndex: nextZIndex(document, 'pipe') }));
+          .map((pipe) => ({ ...pipe, id: crypto.randomUUID(), x: pipe.x + offset.x, y: pipe.y + offset.y, zIndex: nextZIndex(document) }));
         if (!document.pipes) document.pipes = [];
         document.pipes.push(...nextPipes);
       }
@@ -544,7 +533,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         label: 'Flow',
         style: 'animated',
         waypoints: [],
-        zIndex: nextZIndex(document, 'connector'),
+        zIndex: nextZIndex(document),
       };
       document.connectors.push(connector);
 
@@ -570,7 +559,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         label: 'Flow',
         style: 'animated',
         waypoints: [],
-        zIndex: nextZIndex(document, 'connector'),
+        zIndex: nextZIndex(document),
       };
       document.connectors.push(connector);
       return {
@@ -793,7 +782,6 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   pushToast: (message, tone = 'info') => {
     const toast = createToast(message, tone);
     set((state) => ({ toasts: [...state.toasts, toast] }));
-    window.setTimeout(() => get().dismissToast(toast.id), 2800);
   },
   dismissToast: (id) => set((state) => ({ toasts: state.toasts.filter((toast) => toast.id !== id) })),
   bringToFront: () => {
@@ -855,11 +843,13 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       for (const entity of clipboard.entities) {
         const newId = crypto.randomUUID();
         newIds.push(newId);
-        const shifted = { ...structuredClone(entity), id: newId, x: ((entity as any).x ?? 0) + offset.x, y: ((entity as any).y ?? 0) + offset.y, zIndex: nextZIndex(document) };
+        const shifted = { ...structuredClone(entity), id: newId, zIndex: nextZIndex(document) };
+        if ('x' in shifted) (shifted as { x: number }).x += offset.x;
+        if ('y' in shifted) (shifted as { y: number }).y += offset.y;
         if (clipboard.type === 'area') document.areas.push(shifted as AreaEntity);
         else if (clipboard.type === 'node') document.nodes.push(shifted as NodeEntity);
-        else if (clipboard.type === 'text') (document.texts ?? []).push(shifted as TextEntity);
-        else if (clipboard.type === 'pipe') (document.pipes ?? []).push(shifted as PipeEntity);
+        else if (clipboard.type === 'text') document.texts.push(shifted as TextEntity);
+        else if (clipboard.type === 'pipe') document.pipes.push(shifted as PipeEntity);
       }
       return {
         document,
@@ -875,8 +865,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       if (!selection.type || selection.ids.length < 2) return state;
       const document = cloneDocument(state.document);
       const ids = new Set(selection.ids);
-      const applyPatch = (e: any) => {
-        const updates: any = {};
+      const applyPatch = <T extends { id: string }>(e: T): T => {
+        const updates: Partial<{ glowColor: string; fontSize: number; tags: string[] }> = {};
         if (patch.glowColor != null) updates.glowColor = patch.glowColor;
         if (patch.fontSize != null) updates.fontSize = patch.fontSize;
         if (patch.tags != null) updates.tags = patch.tags;

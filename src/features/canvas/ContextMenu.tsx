@@ -87,7 +87,7 @@ export default function ContextMenu({ x, y, onClose }: ContextMenuProps) {
   };
 
   return (
-    <div ref={menuRef} className="context-menu" style={{ left: x, top: y }}>
+    <div ref={menuRef} className="context-menu" style={{ left: x, top: y }} role="menu" aria-label="Entity context menu">
       <div className="context-menu__header">
         {selection.type.charAt(0).toUpperCase() + selection.type.slice(1)}
       </div>
