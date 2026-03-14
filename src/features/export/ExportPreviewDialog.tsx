@@ -44,6 +44,9 @@ export default function ExportPreviewDialog({ canvas, fileName, onClose }: Expor
     <div
       ref={backdropRef}
       onClick={handleBackdropClick}
+      role="dialog"
+      aria-modal="true"
+      aria-label="PNG export preview"
       style={{
         position: 'fixed', inset: 0, zIndex: 9999,
         display: 'flex', alignItems: 'center', justifyContent: 'center',

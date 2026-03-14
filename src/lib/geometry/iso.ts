@@ -70,7 +70,6 @@ export function buildIsoPath(start: Point, end: Point, camera: CameraState): Poi
     return [start, end];
   }
   const a = (dx * isoYDir.y - dy * isoYDir.x) / det;
-  const b = (isoXDir.x * dy - isoXDir.y * dx) / det;
 
   const mid = { x: start.x + a * isoXDir.x, y: start.y + a * isoXDir.y };
 

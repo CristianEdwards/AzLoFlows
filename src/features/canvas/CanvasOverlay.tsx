@@ -141,7 +141,7 @@ export default function CanvasOverlay({ document, selection, camera, viewport, h
     : null;
 
   return (
-    <svg className="canvas-overlay" viewBox={`0 0 ${viewport.width} ${viewport.height}`} aria-hidden="true">
+    <svg className="canvas-overlay" viewBox={`0 0 ${viewport.width} ${viewport.height}`} role="presentation">
       {marqueeRect ? <rect className="canvas-overlay__marquee" x={marqueeRect.x} y={marqueeRect.y} width={marqueeRect.width} height={marqueeRect.height} /> : null}
       {selectionPolygon ? <polygon className="canvas-overlay__selection" points={selectionPolygon.map((point) => `${point.x},${point.y}`).join(' ')} /> : null}
       {cornerHandles.map((item) => (

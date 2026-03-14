@@ -485,7 +485,21 @@ export default function CanvasViewport({ canvasRef, onCursorWorldChange, onViewp
     const rect = event.currentTarget.getBoundingClientRect();
     const world = screenToWorld({ x: event.clientX - rect.left, y: event.clientY - rect.top }, camera, viewport);
     const templateJson = event.dataTransfer.getData('application/x-isoflow-template');
-    const templateOverrides = templateJson ? JSON.parse(templateJson) : undefined;
+    let templateOverrides: { title?: string; subtitle?: string; fill?: string; glowColor?: string; icon?: string } | undefined;
+    if (templateJson) {
+      try {
+        const parsed = JSON.parse(templateJson);
+        if (parsed && typeof parsed === 'object') {
+          templateOverrides = {
+            title: typeof parsed.title === 'string' ? parsed.title : undefined,
+            subtitle: typeof parsed.subtitle === 'string' ? parsed.subtitle : undefined,
+            fill: typeof parsed.fill === 'string' ? parsed.fill : undefined,
+            glowColor: typeof parsed.glowColor === 'string' ? parsed.glowColor : undefined,
+            icon: typeof parsed.icon === 'string' ? parsed.icon : undefined,
+          };
+        }
+      } catch { /* ignore malformed JSON */ }
+    }
     addShape(shape, world, templateOverrides);
   }
 
@@ -494,6 +508,8 @@ export default function CanvasViewport({ canvasRef, onCursorWorldChange, onViewp
       <canvas
         ref={canvasRef}
         className="diagram-canvas"
+        role="img"
+        aria-label="Isometric diagram canvas"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}

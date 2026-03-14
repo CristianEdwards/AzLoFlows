@@ -1,4 +1,5 @@
 import { CULL_MARGIN } from '@/lib/config';
+import { isVisible } from '@/lib/visibility';
 import { renderArea } from '@/features/canvas/renderers/renderArea';
 import { renderBackground } from '@/features/canvas/renderers/renderBackground';
 import { renderConnector } from '@/features/canvas/renderers/renderConnector';
@@ -20,23 +21,6 @@ interface RenderSceneArgs {
   tagFilter: TagFilter;
   theme: 'dark' | 'light';
 }
-
-function isVisible(tags: string[] | undefined, filter: TagFilter): boolean {
-  if (!tags || tags.length === 0) return true;
-  if (!filter.scenario) return false;
-
-  const entityScenarios = tags.filter((t) => !t.startsWith('flow:') && !t.startsWith('type:'));
-  const entitySources = tags.filter((t) => t.startsWith('flow:')).map((t) => t.slice(5));
-  const entityTypes = tags.filter((t) => t.startsWith('type:')).map((t) => t.slice(5));
-
-  if (entityScenarios.length > 0 && !entityScenarios.includes(filter.scenario)) return false;
-  if (entitySources.length > 0 && !entitySources.some((s) => filter.sources.has(s as any))) return false;
-  if (entityTypes.length > 0 && !entityTypes.some((t) => filter.types.has(t as any))) return false;
-
-  return true;
-}
-
-/** Pad viewport bounds to avoid popping at edges (glows, shadows, etc.) */
 
 function isOnScreen(
   entity: { x: number; y: number; width: number; height: number },
@@ -73,7 +57,7 @@ export function renderScene({ ctx, viewport, document, selection, camera, time, 
   for (const e of document.connectors) if (isVisible(e.tags, tagFilter)) items.push({ kind: 'connector', entity: e }); // connectors span between nodes, skip culling
   for (const e of visibleNodes) if (isOnScreen(e, camera, viewport)) items.push({ kind: 'node', entity: e });
   for (const e of (document.pipes ?? [])) if (isVisible(e.tags, tagFilter) && isOnScreen(e, camera, viewport)) items.push({ kind: 'pipe', entity: e });
-  for (const e of (document.texts ?? [])) if (isVisible(e.tags, tagFilter) && isOnScreen({ x: e.x, y: e.y, width: e.fontSize * 6, height: e.fontSize * 2 }, camera, viewport)) items.push({ kind: 'text', entity: e });
+  for (const e of (document.texts ?? [])) if (isVisible(e.tags, tagFilter) && isOnScreen({ x: e.x - e.fontSize * 4, y: e.y - e.fontSize, width: e.fontSize * 12, height: e.fontSize * 4 }, camera, viewport)) items.push({ kind: 'text', entity: e });
   items.sort((a, b) => a.entity.zIndex - b.entity.zIndex);
 
   for (const item of items) {

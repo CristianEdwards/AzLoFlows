@@ -36,11 +36,6 @@ export function renderNode(
     x: (leftBottom.x - leftTop.x) / leftEdgeLength,
     y: (leftBottom.y - leftTop.y) / leftEdgeLength,
   };
-  const leftFaceBasisX = {
-    x: (leftBottom.x - leftTop.x) / leftEdgeLength,
-    y: (leftBottom.y - leftTop.y) / leftEdgeLength,
-  };
-  const leftFaceBasisY = { x: 0, y: 1 };
   const textDirection = node.textRotated ? topFaceBasisX : topFaceBasisY;
   const textStackDirection = node.textRotated
     ? { x: topFaceBasisY.x, y: topFaceBasisY.y }
