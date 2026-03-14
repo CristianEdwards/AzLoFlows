@@ -47,8 +47,23 @@ export function renderNode(
     ? { x: topFaceBasisY.x, y: topFaceBasisY.y }
     : { x: -topFaceBasisX.x, y: -topFaceBasisX.y };
 
-  // In light mode, paint white bases on all 3D faces so colours pop
+  // In light mode, paint tinted white bases on all 3D faces then use
+  // the bright glowColor (not the dark companion fill) for face tints
+  // so nodes look vibrant instead of muddy.
+  const faceFill = light ? node.glowColor : node.fill;
+
   if (light) {
+    // Drop-shadow behind the entire node for depth
+    drawPolygon(ctx, [leftBottom, rightBottom, frontRightBottom, frontLeftBottom]);
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.18)';
+    ctx.shadowBlur = 14;
+    ctx.shadowOffsetY = 4;
+    ctx.fillStyle = 'rgba(0,0,0,0)';
+    ctx.fill();
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+
     for (const face of [
       [leftTop, leftBottom, frontLeftBottom, leftTopDepth],
       [leftBottom, rightBottom, frontRightBottom, frontLeftBottom],
@@ -56,27 +71,27 @@ export function renderNode(
       points,
     ]) {
       drawPolygon(ctx, face);
-      ctx.fillStyle = 'rgba(255,255,255,0.88)';
+      ctx.fillStyle = 'rgba(255,255,255,0.92)';
       ctx.fill();
     }
   }
 
   drawPolygon(ctx, [leftTop, leftBottom, frontLeftBottom, leftTopDepth]);
-  ctx.fillStyle = hexToRgba(node.fill, light ? 0.92 : 0.22);
+  ctx.fillStyle = hexToRgba(faceFill, light ? 0.22 : 0.22);
   ctx.fill();
   ctx.strokeStyle = hexToRgba(node.glowColor, (light ? 0.22 : 0.14) * pulse);
   ctx.lineWidth = 0.8 * bScale;
   ctx.stroke();
 
   drawPolygon(ctx, [leftBottom, rightBottom, frontRightBottom, frontLeftBottom]);
-  ctx.fillStyle = hexToRgba(node.fill, light ? 0.98 : 0.42);
+  ctx.fillStyle = hexToRgba(faceFill, light ? 0.30 : 0.42);
   ctx.fill();
   ctx.strokeStyle = hexToRgba(node.glowColor, (light ? 0.22 : 0.14) * pulse);
   ctx.lineWidth = 0.8 * bScale;
   ctx.stroke();
 
   drawPolygon(ctx, [rightTop, rightBottom, frontRightBottom, rightTopDepth]);
-  ctx.fillStyle = hexToRgba(node.fill, light ? 0.95 : 0.28);
+  ctx.fillStyle = hexToRgba(faceFill, light ? 0.25 : 0.28);
   ctx.fill();
   ctx.strokeStyle = hexToRgba(node.glowColor, (light ? 0.18 : 0.1) * pulse);
   ctx.lineWidth = 0.8 * bScale;
@@ -84,12 +99,12 @@ export function renderNode(
 
   drawPolygon(ctx, points);
   const gradient = ctx.createLinearGradient(points[0].x, points[0].y, points[2].x, points[2].y);
-  gradient.addColorStop(0, hexToRgba(node.fill, light ? 0.98 : 0.84));
-  gradient.addColorStop(0.5, hexToRgba(node.fill, light ? 0.88 : 0.46));
-  gradient.addColorStop(1, hexToRgba(node.fill, light ? 0.72 : 0.24));
+  gradient.addColorStop(0, hexToRgba(faceFill, light ? 0.35 : 0.84));
+  gradient.addColorStop(0.5, hexToRgba(faceFill, light ? 0.22 : 0.46));
+  gradient.addColorStop(1, hexToRgba(faceFill, light ? 0.12 : 0.24));
   ctx.fillStyle = gradient;
-  ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.12 : 0.4) * pulse);
-  ctx.shadowBlur = light ? (selected ? 8 : 4) : (selected ? 26 : 18);
+  ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.25 : 0.4) * pulse);
+  ctx.shadowBlur = light ? (selected ? 16 : 10) : (selected ? 26 : 18);
   ctx.fill();
   ctx.shadowBlur = 0;
 
@@ -204,8 +219,8 @@ export function renderNode(
     const scale = iconSize / 32;
     ctx.scale(scale, scale);
     ctx.translate(-16, -16);
-    ctx.globalAlpha = light ? 1.0 : 0.7;
-    ctx.fillStyle = light ? hexToRgba(node.glowColor, 0.5) : hexToRgba(node.glowColor, 1.0);
+    ctx.globalAlpha = light ? 0.85 : 0.7;
+    ctx.fillStyle = light ? hexToRgba(node.glowColor, 0.7) : hexToRgba(node.glowColor, 1.0);
     for (const d of iconDef.paths) {
       const p2d = new Path2D(d);
       ctx.fill(p2d);
