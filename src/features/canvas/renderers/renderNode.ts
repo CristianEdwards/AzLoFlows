@@ -52,10 +52,10 @@ export function renderNode(
   const faceFill = light ? node.glowColor : node.fill;
 
   // Light-mode palette: derive a range of tints/shades from the glow color
-  const lightBase    = light ? lightenHex(node.glowColor, 0.72) : '';  // pastel light
-  const lightMid     = light ? lightenHex(node.glowColor, 0.52) : '';  // medium tint
-  const lightAccent  = light ? lightenHex(node.glowColor, 0.35) : '';  // deeper tint
-  const lightShadow  = light ? darkenHex(node.glowColor, 0.85) : '';   // subtle dark
+  const lightBase    = light ? lightenHex(node.glowColor, 0.48) : '';  // lightest tint
+  const lightMid     = light ? lightenHex(node.glowColor, 0.30) : '';  // medium tint
+  const lightAccent  = light ? lightenHex(node.glowColor, 0.15) : '';  // near-saturated
+  const lightShadow  = light ? darkenHex(node.glowColor, 0.80) : '';   // subtle dark
 
   if (light) {
     // Drop-shadow behind the entire node for depth
@@ -90,7 +90,7 @@ export function renderNode(
   if (light) {
     const gFront = ctx.createLinearGradient(leftBottom.x, leftBottom.y, frontRightBottom.x, frontRightBottom.y);
     gFront.addColorStop(0, lightAccent);
-    gFront.addColorStop(1, lightenHex(node.glowColor, 0.45));
+    gFront.addColorStop(1, lightenHex(node.glowColor, 0.22));
     ctx.fillStyle = gFront;
   } else {
     ctx.fillStyle = hexToRgba(faceFill, 0.42);
@@ -105,7 +105,7 @@ export function renderNode(
   if (light) {
     const gRight = ctx.createLinearGradient(rightTop.x, rightTop.y, frontRightBottom.x, frontRightBottom.y);
     gRight.addColorStop(0, lightMid);
-    gRight.addColorStop(1, lightenHex(node.glowColor, 0.42));
+    gRight.addColorStop(1, lightenHex(node.glowColor, 0.20));
     ctx.fillStyle = gRight;
   } else {
     ctx.fillStyle = hexToRgba(faceFill, 0.28);
