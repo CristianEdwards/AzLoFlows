@@ -2,19 +2,19 @@ import type { ViewportSize } from '@/lib/geometry/iso';
 
 export function renderBackground(ctx: CanvasRenderingContext2D, viewport: ViewportSize, theme: 'dark' | 'light' = 'dark'): void {
   if (theme === 'light') {
-    ctx.fillStyle = '#f0f2f8';
+    ctx.fillStyle = '#f8fafc';
     ctx.fillRect(0, 0, viewport.width, viewport.height);
 
     const wash = ctx.createLinearGradient(0, 0, viewport.width, viewport.height);
-    wash.addColorStop(0, 'rgba(238, 240, 248, 0.95)');
-    wash.addColorStop(0.45, 'rgba(244, 246, 252, 0.6)');
-    wash.addColorStop(1, 'rgba(236, 238, 246, 0.95)');
+    wash.addColorStop(0, 'rgba(248, 250, 252, 0.95)');
+    wash.addColorStop(0.45, 'rgba(241, 245, 249, 0.6)');
+    wash.addColorStop(1, 'rgba(248, 250, 252, 0.95)');
     ctx.fillStyle = wash;
     ctx.fillRect(0, 0, viewport.width, viewport.height);
 
-    paintGlow(ctx, viewport.width * 0.18, viewport.height * 0.18, Math.max(viewport.width, viewport.height) * 0.42, 'rgba(0, 180, 210, 0.025)');
-    paintGlow(ctx, viewport.width * 0.82, viewport.height * 0.14, Math.max(viewport.width, viewport.height) * 0.36, 'rgba(77, 141, 255, 0.025)');
-    paintGlow(ctx, viewport.width * 0.9, viewport.height * 0.78, Math.max(viewport.width, viewport.height) * 0.34, 'rgba(191, 90, 242, 0.03)');
+    paintGlow(ctx, viewport.width * 0.18, viewport.height * 0.18, Math.max(viewport.width, viewport.height) * 0.42, 'rgba(6, 182, 212, 0.025)');
+    paintGlow(ctx, viewport.width * 0.82, viewport.height * 0.14, Math.max(viewport.width, viewport.height) * 0.36, 'rgba(56, 189, 248, 0.025)');
+    paintGlow(ctx, viewport.width * 0.9, viewport.height * 0.78, Math.max(viewport.width, viewport.height) * 0.34, 'rgba(139, 92, 246, 0.03)');
 
     const vignette = ctx.createRadialGradient(
       viewport.width * 0.5,
@@ -40,20 +40,20 @@ export function renderBackground(ctx: CanvasRenderingContext2D, viewport: Viewpo
     return;
   }
 
-  ctx.fillStyle = '#0a0a1a';
+  ctx.fillStyle = '#020617';
   ctx.fillRect(0, 0, viewport.width, viewport.height);
 
   const wash = ctx.createLinearGradient(0, 0, viewport.width, viewport.height);
-  wash.addColorStop(0, 'rgba(8, 12, 30, 0.92)');
-  wash.addColorStop(0.45, 'rgba(6, 10, 26, 0.32)');
-  wash.addColorStop(1, 'rgba(8, 8, 24, 0.94)');
+  wash.addColorStop(0, 'rgba(15, 23, 42, 0.92)');
+  wash.addColorStop(0.45, 'rgba(15, 23, 42, 0.32)');
+  wash.addColorStop(1, 'rgba(15, 23, 42, 0.94)');
   ctx.fillStyle = wash;
   ctx.fillRect(0, 0, viewport.width, viewport.height);
 
-  paintGlow(ctx, viewport.width * 0.18, viewport.height * 0.18, Math.max(viewport.width, viewport.height) * 0.42, 'rgba(0, 229, 255, 0.07)');
-  paintGlow(ctx, viewport.width * 0.82, viewport.height * 0.14, Math.max(viewport.width, viewport.height) * 0.36, 'rgba(77, 141, 255, 0.08)');
-  paintGlow(ctx, viewport.width * 0.9, viewport.height * 0.78, Math.max(viewport.width, viewport.height) * 0.34, 'rgba(191, 90, 242, 0.09)');
-  paintGlow(ctx, viewport.width * 0.55, viewport.height * 0.5, Math.max(viewport.width, viewport.height) * 0.48, 'rgba(10, 18, 42, 0.34)');
+  paintGlow(ctx, viewport.width * 0.18, viewport.height * 0.18, Math.max(viewport.width, viewport.height) * 0.42, 'rgba(34, 211, 238, 0.07)');
+  paintGlow(ctx, viewport.width * 0.82, viewport.height * 0.14, Math.max(viewport.width, viewport.height) * 0.36, 'rgba(56, 189, 248, 0.08)');
+  paintGlow(ctx, viewport.width * 0.9, viewport.height * 0.78, Math.max(viewport.width, viewport.height) * 0.34, 'rgba(139, 92, 246, 0.09)');
+  paintGlow(ctx, viewport.width * 0.55, viewport.height * 0.5, Math.max(viewport.width, viewport.height) * 0.48, 'rgba(15, 23, 42, 0.34)');
 
   const vignette = ctx.createRadialGradient(
     viewport.width * 0.5,
