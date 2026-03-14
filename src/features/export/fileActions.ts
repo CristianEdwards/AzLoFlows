@@ -176,7 +176,7 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
   svg.push('</defs>');
 
   // Background
-  svg.push(`<rect width="100%" height="100%" fill="${light ? '#f0f2f8' : '#030413'}" />`);
+  svg.push(`<rect width="100%" height="100%" fill="${light ? '#f8fafc' : '#020617'}" />`);
 
   // Build a unified render list sorted by global zIndex
   type SvgRenderItem =
@@ -588,13 +588,13 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
   const pillPadY = 6;
   const labelFontSize = 11;
   const pillFontSize = 12;
-  const innerBg = light ? 'rgba(255,255,255,0.92)' : 'rgba(8,10,28,0.92)';
-  const pillBorder = light ? 'rgba(0,0,0,0.12)' : 'rgba(206,147,216,0.2)';
-  const pillActiveBg = light ? 'rgba(156,39,176,0.18)' : 'rgba(156,39,176,0.35)';
-  const pillActiveBorder = light ? '#9c27b0' : '#ce93d8';
-  const pillText = light ? 'rgba(26,26,46,0.72)' : 'rgba(230,238,255,0.72)';
-  const pillActiveText = light ? '#4a148c' : '#f3e5f5';
-  const labelColor = light ? 'rgba(106,27,154,0.8)' : 'rgba(206,147,216,0.7)';
+  const innerBg = light ? 'rgba(255,255,255,0.92)' : 'rgba(15,23,42,0.92)';
+  const pillBorder = light ? 'rgba(0,0,0,0.12)' : 'rgba(196,181,253,0.2)';
+  const pillActiveBg = light ? 'rgba(139,92,246,0.18)' : 'rgba(139,92,246,0.35)';
+  const pillActiveBorder = light ? '#8b5cf6' : '#c4b5fd';
+  const pillText = light ? 'rgba(15,23,42,0.72)' : 'rgba(248,250,252,0.72)';
+  const pillActiveText = light ? '#6d28d9' : '#ede9fe';
+  const labelColor = light ? 'rgba(109,40,217,0.8)' : 'rgba(196,181,253,0.7)';
   const ringBorder = 3;
   const innerR = 15;
   const outerR = 18;
@@ -641,7 +641,7 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
   svg.splice(
     svg.indexOf('</defs>'),
     0,
-    `<linearGradient id="pickerRing" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#6a1b9a"/><stop offset="50%" stop-color="#ce93d8"/><stop offset="100%" stop-color="#6a1b9a"/></linearGradient>`,
+    `<linearGradient id="pickerRing" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#6d28d9"/><stop offset="50%" stop-color="#c4b5fd"/><stop offset="100%" stop-color="#6d28d9"/></linearGradient>`,
   );
 
   // Scenario picker â€” top: 8, left: 8
@@ -837,17 +837,17 @@ function buildInteractiveHtml(svgContent: string, docJson: string, title: string
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { height: 100%; overflow: hidden; font-family: Inter, -apple-system, sans-serif; }
-  body { background: ${theme === 'dark' ? '#030413' : '#f0f2f8'}; color: ${theme === 'dark' ? '#e6eeff' : '#1a1a2e'}; }
+  body { background: ${theme === 'dark' ? '#020617' : '#f8fafc'}; color: ${theme === 'dark' ? '#f8fafc' : '#0f172a'}; }
   .container { width: 100%; height: 100%; display: flex; flex-direction: column; }
-  .toolbar { padding: 8px 16px; display: flex; align-items: center; gap: 12px; background: ${theme === 'dark' ? 'rgba(6,10,28,0.85)' : 'rgba(255,255,255,0.9)'}; border-bottom: 1px solid ${theme === 'dark' ? 'rgba(180,208,255,0.14)' : 'rgba(0,0,0,0.08)'}; backdrop-filter: blur(20px); }
+  .toolbar { padding: 8px 16px; display: flex; align-items: center; gap: 12px; background: ${theme === 'dark' ? 'rgba(15,23,42,0.85)' : 'rgba(255,255,255,0.9)'}; border-bottom: 1px solid ${theme === 'dark' ? 'rgba(51,65,85,0.5)' : 'rgba(0,0,0,0.08)'}; backdrop-filter: blur(20px); }
   .toolbar h1 { font-size: 14px; font-weight: 600; flex: 1; }
-  .toolbar .badge { font-size: 10px; padding: 2px 8px; border-radius: 8px; background: ${theme === 'dark' ? 'rgba(0,229,255,0.12)' : 'rgba(106,27,154,0.1)'}; color: ${theme === 'dark' ? '#00e5ff' : '#6a1b9a'}; }
-  .toolbar button { padding: 4px 12px; border-radius: 8px; border: 1px solid ${theme === 'dark' ? 'rgba(180,208,255,0.2)' : 'rgba(0,0,0,0.12)'}; background: transparent; color: inherit; cursor: pointer; font-size: 12px; }
-  .toolbar button:hover { background: ${theme === 'dark' ? 'rgba(0,229,255,0.1)' : 'rgba(0,0,0,0.05)'}; }
+  .toolbar .badge { font-size: 10px; padding: 2px 8px; border-radius: 8px; background: ${theme === 'dark' ? 'rgba(34,211,238,0.12)' : 'rgba(109,40,217,0.1)'}; color: ${theme === 'dark' ? '#22d3ee' : '#6d28d9'}; }
+  .toolbar button { padding: 4px 12px; border-radius: 8px; border: 1px solid ${theme === 'dark' ? 'rgba(51,65,85,0.5)' : 'rgba(0,0,0,0.12)'}; background: transparent; color: inherit; cursor: pointer; font-size: 12px; }
+  .toolbar button:hover { background: ${theme === 'dark' ? 'rgba(34,211,238,0.1)' : 'rgba(0,0,0,0.05)'}; }
   .canvas-wrap { flex: 1; overflow: hidden; cursor: grab; position: relative; }
   .canvas-wrap.grabbing { cursor: grabbing; }
   .canvas-wrap svg { transform-origin: 0 0; }
-  .zoom-info { position: absolute; bottom: 12px; right: 12px; font-size: 11px; padding: 4px 10px; border-radius: 8px; background: ${theme === 'dark' ? 'rgba(6,10,28,0.8)' : 'rgba(255,255,255,0.8)'}; border: 1px solid ${theme === 'dark' ? 'rgba(180,208,255,0.14)' : 'rgba(0,0,0,0.08)'}; }
+  .zoom-info { position: absolute; bottom: 12px; right: 12px; font-size: 11px; padding: 4px 10px; border-radius: 8px; background: ${theme === 'dark' ? 'rgba(15,23,42,0.8)' : 'rgba(255,255,255,0.8)'}; border: 1px solid ${theme === 'dark' ? 'rgba(51,65,85,0.5)' : 'rgba(0,0,0,0.08)'}; }
 </style>
 </head>
 <body>

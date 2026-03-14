@@ -32,7 +32,7 @@ export default class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: 40, fontFamily: 'Inter, sans-serif', color: '#e6eeff', background: '#0a0a1a', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ padding: 40, fontFamily: 'Inter, sans-serif', color: '#f8fafc', background: '#020617', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ maxWidth: 480, textAlign: 'center' }}>
             <h1 style={{ fontSize: 28, marginBottom: 12 }}>Something went wrong</h1>
             <p style={{ color: '#8899bb', marginBottom: 8 }}>AzLoFlows encountered an unexpected error.</p>
@@ -40,7 +40,7 @@ export default class ErrorBoundary extends Component<Props, State> {
               {this.state.error?.message}
             </pre>
             <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-              <button onClick={this.handleReload} style={{ padding: '8px 20px', borderRadius: 8, border: '1px solid #4d8dff', background: '#1a2a4a', color: '#e6eeff', cursor: 'pointer', fontSize: 14 }}>
+              <button onClick={this.handleReload} style={{ padding: '8px 20px', borderRadius: 8, border: '1px solid #38bdf8', background: '#0f172a', color: '#f8fafc', cursor: 'pointer', fontSize: 14 }}>
                 Reload App
               </button>
               <button onClick={this.handleClear} style={{ padding: '8px 20px', borderRadius: 8, border: '1px solid #ff4444', background: '#2a1a1a', color: '#ffaaaa', cursor: 'pointer', fontSize: 14 }}>

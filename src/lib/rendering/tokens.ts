@@ -50,13 +50,13 @@ export const paletteOrder = [
 ];
 
 export const uiTokens = {
-  appBackground: '#030413',
-  panelBackground: 'rgba(6, 10, 28, 0.8)',
-  panelBorder: 'rgba(180, 208, 255, 0.14)',
+  appBackground: '#020617',       // Slate 950
+  panelBackground: 'rgba(15, 23, 42, 0.8)',  // Slate 900
+  panelBorder: 'rgba(51, 65, 85, 0.5)',      // Slate 700
   panelShadow: '0 18px 48px rgba(0, 0, 0, 0.45)',
-  text: '#e6eeff',
-  textMuted: 'rgba(190, 205, 242, 0.7)',
-  selection: '#d8f7ff',
+  text: '#f8fafc',                // Slate 50
+  textMuted: 'rgba(148, 163, 184, 0.7)',     // Slate 400
+  selection: '#f8fafc',           // Slate 50
 };
 
 export function hexToRgba(hex: string, alpha: number): string {
