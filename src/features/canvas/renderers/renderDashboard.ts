@@ -58,32 +58,28 @@ export function renderDashboard(
     y: wtl.y + (wtr.y - wtl.y) * u + (wbl.y - wtl.y) * v,
   });
 
-  // ── Floor reflection (drawn first, behind everything) ──
-  // Mirror the panel face downward from the bottom edge onto the iso ground
-  const reflH = panelH * 0.55; // reflection shorter than panel
-  const rbl = { x: wbl.x, y: wbl.y };
-  const rbr = { x: wbr.x, y: wbr.y };
-  const rtl = { x: wbl.x + bx.x * tiltBack, y: wbl.y + reflH + bx.y * tiltBack };
-  const rtr = { x: wbr.x + bx.x * tiltBack, y: wbr.y + reflH + bx.y * tiltBack };
-  drawPolygon(ctx, [rbl, rbr, rtr, rtl]);
-  const reflGrad = ctx.createLinearGradient(rbl.x, rbl.y, rtl.x, rtl.y);
+  // ── Behind-panel reflection (ghost copy offset behind) ──
+  const reflOff = sideDepth * 3.5;
+  const rwtl = { x: wtl.x + by.x * reflOff, y: wtl.y + by.y * reflOff };
+  const rwtr = { x: wtr.x + by.x * reflOff, y: wtr.y + by.y * reflOff };
+  const rwbr = { x: wbr.x + by.x * reflOff, y: wbr.y + by.y * reflOff };
+  const rwbl = { x: wbl.x + by.x * reflOff, y: wbl.y + by.y * reflOff };
+  drawPolygon(ctx, [rwtl, rwtr, rwbr, rwbl]);
+  const reflGrad = ctx.createLinearGradient(rwtl.x, rwtl.y, rwbl.x, rwbl.y);
   if (light) {
-    reflGrad.addColorStop(0, hexToRgba(deepTone, 0.18));
-    reflGrad.addColorStop(0.5, hexToRgba(deepTone, 0.06));
-    reflGrad.addColorStop(1, 'rgba(0,0,0,0)');
+    reflGrad.addColorStop(0, hexToRgba(deepTone, 0.14));
+    reflGrad.addColorStop(0.6, hexToRgba(deepTone, 0.06));
+    reflGrad.addColorStop(1, hexToRgba(deepTone, 0.02));
   } else {
-    reflGrad.addColorStop(0, hexToRgba(faceFill, 0.14));
-    reflGrad.addColorStop(0.5, hexToRgba(faceFill, 0.05));
-    reflGrad.addColorStop(1, 'rgba(0,0,0,0)');
+    reflGrad.addColorStop(0, hexToRgba(faceFill, 0.12));
+    reflGrad.addColorStop(0.6, hexToRgba(faceFill, 0.05));
+    reflGrad.addColorStop(1, hexToRgba(faceFill, 0.01));
   }
   ctx.fillStyle = reflGrad;
   ctx.fill();
-  // Faint reflection border at the base
-  ctx.beginPath();
-  ctx.moveTo(rbl.x, rbl.y);
-  ctx.lineTo(rbr.x, rbr.y);
-  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.12 : 0.08);
-  ctx.lineWidth = 0.6 * bScale;
+  drawPolygon(ctx, [rwtl, rwtr, rwbr, rwbl]);
+  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.08 : 0.05);
+  ctx.lineWidth = 0.5 * bScale;
   ctx.stroke();
 
   // ── Drop shadow ──
