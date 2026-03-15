@@ -47,10 +47,16 @@ export function renderDashboard(
   const wtl = { x: rt.x - bx.x * tiltBack, y: rt.y - panelH - bx.y * tiltBack };
   const wtr = { x: rb.x - bx.x * tiltBack, y: rb.y - panelH - bx.y * tiltBack };
 
-  // Side thickness
-  const sideDepth = 5 * camera.zoom;
+  // Side thickness (glass depth)
+  const sideDepth = 10 * camera.zoom;
   const wblT = { x: wbl.x - by.x * sideDepth, y: wbl.y - by.y * sideDepth };
   const wtlT = { x: wtl.x - by.x * sideDepth, y: wtl.y - by.y * sideDepth };
+
+  // Bottom edge thickness
+  const bottomDepth = 6 * camera.zoom;
+  const wblB = { x: wbl.x, y: wbl.y + bottomDepth };
+  const wbrB = { x: wbr.x, y: wbr.y + bottomDepth };
+  const wblTB = { x: wblT.x, y: wblT.y + bottomDepth };
 
   // Helper: bilinear on panel face
   const panelPt = (u: number, v: number) => ({
@@ -95,12 +101,53 @@ export function renderDashboard(
     ctx.shadowOffsetY = 0;
   }
 
-  // ── Left edge thickness ──
-  drawPolygon(ctx, [wtl, wbl, wblT, wtlT]);
-  ctx.fillStyle = light ? darkenHex(deepTone, 0.65) : hexToRgba(faceFill, 0.10);
+  // ── Bottom edge thickness (3D base strip) ──
+  drawPolygon(ctx, [wbl, wbr, wbrB, wblB]);
+  if (light) {
+    ctx.fillStyle = darkenHex(deepTone, 0.78);
+  } else {
+    const gBot = ctx.createLinearGradient(wbl.x, wbl.y, wblB.x, wblB.y);
+    gBot.addColorStop(0, hexToRgba(faceFill, 0.20));
+    gBot.addColorStop(1, hexToRgba(faceFill, 0.05));
+    ctx.fillStyle = gBot;
+  }
   ctx.fill();
-  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.15 : 0.06);
+  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.12 : 0.06);
   ctx.lineWidth = 0.5 * bScale;
+  ctx.stroke();
+
+  // Bottom-left corner strip
+  drawPolygon(ctx, [wblT, wbl, wblB, wblTB]);
+  ctx.fillStyle = light ? darkenHex(deepTone, 0.82) : hexToRgba(faceFill, 0.06);
+  ctx.fill();
+
+  // ── Left edge thickness ── (glass depth face)
+  drawPolygon(ctx, [wtl, wbl, wblT, wtlT]);
+  if (light) {
+    const gSide = ctx.createLinearGradient(wtl.x, wtl.y, wblT.x, wblT.y);
+    gSide.addColorStop(0, darkenHex(deepTone, 0.55));
+    gSide.addColorStop(1, darkenHex(deepTone, 0.72));
+    ctx.fillStyle = gSide;
+  } else {
+    const gSide = ctx.createLinearGradient(wtl.x, wtl.y, wblT.x, wblT.y);
+    gSide.addColorStop(0, hexToRgba(faceFill, 0.22));
+    gSide.addColorStop(0.5, hexToRgba(faceFill, 0.12));
+    gSide.addColorStop(1, hexToRgba(faceFill, 0.06));
+    ctx.fillStyle = gSide;
+  }
+  ctx.fill();
+  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.20 : 0.10);
+  ctx.lineWidth = 0.6 * bScale;
+  ctx.stroke();
+
+  // Glass specular on left edge
+  ctx.beginPath();
+  const dLMid1 = { x: wtl.x * 0.5 + wtlT.x * 0.5, y: wtl.y * 0.5 + wtlT.y * 0.5 };
+  const dLMid2 = { x: wbl.x * 0.5 + wblT.x * 0.5, y: wbl.y * 0.5 + wblT.y * 0.5 };
+  ctx.moveTo(dLMid1.x, dLMid1.y);
+  ctx.lineTo(dLMid2.x, dLMid2.y);
+  ctx.strokeStyle = light ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 2 * bScale;
   ctx.stroke();
 
   // ── Main panel face ──
@@ -112,15 +159,26 @@ export function renderDashboard(
     grad.addColorStop(0.35, deepToneMid);
     grad.addColorStop(1, deepTone);
   } else {
-    grad.addColorStop(0, hexToRgba(faceFill, 0.65));
-    grad.addColorStop(0.35, hexToRgba(faceFill, 0.38));
-    grad.addColorStop(1, hexToRgba(faceFill, 0.14));
+    grad.addColorStop(0, hexToRgba(faceFill, 0.72));
+    grad.addColorStop(0.2, hexToRgba(faceFill, 0.45));
+    grad.addColorStop(0.6, hexToRgba(faceFill, 0.24));
+    grad.addColorStop(1, hexToRgba(faceFill, 0.10));
   }
   ctx.fillStyle = grad;
-  ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.28 : 0.45) * pulse);
-  ctx.shadowBlur = light ? (selected ? 22 : 16) : (selected ? 30 : 20);
+  ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.35 : 0.55) * pulse);
+  ctx.shadowBlur = light ? (selected ? 26 : 18) : (selected ? 36 : 24);
   ctx.fill();
   ctx.shadowBlur = 0;
+
+  // Glass specular diagonal on main panel face
+  ctx.beginPath();
+  const dSpec1 = panelPt(0.25, 0.15);
+  const dSpec2 = panelPt(0.75, 0.85);
+  ctx.moveTo(dSpec1.x, dSpec1.y);
+  ctx.lineTo(dSpec2.x, dSpec2.y);
+  ctx.strokeStyle = light ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 4 * bScale;
+  ctx.stroke();
 
   // Panel border
   drawPolygon(ctx, panelFace);

@@ -54,10 +54,16 @@ export function renderLaptop(
   const wtl = { x: rt.x - bx.x * tiltBack, y: rt.y - screenH - bx.y * tiltBack };
   const wtr = { x: rb.x - bx.x * tiltBack, y: rb.y - screenH - bx.y * tiltBack };
 
-  // Side-edge thickness
-  const sideDepth = 4 * camera.zoom;
+  // Side-edge thickness (glass depth)
+  const sideDepth = 8 * camera.zoom;
   const wblT = { x: wbl.x - by.x * sideDepth, y: wbl.y - by.y * sideDepth };
   const wtlT = { x: wtl.x - by.x * sideDepth, y: wtl.y - by.y * sideDepth };
+
+  // Bottom edge thickness
+  const bottomDepth = 5 * camera.zoom;
+  const wblB = { x: wbl.x, y: wbl.y + bottomDepth };
+  const wbrB = { x: wbr.x, y: wbr.y + bottomDepth };
+  const wblTB = { x: wblT.x, y: wblT.y + bottomDepth };
 
   // Bilinear helper on screen face
   const pp = (u: number, v: number) => ({
@@ -180,12 +186,50 @@ export function renderLaptop(
   ctx.lineWidth = 0.8 * bScale;
   ctx.stroke();
 
-  // ── Screen left-edge thickness ──
-  drawPolygon(ctx, [wtl, wbl, wblT, wtlT]);
-  ctx.fillStyle = light ? darkenHex(deepTone, 0.70) : hexToRgba(faceFill, 0.10);
+  // ── Screen bottom edge (3D base strip) ──
+  drawPolygon(ctx, [wbl, wbr, wbrB, wblB]);
+  if (light) {
+    ctx.fillStyle = darkenHex(deepTone, 0.78);
+  } else {
+    const gBot = ctx.createLinearGradient(wbl.x, wbl.y, wblB.x, wblB.y);
+    gBot.addColorStop(0, hexToRgba(faceFill, 0.18));
+    gBot.addColorStop(1, hexToRgba(faceFill, 0.04));
+    ctx.fillStyle = gBot;
+  }
   ctx.fill();
-  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.15 : 0.06);
-  ctx.lineWidth = 0.4 * bScale;
+
+  // Bottom-left corner strip
+  drawPolygon(ctx, [wblT, wbl, wblB, wblTB]);
+  ctx.fillStyle = light ? darkenHex(deepTone, 0.82) : hexToRgba(faceFill, 0.05);
+  ctx.fill();
+
+  // ── Screen left-edge thickness ── (glass depth)
+  drawPolygon(ctx, [wtl, wbl, wblT, wtlT]);
+  if (light) {
+    const gSide = ctx.createLinearGradient(wtl.x, wtl.y, wblT.x, wblT.y);
+    gSide.addColorStop(0, darkenHex(deepTone, 0.58));
+    gSide.addColorStop(1, darkenHex(deepTone, 0.72));
+    ctx.fillStyle = gSide;
+  } else {
+    const gSide = ctx.createLinearGradient(wtl.x, wtl.y, wblT.x, wblT.y);
+    gSide.addColorStop(0, hexToRgba(faceFill, 0.22));
+    gSide.addColorStop(0.5, hexToRgba(faceFill, 0.12));
+    gSide.addColorStop(1, hexToRgba(faceFill, 0.06));
+    ctx.fillStyle = gSide;
+  }
+  ctx.fill();
+  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.18 : 0.08);
+  ctx.lineWidth = 0.5 * bScale;
+  ctx.stroke();
+
+  // Glass specular on left edge
+  ctx.beginPath();
+  const lpLMid1 = { x: wtl.x * 0.5 + wtlT.x * 0.5, y: wtl.y * 0.5 + wtlT.y * 0.5 };
+  const lpLMid2 = { x: wbl.x * 0.5 + wblT.x * 0.5, y: wbl.y * 0.5 + wblT.y * 0.5 };
+  ctx.moveTo(lpLMid1.x, lpLMid1.y);
+  ctx.lineTo(lpLMid2.x, lpLMid2.y);
+  ctx.strokeStyle = light ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 1.5 * bScale;
   ctx.stroke();
 
   // ── Screen panel (rising from right edge rt→rb) ──
@@ -197,26 +241,37 @@ export function renderLaptop(
     scrGrad.addColorStop(0.3, deepToneMid);
     scrGrad.addColorStop(1, deepToneLit);
   } else {
-    scrGrad.addColorStop(0, hexToRgba(faceFill, 0.20));
-    scrGrad.addColorStop(0.3, hexToRgba(faceFill, 0.48));
-    scrGrad.addColorStop(1, hexToRgba(faceFill, 0.72));
+    scrGrad.addColorStop(0, hexToRgba(faceFill, 0.14));
+    scrGrad.addColorStop(0.2, hexToRgba(faceFill, 0.35));
+    scrGrad.addColorStop(0.6, hexToRgba(faceFill, 0.55));
+    scrGrad.addColorStop(1, hexToRgba(faceFill, 0.78));
   }
   ctx.fillStyle = scrGrad;
-  ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.35 : 0.5) * pulse);
-  ctx.shadowBlur = light ? (selected ? 20 : 14) : (selected ? 28 : 18);
+  ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.40 : 0.55) * pulse);
+  ctx.shadowBlur = light ? (selected ? 24 : 16) : (selected ? 34 : 22);
   ctx.fill();
   ctx.shadowBlur = 0;
 
+  // Glass specular diagonal on screen face
+  ctx.beginPath();
+  const lpSpec1 = pp(0.3, 0.15);
+  const lpSpec2 = pp(0.7, 0.85);
+  ctx.moveTo(lpSpec1.x, lpSpec1.y);
+  ctx.lineTo(lpSpec2.x, lpSpec2.y);
+  ctx.strokeStyle = light ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 3.5 * bScale;
+  ctx.stroke();
+
   // Screen border
   drawPolygon(ctx, screenFace);
-  ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.98 : (light ? 0.85 : 0.72));
-  ctx.lineWidth = (selected ? 3 : 2.2) * bScale;
+  ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.98 : (light ? 0.88 : 0.78));
+  ctx.lineWidth = (selected ? 3 : 2.4) * bScale;
   ctx.stroke();
 
   // Outer glow
   drawPolygon(ctx, screenFace);
-  ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.25 : (light ? 0.10 : 0.15));
-  ctx.lineWidth = (selected ? 6 : 4) * bScale;
+  ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.28 : (light ? 0.12 : 0.18));
+  ctx.lineWidth = (selected ? 7 : 5) * bScale;
   ctx.stroke();
 
   // Screen bezel line

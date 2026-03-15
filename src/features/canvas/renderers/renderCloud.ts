@@ -184,29 +184,30 @@ export function renderCloud(
     gTop.addColorStop(0.5, deepToneMid);
     gTop.addColorStop(1, deepTone);
   } else {
-    gTop.addColorStop(0, hexToRgba(faceFill, 0.80));
-    gTop.addColorStop(0.5, hexToRgba(faceFill, 0.48));
-    gTop.addColorStop(1, hexToRgba(faceFill, 0.22));
+    gTop.addColorStop(0, hexToRgba(faceFill, 0.85));
+    gTop.addColorStop(0.3, hexToRgba(faceFill, 0.55));
+    gTop.addColorStop(0.7, hexToRgba(faceFill, 0.30));
+    gTop.addColorStop(1, hexToRgba(faceFill, 0.15));
   }
   ctx.fillStyle = gTop;
-  ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.35 : 0.4) * pulse);
-  ctx.shadowBlur = light ? (selected ? 20 : 14) : (selected ? 26 : 18);
+  ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.40 : 0.55) * pulse);
+  ctx.shadowBlur = light ? (selected ? 24 : 16) : (selected ? 34 : 24);
   ctx.fill();
   ctx.shadowBlur = 0;
 
   // ── Top border ──
   cloudTopPath(ctx, cx, cy, hx, hy);
-  ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.98 : (light ? 0.88 : 0.78));
-  ctx.lineWidth = (selected ? 3 : 2.2) * bScale;
+  ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.98 : (light ? 0.90 : 0.82));
+  ctx.lineWidth = (selected ? 3 : 2.4) * bScale;
   ctx.stroke();
 
   // ── Outer glow ──
   cloudTopPath(ctx, cx, cy, hx, hy);
-  ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.28 : (light ? 0.12 : 0.18));
-  ctx.lineWidth = (selected ? 7 : 5) * bScale;
+  ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.30 : (light ? 0.15 : 0.22));
+  ctx.lineWidth = (selected ? 8 : 6) * bScale;
   ctx.stroke();
 
-  // ── Glossy highlight arcs (puffy bumps) ──
+  // ── Glossy highlight arcs (puffy bumps — glass specular) ──
   ctx.beginPath();
   const hlPt = (u: number, v: number) => ({
     x: cx + u * hx.x + v * hy.x,
@@ -216,18 +217,36 @@ export function renderCloud(
   const h2 = hlPt(0.10, -0.55);
   ctx.moveTo(h1.x, h1.y);
   ctx.quadraticCurveTo(hlPt(-0.10, -0.52).x, hlPt(-0.10, -0.52).y, h2.x, h2.y);
-  ctx.strokeStyle = light ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)';
-  ctx.lineWidth = 2.5 * bScale;
+  ctx.strokeStyle = light ? 'rgba(255,255,255,0.20)' : 'rgba(255,255,255,0.12)';
+  ctx.lineWidth = 3.5 * bScale;
   ctx.stroke();
 
-  // Second highlight
+  // Second highlight (broader)
   ctx.beginPath();
   const h3 = hlPt(0.30, -0.35);
   const h4 = hlPt(0.60, -0.18);
   ctx.moveTo(h3.x, h3.y);
   ctx.quadraticCurveTo(hlPt(0.48, -0.35).x, hlPt(0.48, -0.35).y, h4.x, h4.y);
-  ctx.strokeStyle = light ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.05)';
+  ctx.strokeStyle = light ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.08)';
+  ctx.lineWidth = 2.5 * bScale;
+  ctx.stroke();
+
+  // Third highlight (front bump)
+  ctx.beginPath();
+  const h5 = hlPt(-0.15, 0.30);
+  const h6 = hlPt(0.25, 0.42);
+  ctx.moveTo(h5.x, h5.y);
+  ctx.quadraticCurveTo(hlPt(0.05, 0.40).x, hlPt(0.05, 0.40).y, h6.x, h6.y);
+  ctx.strokeStyle = light ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.06)';
   ctx.lineWidth = 2 * bScale;
+  ctx.stroke();
+
+  // Inner glow ring on top face
+  cloudTopPath(ctx, cx, cy,
+    { x: hx.x * 0.85, y: hx.y * 0.85 },
+    { x: hy.x * 0.85, y: hy.y * 0.85 });
+  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.10 : 0.08);
+  ctx.lineWidth = 1.2 * bScale;
   ctx.stroke();
 
   // ── Icon + text ──

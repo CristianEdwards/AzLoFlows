@@ -52,10 +52,16 @@ export function renderChartPanel(
   const wtl = { x: rt.x - bx.x * tiltBack, y: rt.y - panelH - bx.y * tiltBack };
   const wtr = { x: rb.x - bx.x * tiltBack, y: rb.y - panelH - bx.y * tiltBack };
 
-  // Left-edge thickness (depth of glass)
-  const sideDepth = 4 * camera.zoom;
+  // Left-edge thickness (glass depth)
+  const sideDepth = 8 * camera.zoom;
   const wblT = { x: wbl.x - by.x * sideDepth, y: wbl.y - by.y * sideDepth };
   const wtlT = { x: wtl.x - by.x * sideDepth, y: wtl.y - by.y * sideDepth };
+
+  // Bottom edge thickness
+  const bottomDepth = 5 * camera.zoom;
+  const wblB = { x: wbl.x, y: wbl.y + bottomDepth };
+  const wbrB = { x: wbr.x, y: wbr.y + bottomDepth };
+  const wblTB = { x: wblT.x, y: wblT.y + bottomDepth };
 
   // Helper: bilinear on panel face
   const pp = (u: number, v: number) => ({
@@ -100,12 +106,53 @@ export function renderChartPanel(
     ctx.shadowOffsetY = 0;
   }
 
-  // ── Left edge thickness ──
-  drawPolygon(ctx, [wtl, wbl, wblT, wtlT]);
-  ctx.fillStyle = light ? darkenHex(deepTone, 0.70) : hexToRgba(faceFill, 0.10);
+  // ── Bottom edge thickness (3D base strip) ──
+  drawPolygon(ctx, [wbl, wbr, wbrB, wblB]);
+  if (light) {
+    ctx.fillStyle = darkenHex(deepTone, 0.78);
+  } else {
+    const gBot = ctx.createLinearGradient(wbl.x, wbl.y, wblB.x, wblB.y);
+    gBot.addColorStop(0, hexToRgba(faceFill, 0.18));
+    gBot.addColorStop(1, hexToRgba(faceFill, 0.04));
+    ctx.fillStyle = gBot;
+  }
   ctx.fill();
-  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.15 : 0.06);
-  ctx.lineWidth = 0.4 * bScale;
+  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.10 : 0.05);
+  ctx.lineWidth = 0.5 * bScale;
+  ctx.stroke();
+
+  // Bottom-left corner strip
+  drawPolygon(ctx, [wblT, wbl, wblB, wblTB]);
+  ctx.fillStyle = light ? darkenHex(deepTone, 0.82) : hexToRgba(faceFill, 0.05);
+  ctx.fill();
+
+  // ── Left edge thickness ── (glass depth face)
+  drawPolygon(ctx, [wtl, wbl, wblT, wtlT]);
+  if (light) {
+    const gSide = ctx.createLinearGradient(wtl.x, wtl.y, wblT.x, wblT.y);
+    gSide.addColorStop(0, darkenHex(deepTone, 0.58));
+    gSide.addColorStop(1, darkenHex(deepTone, 0.72));
+    ctx.fillStyle = gSide;
+  } else {
+    const gSide = ctx.createLinearGradient(wtl.x, wtl.y, wblT.x, wblT.y);
+    gSide.addColorStop(0, hexToRgba(faceFill, 0.20));
+    gSide.addColorStop(0.5, hexToRgba(faceFill, 0.10));
+    gSide.addColorStop(1, hexToRgba(faceFill, 0.05));
+    ctx.fillStyle = gSide;
+  }
+  ctx.fill();
+  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.18 : 0.08);
+  ctx.lineWidth = 0.5 * bScale;
+  ctx.stroke();
+
+  // Glass specular on left edge
+  ctx.beginPath();
+  const cpLMid1 = { x: wtl.x * 0.5 + wtlT.x * 0.5, y: wtl.y * 0.5 + wtlT.y * 0.5 };
+  const cpLMid2 = { x: wbl.x * 0.5 + wblT.x * 0.5, y: wbl.y * 0.5 + wblT.y * 0.5 };
+  ctx.moveTo(cpLMid1.x, cpLMid1.y);
+  ctx.lineTo(cpLMid2.x, cpLMid2.y);
+  ctx.strokeStyle = light ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 1.5 * bScale;
   ctx.stroke();
 
   // ── Main face ──
@@ -117,11 +164,27 @@ export function renderChartPanel(
     grad.addColorStop(0.4, deepToneMid);
     grad.addColorStop(1, deepTone);
   } else {
-    grad.addColorStop(0, hexToRgba(faceFill, 0.60));
-    grad.addColorStop(0.4, hexToRgba(faceFill, 0.35));
-    grad.addColorStop(1, hexToRgba(faceFill, 0.12));
+    grad.addColorStop(0, hexToRgba(faceFill, 0.68));
+    grad.addColorStop(0.2, hexToRgba(faceFill, 0.42));
+    grad.addColorStop(0.6, hexToRgba(faceFill, 0.22));
+    grad.addColorStop(1, hexToRgba(faceFill, 0.10));
   }
   ctx.fillStyle = grad;
+
+  // Glass specular diagonal on main face
+  ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.35 : 0.55) * pulse);
+  ctx.shadowBlur = light ? (selected ? 24 : 16) : (selected ? 34 : 22);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  ctx.beginPath();
+  const cpSpec1 = pp(0.3, 0.15);
+  const cpSpec2 = pp(0.7, 0.85);
+  ctx.moveTo(cpSpec1.x, cpSpec1.y);
+  ctx.lineTo(cpSpec2.x, cpSpec2.y);
+  ctx.strokeStyle = light ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 3.5 * bScale;
+  ctx.stroke();
   ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.25 : 0.40) * pulse);
   ctx.shadowBlur = light ? (selected ? 18 : 12) : (selected ? 24 : 16);
   ctx.fill();
