@@ -6,7 +6,9 @@ import { hexToRgba, lightenHex, darkenHex, deepToneForGlow } from '@/lib/renderi
 import type { CameraState, NodeEntity, Point } from '@/types/document';
 
 /**
- * Renders an isometric server rack — stacked horizontal slats with LED indicators.
+ * Renders an isometric server rack — individually floating glass server blades
+ * stacked with visible gaps and glow bleeding between them.
+ * Inspired by high-end datacenter illustration styles.
  */
 export function renderServerRack(
   ctx: CanvasRenderingContext2D,
@@ -20,7 +22,6 @@ export function renderServerRack(
   const light = theme === 'light';
   const points = isoQuad(node.x, node.y, node.width, node.height, camera, viewport);
   const [leftTop, rightTop, rightBottom, leftBottom] = points;
-  const depth = NODE_DEPTH * 1.2 * camera.zoom; // taller rack
   const pulse = 0.7 + Math.sin(time * 0.0015 + node.zIndex) * 0.18;
 
   const topEdgeLength = Math.hypot(rightTop.x - leftTop.x, rightTop.y - leftTop.y) || 1;
@@ -37,22 +38,25 @@ export function renderServerRack(
     y: (leftBottom.y - leftTop.y) / leftEdgeLength,
   };
 
-  const leftTopDepth = { x: leftTop.x, y: leftTop.y + depth };
-  const frontLeftBottom = { x: leftBottom.x, y: leftBottom.y + depth };
-  const frontRightBottom = { x: rightBottom.x, y: rightBottom.y + depth };
-  const rightTopDepth = { x: rightTop.x, y: rightTop.y + depth };
-
   const faceFill = light ? node.glowColor : node.fill;
   const deepTone = light ? deepToneForGlow(node.glowColor) : '';
   const deepToneLit = light ? lightenHex(deepTone, 0.22) : '';
   const deepToneMid = light ? lightenHex(deepTone, 0.12) : '';
 
+  // ── Server blade configuration ──
+  const bladeCount = 4;
+  const bladeDepth = NODE_DEPTH * 0.26 * camera.zoom;  // height of each blade
+  const gapH = 5 * camera.zoom;  // visible gap between blades
+  const totalHeight = bladeCount * bladeDepth + (bladeCount - 1) * gapH;
+
   // ── Drop shadow (light mode) ──
   if (light) {
-    drawPolygon(ctx, [leftBottom, rightBottom, frontRightBottom, frontLeftBottom]);
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.28)';
-    ctx.shadowBlur = 22;
-    ctx.shadowOffsetY = 7;
+    const shLB = { x: leftBottom.x, y: leftBottom.y + totalHeight };
+    const shRB = { x: rightBottom.x, y: rightBottom.y + totalHeight };
+    drawPolygon(ctx, [leftBottom, rightBottom, shRB, shLB]);
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.30)';
+    ctx.shadowBlur = 26;
+    ctx.shadowOffsetY = 8;
     ctx.fillStyle = 'rgba(0,0,0,0)';
     ctx.fill();
     ctx.shadowColor = 'transparent';
@@ -60,162 +64,204 @@ export function renderServerRack(
     ctx.shadowOffsetY = 0;
   }
 
-  // ── Left side face ──
-  drawPolygon(ctx, [leftTop, leftBottom, frontLeftBottom, leftTopDepth]);
-  if (light) {
-    const g = ctx.createLinearGradient(leftTop.x, leftTop.y, frontLeftBottom.x, frontLeftBottom.y);
-    g.addColorStop(0, deepToneMid);
-    g.addColorStop(1, deepTone);
-    ctx.fillStyle = g;
-  } else {
-    ctx.fillStyle = hexToRgba(faceFill, 0.22);
-  }
-  ctx.fill();
-  ctx.strokeStyle = hexToRgba(node.glowColor, (light ? 0.35 : 0.14) * pulse);
-  ctx.lineWidth = 0.8 * bScale;
-  ctx.stroke();
+  // Draw each blade from bottom to top (back to front in draw order)
+  const ledColors = ['#00ff88', '#00e5ff', node.glowColor, '#ffab00'];
+  for (let blade = bladeCount - 1; blade >= 0; blade--) {
+    const yOff = blade * (bladeDepth + gapH);
+    const bladeAlpha = 0.75 + blade * 0.08;  // top blade brightest
 
-  // ── Front face (main rack face with slats) ──
-  const frontFace = [leftBottom, rightBottom, frontRightBottom, frontLeftBottom];
-  drawPolygon(ctx, frontFace);
-  if (light) {
-    const gFront = ctx.createLinearGradient(leftBottom.x, leftBottom.y, frontRightBottom.x, frontRightBottom.y);
-    gFront.addColorStop(0, deepTone);
-    gFront.addColorStop(1, darkenHex(deepTone, 0.8));
-    ctx.fillStyle = gFront;
-  } else {
-    ctx.fillStyle = hexToRgba(faceFill, 0.42);
-  }
-  ctx.fill();
+    // Four corners of blade top face (shifted down by yOff)
+    const blt = { x: leftTop.x, y: leftTop.y + yOff };
+    const brt = { x: rightTop.x, y: rightTop.y + yOff };
+    const brb = { x: rightBottom.x, y: rightBottom.y + yOff };
+    const blb = { x: leftBottom.x, y: leftBottom.y + yOff };
 
-  // ── Front face slats (horizontal dividers) ──
-  const slatCount = 4;
-  for (let i = 1; i < slatCount; i++) {
-    const t = i / slatCount;
-    const lx = leftBottom.x + (frontLeftBottom.x - leftBottom.x) * t;
-    const ly = leftBottom.y + (frontLeftBottom.y - leftBottom.y) * t;
-    const rx = rightBottom.x + (frontRightBottom.x - rightBottom.x) * t;
-    const ry = rightBottom.y + (frontRightBottom.y - rightBottom.y) * t;
+    // Depth-shifted corners
+    const bltD = { x: blt.x, y: blt.y + bladeDepth };
+    const brtD = { x: brt.x, y: brt.y + bladeDepth };
+    const brbD = { x: brb.x, y: brb.y + bladeDepth };
+    const blbD = { x: blb.x, y: blb.y + bladeDepth };
+
+    // ── Left face (glass) ──
+    drawPolygon(ctx, [blt, blb, blbD, bltD]);
+    if (light) {
+      const g = ctx.createLinearGradient(blt.x, blt.y, blbD.x, blbD.y);
+      g.addColorStop(0, deepToneMid);
+      g.addColorStop(1, deepTone);
+      ctx.fillStyle = g;
+    } else {
+      const g = ctx.createLinearGradient(blt.x, blt.y, blbD.x, blbD.y);
+      g.addColorStop(0, hexToRgba(faceFill, 0.30 * bladeAlpha));
+      g.addColorStop(1, hexToRgba(faceFill, 0.12 * bladeAlpha));
+      ctx.fillStyle = g;
+    }
+    ctx.fill();
+
+    // ── Front face (glass with LED) ──
+    drawPolygon(ctx, [blb, brb, brbD, blbD]);
+    if (light) {
+      const gFront = ctx.createLinearGradient(blb.x, blb.y, brbD.x, brbD.y);
+      gFront.addColorStop(0, deepTone);
+      gFront.addColorStop(1, darkenHex(deepTone, 0.8));
+      ctx.fillStyle = gFront;
+    } else {
+      const gFront = ctx.createLinearGradient(blb.x, blb.y, brbD.x, brbD.y);
+      gFront.addColorStop(0, hexToRgba(faceFill, 0.45 * bladeAlpha));
+      gFront.addColorStop(0.5, hexToRgba(faceFill, 0.25 * bladeAlpha));
+      gFront.addColorStop(1, hexToRgba(faceFill, 0.12 * bladeAlpha));
+      ctx.fillStyle = gFront;
+    }
+    ctx.fill();
+
+    // Front face glass specular
     ctx.beginPath();
-    ctx.moveTo(lx, ly);
-    ctx.lineTo(rx, ry);
-    ctx.strokeStyle = light ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.06)';
-    ctx.lineWidth = 1.2 * bScale;
+    const fMid1 = { x: blb.x * 0.6 + brb.x * 0.4, y: blb.y * 0.6 + brb.y * 0.4 };
+    const fMid2 = { x: blbD.x * 0.4 + brbD.x * 0.6, y: blbD.y * 0.4 + brbD.y * 0.6 };
+    ctx.moveTo(fMid1.x, fMid1.y);
+    ctx.lineTo(fMid2.x, fMid2.y);
+    ctx.strokeStyle = light ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.04)';
+    ctx.lineWidth = 2 * bScale;
     ctx.stroke();
 
-    // Thin dark gap line
-    ctx.beginPath();
-    ctx.moveTo(lx, ly + 1);
-    ctx.lineTo(rx, ry + 1);
-    ctx.strokeStyle = light ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.2)';
+    // Front face border
+    drawPolygon(ctx, [blb, brb, brbD, blbD]);
+    ctx.strokeStyle = hexToRgba(node.glowColor, (light ? 0.30 : 0.18) * pulse);
     ctx.lineWidth = 0.8 * bScale;
     ctx.stroke();
-  }
 
-  // ── LED indicators on front face ──
-  const ledColors = ['#00ff88', '#00e5ff', node.glowColor, '#ffab00'];
-  for (let i = 0; i < slatCount; i++) {
-    const t = (i + 0.5) / slatCount;
-    const cx = leftBottom.x + (frontLeftBottom.x - leftBottom.x) * t;
-    const cy = leftBottom.y + (frontLeftBottom.y - leftBottom.y) * t;
-    // Offset inward from left edge
-    const ledX = cx + (rightBottom.x - leftBottom.x) * 0.08;
-    const ledY = cy + (rightBottom.y - leftBottom.y) * 0.08;
-
-    const blinkPhase = Math.sin(time * 0.003 + i * 1.7);
+    // LED indicator on front face
+    const ledT = 0.5;  // vertical center of front face
+    const ledCx = blb.x + (blbD.x - blb.x) * ledT + (brb.x - blb.x) * 0.06;
+    const ledCy = blb.y + (blbD.y - blb.y) * ledT + (brb.y - blb.y) * 0.06;
+    const blinkPhase = Math.sin(time * 0.003 + blade * 1.7);
     const ledOn = blinkPhase > -0.3;
 
     ctx.beginPath();
-    ctx.arc(ledX, ledY, 2 * bScale, 0, Math.PI * 2);
-    ctx.fillStyle = ledOn ? hexToRgba(ledColors[i % ledColors.length], 0.9) : 'rgba(60,60,60,0.4)';
+    ctx.arc(ledCx, ledCy, 2.2 * bScale, 0, Math.PI * 2);
+    ctx.fillStyle = ledOn ? hexToRgba(ledColors[blade % ledColors.length], 0.9) : 'rgba(60,60,60,0.4)';
     if (ledOn) {
-      ctx.shadowColor = ledColors[i % ledColors.length];
-      ctx.shadowBlur = 5;
+      ctx.shadowColor = ledColors[blade % ledColors.length];
+      ctx.shadowBlur = 6;
     }
     ctx.fill();
     ctx.shadowBlur = 0;
+
+    // ── Right face ──
+    drawPolygon(ctx, [brt, brb, brbD, brtD]);
+    if (light) {
+      ctx.fillStyle = darkenHex(deepTone, 0.85);
+    } else {
+      ctx.fillStyle = hexToRgba(faceFill, 0.10 * bladeAlpha);
+    }
+    ctx.fill();
+
+    // ── Top face (blade top surface) ──
+    drawPolygon(ctx, [blt, brt, brb, blb]);
+    const gTop = ctx.createLinearGradient(blt.x, blt.y, brb.x, brb.y);
+    if (light) {
+      gTop.addColorStop(0, deepToneLit);
+      gTop.addColorStop(0.5, deepToneMid);
+      gTop.addColorStop(1, deepTone);
+    } else {
+      gTop.addColorStop(0, hexToRgba(faceFill, 0.85 * bladeAlpha));
+      gTop.addColorStop(0.3, hexToRgba(faceFill, 0.52 * bladeAlpha));
+      gTop.addColorStop(0.7, hexToRgba(faceFill, 0.28 * bladeAlpha));
+      gTop.addColorStop(1, hexToRgba(faceFill, 0.14 * bladeAlpha));
+    }
+    ctx.fillStyle = gTop;
+    if (blade === 0) {
+      ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.35 : 0.5) * pulse);
+      ctx.shadowBlur = light ? (selected ? 22 : 16) : (selected ? 30 : 20);
+    }
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Glass specular on top face
+    ctx.beginPath();
+    const tSpec1 = {
+      x: blt.x * 0.55 + brt.x * 0.45,
+      y: blt.y * 0.55 + brt.y * 0.45,
+    };
+    const tSpec2 = {
+      x: blb.x * 0.45 + brb.x * 0.55,
+      y: blb.y * 0.45 + brb.y * 0.55,
+    };
+    ctx.moveTo(tSpec1.x, tSpec1.y);
+    ctx.lineTo(tSpec2.x, tSpec2.y);
+    ctx.strokeStyle = light ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.05)';
+    ctx.lineWidth = 3 * bScale;
+    ctx.stroke();
+
+    // Top face border
+    drawPolygon(ctx, [blt, brt, brb, blb]);
+    ctx.strokeStyle = hexToRgba(node.glowColor,
+      blade === 0 ? (selected ? 0.98 : (light ? 0.88 : 0.75)) : (light ? 0.50 : 0.35));
+    ctx.lineWidth = (blade === 0 ? (selected ? 3 : 2.2) : 1.2) * bScale;
+    ctx.stroke();
+
+    // ── Leading edge glow (left edge of each blade) ──
+    ctx.beginPath();
+    ctx.moveTo(blt.x, blt.y);
+    ctx.lineTo(blb.x, blb.y);
+    ctx.strokeStyle = hexToRgba(node.glowColor, blade === 0 ? 0.96 : 0.55);
+    ctx.lineWidth = (blade === 0 ? 2.5 : 1.5) * bScale;
+    ctx.shadowColor = hexToRgba(node.glowColor, light ? 0.15 : 0.40);
+    ctx.shadowBlur = (light ? 3 : 8) * bScale;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // ── Glow line between blades (visible in gap) ──
+    if (blade < bladeCount - 1) {
+      const glowY = blt.y + bladeDepth + gapH * 0.4;
+      ctx.beginPath();
+      ctx.moveTo(blb.x, blb.y + bladeDepth + gapH * 0.3);
+      ctx.lineTo(brb.x, brb.y + bladeDepth + gapH * 0.3);
+      ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.40 : 0.55);
+      ctx.lineWidth = 1.5 * bScale;
+      ctx.shadowColor = hexToRgba(node.glowColor, light ? 0.25 : 0.50);
+      ctx.shadowBlur = 6 * bScale;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Left-side gap glow
+      ctx.beginPath();
+      ctx.moveTo(blt.x, blt.y + bladeDepth + gapH * 0.3);
+      ctx.lineTo(blb.x, blb.y + bladeDepth + gapH * 0.3);
+      ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.30 : 0.40);
+      ctx.lineWidth = 1 * bScale;
+      ctx.shadowColor = hexToRgba(node.glowColor, light ? 0.15 : 0.35);
+      ctx.shadowBlur = 4 * bScale;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+
+    // Ventilation slot on top face (subtle line)
+    if (blade === 0) {
+      for (let i = 1; i <= 2; i++) {
+        const t = i / 3;
+        const slotStart: Point = {
+          x: blt.x + (brt.x - blt.x) * 0.25 + (blb.x - blt.x) * t,
+          y: blt.y + (brt.y - blt.y) * 0.25 + (blb.y - blt.y) * t,
+        };
+        const slotEnd: Point = {
+          x: blt.x + (brt.x - blt.x) * 0.75 + (blb.x - blt.x) * t,
+          y: blt.y + (brt.y - blt.y) * 0.75 + (blb.y - blt.y) * t,
+        };
+        ctx.beginPath();
+        ctx.moveTo(slotStart.x, slotStart.y);
+        ctx.lineTo(slotEnd.x, slotEnd.y);
+        ctx.strokeStyle = light ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)';
+        ctx.lineWidth = 0.8 * bScale;
+        ctx.stroke();
+      }
+    }
   }
 
-  // ── Front face border ──
-  drawPolygon(ctx, frontFace);
-  ctx.strokeStyle = hexToRgba(node.glowColor, (light ? 0.45 : 0.3) * pulse);
-  ctx.lineWidth = 1.2 * bScale;
-  ctx.stroke();
-
-  // ── Right side face ──
-  drawPolygon(ctx, [rightTop, rightBottom, frontRightBottom, rightTopDepth]);
-  if (light) {
-    const gRight = ctx.createLinearGradient(rightTop.x, rightTop.y, frontRightBottom.x, frontRightBottom.y);
-    gRight.addColorStop(0, deepToneMid);
-    gRight.addColorStop(1, darkenHex(deepTone, 0.85));
-    ctx.fillStyle = gRight;
-  } else {
-    ctx.fillStyle = hexToRgba(faceFill, 0.28);
-  }
-  ctx.fill();
-  ctx.strokeStyle = hexToRgba(node.glowColor, (light ? 0.30 : 0.1) * pulse);
-  ctx.lineWidth = 0.8 * bScale;
-  ctx.stroke();
-
-  // ── Top face ──
-  drawPolygon(ctx, points);
-  const gradient = ctx.createLinearGradient(points[0].x, points[0].y, points[2].x, points[2].y);
-  if (light) {
-    gradient.addColorStop(0, deepToneLit);
-    gradient.addColorStop(0.5, deepToneMid);
-    gradient.addColorStop(1, deepTone);
-  } else {
-    gradient.addColorStop(0, hexToRgba(faceFill, 0.84));
-    gradient.addColorStop(0.5, hexToRgba(faceFill, 0.46));
-    gradient.addColorStop(1, hexToRgba(faceFill, 0.24));
-  }
-  ctx.fillStyle = gradient;
-  ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.35 : 0.4) * pulse);
-  ctx.shadowBlur = light ? (selected ? 20 : 14) : (selected ? 26 : 18);
-  ctx.fill();
-  ctx.shadowBlur = 0;
-
-  // ── Top face border ──
-  drawPolygon(ctx, points);
-  ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.98 : (light ? 0.88 : 0.78));
-  ctx.lineWidth = (selected ? 3.2 : 2.4) * bScale;
-  ctx.stroke();
-
-  // ── Top face outer glow ──
+  // ── Outer glow on top blade ──
   drawPolygon(ctx, points);
   ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.28 : (light ? 0.12 : 0.18));
   ctx.lineWidth = (selected ? 7 : 5) * bScale;
   ctx.stroke();
-
-  // ── Ventilation slots on top face ──
-  for (let i = 1; i <= 3; i++) {
-    const t = i / 4;
-    const slotStart: Point = {
-      x: leftTop.x + (rightTop.x - leftTop.x) * 0.2 + (leftBottom.x - leftTop.x) * t,
-      y: leftTop.y + (rightTop.y - leftTop.y) * 0.2 + (leftBottom.y - leftTop.y) * t,
-    };
-    const slotEnd: Point = {
-      x: leftTop.x + (rightTop.x - leftTop.x) * 0.8 + (leftBottom.x - leftTop.x) * t,
-      y: leftTop.y + (rightTop.y - leftTop.y) * 0.8 + (leftBottom.y - leftTop.y) * t,
-    };
-    ctx.beginPath();
-    ctx.moveTo(slotStart.x, slotStart.y);
-    ctx.lineTo(slotEnd.x, slotEnd.y);
-    ctx.strokeStyle = light ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.05)';
-    ctx.lineWidth = 1 * bScale;
-    ctx.stroke();
-  }
-
-  // ── Edge highlights ──
-  ctx.beginPath();
-  ctx.moveTo(leftTop.x, leftTop.y);
-  ctx.lineTo(leftBottom.x, leftBottom.y);
-  ctx.strokeStyle = hexToRgba(node.glowColor, 0.96);
-  ctx.lineWidth = 2.8 * bScale;
-  ctx.shadowColor = hexToRgba(node.glowColor, light ? 0.15 : 0.45);
-  ctx.shadowBlur = (light ? 3 : 10) * bScale;
-  ctx.stroke();
-  ctx.shadowBlur = 0;
 
   // ── Icon + text ──
   const showDetail = camera.zoom >= DETAIL_ZOOM_THRESHOLD;

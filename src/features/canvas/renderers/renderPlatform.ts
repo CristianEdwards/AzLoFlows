@@ -85,11 +85,94 @@ export function renderPlatform(
     gTop.addColorStop(0, lightenHex(deepTone, 0.15));
     gTop.addColorStop(1, deepTone);
   } else {
-    gTop.addColorStop(0, hexToRgba(faceFill, 0.28));
-    gTop.addColorStop(1, hexToRgba(faceFill, 0.12));
+    gTop.addColorStop(0, hexToRgba(faceFill, 0.32));
+    gTop.addColorStop(0.5, hexToRgba(faceFill, 0.18));
+    gTop.addColorStop(1, hexToRgba(faceFill, 0.08));
   }
   ctx.fillStyle = gTop;
   ctx.fill();
+
+  // ── Raised inner platform (second tier) ──
+  const insetFrac = 0.15;
+  const innerLT = {
+    x: lt.x + (rt.x - lt.x) * insetFrac + (lb.x - lt.x) * insetFrac,
+    y: lt.y + (rt.y - lt.y) * insetFrac + (lb.y - lt.y) * insetFrac,
+  };
+  const innerRT = {
+    x: rt.x - (rt.x - lt.x) * insetFrac + (rb.x - rt.x) * insetFrac,
+    y: rt.y - (rt.y - lt.y) * insetFrac + (rb.y - rt.y) * insetFrac,
+  };
+  const innerRB = {
+    x: rb.x - (rb.x - lb.x) * insetFrac - (rb.x - rt.x) * insetFrac,
+    y: rb.y - (rb.y - lb.y) * insetFrac - (rb.y - rt.y) * insetFrac,
+  };
+  const innerLB = {
+    x: lb.x + (rb.x - lb.x) * insetFrac - (lb.x - lt.x) * insetFrac,
+    y: lb.y + (rb.y - lb.y) * insetFrac - (lb.y - lt.y) * insetFrac,
+  };
+  const innerDepth = depth * 0.6;
+  const iLTu = { x: innerLT.x, y: innerLT.y - innerDepth };
+  const iRTu = { x: innerRT.x, y: innerRT.y - innerDepth };
+  const iRBu = { x: innerRB.x, y: innerRB.y - innerDepth };
+  const iLBu = { x: innerLB.x, y: innerLB.y - innerDepth };
+
+  // Inner platform left face
+  drawPolygon(ctx, [iLTu, iLBu, innerLB, innerLT]);
+  ctx.fillStyle = light ? darkenHex(deepTone, 0.55) : hexToRgba(faceFill, 0.14);
+  ctx.fill();
+
+  // Inner platform front face
+  drawPolygon(ctx, [iLBu, iRBu, innerRB, innerLB]);
+  ctx.fillStyle = light ? darkenHex(deepTone, 0.60) : hexToRgba(faceFill, 0.18);
+  ctx.fill();
+
+  // Inner platform top face
+  drawPolygon(ctx, [iLTu, iRTu, iRBu, iLBu]);
+  const gInner = ctx.createLinearGradient(iLTu.x, iLTu.y, iRBu.x, iRBu.y);
+  if (light) {
+    gInner.addColorStop(0, lightenHex(deepTone, 0.20));
+    gInner.addColorStop(1, deepTone);
+  } else {
+    gInner.addColorStop(0, hexToRgba(faceFill, 0.45));
+    gInner.addColorStop(0.5, hexToRgba(faceFill, 0.25));
+    gInner.addColorStop(1, hexToRgba(faceFill, 0.12));
+  }
+  ctx.fillStyle = gInner;
+  ctx.fill();
+
+  // Glass specular on inner top face
+  ctx.beginPath();
+  const iSpec1 = {
+    x: iLTu.x * 0.55 + iRTu.x * 0.45,
+    y: iLTu.y * 0.55 + iRTu.y * 0.45,
+  };
+  const iSpec2 = {
+    x: iLBu.x * 0.45 + iRBu.x * 0.55,
+    y: iLBu.y * 0.45 + iRBu.y * 0.55,
+  };
+  ctx.moveTo(iSpec1.x, iSpec1.y);
+  ctx.lineTo(iSpec2.x, iSpec2.y);
+  ctx.strokeStyle = light ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 3 * bScale;
+  ctx.stroke();
+
+  // Inner platform border with glow
+  drawPolygon(ctx, [iLTu, iRTu, iRBu, iLBu]);
+  ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.90 : (light ? 0.65 : 0.50));
+  ctx.lineWidth = (selected ? 2.5 : 1.8) * bScale;
+  ctx.shadowColor = hexToRgba(node.glowColor, light ? 0.25 : 0.45);
+  ctx.shadowBlur = (light ? 5 : 10) * bScale;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // ── Glow ring between tiers ──
+  drawPolygon(ctx, [innerLT, innerRT, innerRB, innerLB]);
+  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.35 : 0.50);
+  ctx.lineWidth = 1.5 * bScale;
+  ctx.shadowColor = hexToRgba(node.glowColor, light ? 0.20 : 0.40);
+  ctx.shadowBlur = (light ? 4 : 8) * bScale;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
 
   // ── Glowing rim on the top edge ──
   // Left edge (leading)

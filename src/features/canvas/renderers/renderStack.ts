@@ -38,7 +38,7 @@ export function renderStack(
 
   const layers = 3;
   const layerDepth = NODE_DEPTH * 0.32 * camera.zoom;
-  const gapH = 3 * camera.zoom; // visible gap between layers
+  const gapH = 6 * camera.zoom; // visible gap between layers (wider for glow)
   const totalDepth = layers * layerDepth + (layers - 1) * gapH;
 
   // ── Drop shadow ──
@@ -111,7 +111,10 @@ export function renderStack(
     if (light) {
       ctx.fillStyle = darkenHex(deepTone, 0.75 + layer * 0.05);
     } else {
-      ctx.fillStyle = hexToRgba(faceFill, 0.14 * layerAlpha);
+      const gR = ctx.createLinearGradient(lrt.x, lrt.y, lrbD.x, lrbD.y);
+      gR.addColorStop(0, hexToRgba(faceFill, 0.18 * layerAlpha));
+      gR.addColorStop(1, hexToRgba(faceFill, 0.06 * layerAlpha));
+      ctx.fillStyle = gR;
     }
     ctx.fill();
 
@@ -123,22 +126,39 @@ export function renderStack(
       gTop.addColorStop(0.5, lightenHex(deepTone, 0.12 * layerLightFactor));
       gTop.addColorStop(1, deepTone);
     } else {
-      gTop.addColorStop(0, hexToRgba(faceFill, 0.75 * layerAlpha));
-      gTop.addColorStop(0.5, hexToRgba(faceFill, 0.42 * layerAlpha));
-      gTop.addColorStop(1, hexToRgba(faceFill, 0.18 * layerAlpha));
+      gTop.addColorStop(0, hexToRgba(faceFill, 0.85 * layerAlpha));
+      gTop.addColorStop(0.3, hexToRgba(faceFill, 0.52 * layerAlpha));
+      gTop.addColorStop(0.7, hexToRgba(faceFill, 0.28 * layerAlpha));
+      gTop.addColorStop(1, hexToRgba(faceFill, 0.14 * layerAlpha));
     }
     ctx.fillStyle = gTop;
     if (layer === 0) {
-      ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.35 : 0.4) * pulse);
-      ctx.shadowBlur = light ? (selected ? 20 : 14) : (selected ? 26 : 18);
+      ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.40 : 0.55) * pulse);
+      ctx.shadowBlur = light ? (selected ? 24 : 16) : (selected ? 32 : 22);
     }
     ctx.fill();
     ctx.shadowBlur = 0;
 
+    // Glass specular highlight on top face
+    ctx.beginPath();
+    const sSpec1 = {
+      x: llt.x * 0.55 + lrt.x * 0.45,
+      y: llt.y * 0.55 + lrt.y * 0.45,
+    };
+    const sSpec2 = {
+      x: llb.x * 0.45 + lrb.x * 0.55,
+      y: llb.y * 0.45 + lrb.y * 0.55,
+    };
+    ctx.moveTo(sSpec1.x, sSpec1.y);
+    ctx.lineTo(sSpec2.x, sSpec2.y);
+    ctx.strokeStyle = light ? 'rgba(255,255,255,0.10)' : `rgba(255,255,255,${0.07 * layerAlpha})`;
+    ctx.lineWidth = 3 * bScale;
+    ctx.stroke();
+
     // Top face border
     drawPolygon(ctx, [llt, lrt, lrb, llb]);
-    ctx.strokeStyle = hexToRgba(node.glowColor, (layer === 0 ? (selected ? 0.98 : (light ? 0.85 : 0.72)) : (light ? 0.45 : 0.3)));
-    ctx.lineWidth = (layer === 0 ? (selected ? 3 : 2.2) : 1.2) * bScale;
+    ctx.strokeStyle = hexToRgba(node.glowColor, (layer === 0 ? (selected ? 0.98 : (light ? 0.88 : 0.78)) : (light ? 0.50 : 0.38)));
+    ctx.lineWidth = (layer === 0 ? (selected ? 3 : 2.2) : 1.4) * bScale;
     ctx.stroke();
 
     // ── Glowing separator line on front face between layers ──

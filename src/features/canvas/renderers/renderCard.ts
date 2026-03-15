@@ -23,7 +23,7 @@ export function renderCard(
   const light = theme === 'light';
   const points = isoQuad(node.x, node.y, node.width, node.height, camera, viewport);
   const [lt, rt, rb, lb] = points;
-  const depth = NODE_DEPTH * 0.18 * camera.zoom; // very thin slab
+  const depth = NODE_DEPTH * 0.25 * camera.zoom; // thicker glass slab
   const pulse = 0.7 + Math.sin(time * 0.0015 + node.zIndex) * 0.18;
 
   const topEdgeLen = Math.hypot(rt.x - lt.x, rt.y - lt.y) || 1;
@@ -57,48 +57,87 @@ export function renderCard(
     ctx.shadowOffsetY = 0;
   }
 
-  // ── Left face (thin edge) ──
+  // ── Left face (glass edge) ──
   drawPolygon(ctx, [lt, lb, lbD, ltD]);
   if (light) {
-    ctx.fillStyle = darkenHex(deepTone, 0.7);
+    const gSide = ctx.createLinearGradient(lt.x, lt.y, lbD.x, lbD.y);
+    gSide.addColorStop(0, darkenHex(deepTone, 0.60));
+    gSide.addColorStop(1, darkenHex(deepTone, 0.75));
+    ctx.fillStyle = gSide;
   } else {
-    ctx.fillStyle = hexToRgba(faceFill, 0.12);
+    const gSide = ctx.createLinearGradient(lt.x, lt.y, lbD.x, lbD.y);
+    gSide.addColorStop(0, hexToRgba(faceFill, 0.22));
+    gSide.addColorStop(1, hexToRgba(faceFill, 0.08));
+    ctx.fillStyle = gSide;
   }
   ctx.fill();
-  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.25 : 0.12);
+  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.25 : 0.14);
   ctx.lineWidth = 0.6 * bScale;
   ctx.stroke();
 
-  // ── Front face (thin edge) ──
+  // Glass specular on left face
+  ctx.beginPath();
+  const cLMid1 = { x: lt.x * 0.5 + ltD.x * 0.5, y: lt.y * 0.5 + ltD.y * 0.5 };
+  const cLMid2 = { x: lb.x * 0.5 + lbD.x * 0.5, y: lb.y * 0.5 + lbD.y * 0.5 };
+  ctx.moveTo(cLMid1.x, cLMid1.y);
+  ctx.lineTo(cLMid2.x, cLMid2.y);
+  ctx.strokeStyle = light ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 1.5 * bScale;
+  ctx.stroke();
+
+  // ── Front face (glass edge) ──
   drawPolygon(ctx, [lb, rb, rbD, lbD]);
   if (light) {
-    ctx.fillStyle = darkenHex(deepTone, 0.65);
+    const gFront = ctx.createLinearGradient(lb.x, lb.y, rbD.x, rbD.y);
+    gFront.addColorStop(0, darkenHex(deepTone, 0.55));
+    gFront.addColorStop(1, darkenHex(deepTone, 0.70));
+    ctx.fillStyle = gFront;
   } else {
-    ctx.fillStyle = hexToRgba(faceFill, 0.16);
+    const gFront = ctx.createLinearGradient(lb.x, lb.y, rbD.x, rbD.y);
+    gFront.addColorStop(0, hexToRgba(faceFill, 0.26));
+    gFront.addColorStop(0.5, hexToRgba(faceFill, 0.14));
+    gFront.addColorStop(1, hexToRgba(faceFill, 0.06));
+    ctx.fillStyle = gFront;
   }
   ctx.fill();
-  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.25 : 0.12);
+  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.25 : 0.14);
   ctx.lineWidth = 0.6 * bScale;
   ctx.stroke();
 
-  // ── Top face (card surface — the main visual) ──
+  // ── Top face (card surface — glass) ──
   drawPolygon(ctx, points);
   const grad = ctx.createLinearGradient(lt.x, lt.y, rb.x, rb.y);
   if (light) {
-    // Frosted semi-translucent card fill
     grad.addColorStop(0, lightenHex(deepTone, 0.42));
     grad.addColorStop(0.5, deepToneLit);
     grad.addColorStop(1, deepToneMid);
   } else {
-    grad.addColorStop(0, hexToRgba(faceFill, 0.55));
-    grad.addColorStop(0.5, hexToRgba(faceFill, 0.35));
-    grad.addColorStop(1, hexToRgba(faceFill, 0.18));
+    grad.addColorStop(0, hexToRgba(faceFill, 0.62));
+    grad.addColorStop(0.3, hexToRgba(faceFill, 0.40));
+    grad.addColorStop(0.7, hexToRgba(faceFill, 0.22));
+    grad.addColorStop(1, hexToRgba(faceFill, 0.12));
   }
   ctx.fillStyle = grad;
-  ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.3 : 0.4) * pulse);
-  ctx.shadowBlur = light ? (selected ? 18 : 12) : (selected ? 24 : 16);
+  ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.35 : 0.50) * pulse);
+  ctx.shadowBlur = light ? (selected ? 20 : 14) : (selected ? 30 : 20);
   ctx.fill();
   ctx.shadowBlur = 0;
+
+  // Glass specular on top face
+  ctx.beginPath();
+  const cSpec1 = {
+    x: lt.x * 0.6 + rt.x * 0.4,
+    y: lt.y * 0.6 + rt.y * 0.4,
+  };
+  const cSpec2 = {
+    x: lb.x * 0.4 + rb.x * 0.6,
+    y: lb.y * 0.4 + rb.y * 0.6,
+  };
+  ctx.moveTo(cSpec1.x, cSpec1.y);
+  ctx.lineTo(cSpec2.x, cSpec2.y);
+  ctx.strokeStyle = light ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 3.5 * bScale;
+  ctx.stroke();
 
   // ── Header stripe (top 20 % of the card surface) ──
   const hdrFrac = 0.20;
