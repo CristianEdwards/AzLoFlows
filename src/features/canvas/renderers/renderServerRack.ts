@@ -82,7 +82,7 @@ export function renderServerRack(
     const brbD = { x: brb.x, y: brb.y + bladeDepth };
     const blbD = { x: blb.x, y: blb.y + bladeDepth };
 
-    // ── Left face (glass) ──
+    // ── Left face ──
     drawPolygon(ctx, [blt, blb, blbD, bltD]);
     if (light) {
       const g = ctx.createLinearGradient(blt.x, blt.y, blbD.x, blbD.y);
@@ -91,13 +91,13 @@ export function renderServerRack(
       ctx.fillStyle = g;
     } else {
       const g = ctx.createLinearGradient(blt.x, blt.y, blbD.x, blbD.y);
-      g.addColorStop(0, hexToRgba(faceFill, 0.30 * bladeAlpha));
-      g.addColorStop(1, hexToRgba(faceFill, 0.12 * bladeAlpha));
+      g.addColorStop(0, hexToRgba(node.glowColor, 0.45 * bladeAlpha));
+      g.addColorStop(1, darkenHex(node.glowColor, 0.55));
       ctx.fillStyle = g;
     }
     ctx.fill();
 
-    // ── Front face (glass with LED) ──
+    // ── Front face (with LED) ──
     drawPolygon(ctx, [blb, brb, brbD, blbD]);
     if (light) {
       const gFront = ctx.createLinearGradient(blb.x, blb.y, brbD.x, brbD.y);
@@ -106,9 +106,9 @@ export function renderServerRack(
       ctx.fillStyle = gFront;
     } else {
       const gFront = ctx.createLinearGradient(blb.x, blb.y, brbD.x, brbD.y);
-      gFront.addColorStop(0, hexToRgba(faceFill, 0.45 * bladeAlpha));
-      gFront.addColorStop(0.5, hexToRgba(faceFill, 0.25 * bladeAlpha));
-      gFront.addColorStop(1, hexToRgba(faceFill, 0.12 * bladeAlpha));
+      gFront.addColorStop(0, darkenHex(node.glowColor, 0.40));
+      gFront.addColorStop(0.5, darkenHex(node.glowColor, 0.52));
+      gFront.addColorStop(1, darkenHex(node.glowColor, 0.65));
       ctx.fillStyle = gFront;
     }
     ctx.fill();
@@ -151,7 +151,7 @@ export function renderServerRack(
     if (light) {
       ctx.fillStyle = darkenHex(deepTone, 0.85);
     } else {
-      ctx.fillStyle = hexToRgba(faceFill, 0.10 * bladeAlpha);
+      ctx.fillStyle = darkenHex(node.glowColor, 0.65);
     }
     ctx.fill();
 
@@ -163,10 +163,10 @@ export function renderServerRack(
       gTop.addColorStop(0.5, deepToneMid);
       gTop.addColorStop(1, deepTone);
     } else {
-      gTop.addColorStop(0, hexToRgba(faceFill, 0.85 * bladeAlpha));
-      gTop.addColorStop(0.3, hexToRgba(faceFill, 0.52 * bladeAlpha));
-      gTop.addColorStop(0.7, hexToRgba(faceFill, 0.28 * bladeAlpha));
-      gTop.addColorStop(1, hexToRgba(faceFill, 0.14 * bladeAlpha));
+      gTop.addColorStop(0, hexToRgba(node.glowColor, 0.90 * bladeAlpha));
+      gTop.addColorStop(0.3, hexToRgba(node.glowColor, 0.60 * bladeAlpha));
+      gTop.addColorStop(0.7, darkenHex(node.glowColor, 0.30));
+      gTop.addColorStop(1, darkenHex(node.glowColor, 0.50));
     }
     ctx.fillStyle = gTop;
     if (blade === 0) {

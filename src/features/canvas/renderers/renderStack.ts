@@ -84,10 +84,10 @@ export function renderStack(
     if (light) {
       ctx.fillStyle = darkenHex(deepTone, 0.65 + layer * 0.05);
     } else {
-      ctx.fillStyle = hexToRgba(faceFill, 0.18 * layerAlpha);
+      ctx.fillStyle = darkenHex(node.glowColor, 0.55 + layer * 0.05);
     }
     ctx.fill();
-    ctx.strokeStyle = hexToRgba(node.glowColor, (light ? 0.2 : 0.08) * pulse);
+    ctx.strokeStyle = hexToRgba(node.glowColor, (light ? 0.2 : 0.12) * pulse);
     ctx.lineWidth = 0.5 * bScale;
     ctx.stroke();
 
@@ -99,10 +99,10 @@ export function renderStack(
       g.addColorStop(1, darkenHex(deepTone, 0.75 + layer * 0.05));
       ctx.fillStyle = g;
     } else {
-      ctx.fillStyle = hexToRgba(faceFill, 0.32 * layerAlpha);
+      ctx.fillStyle = darkenHex(node.glowColor, 0.45 + layer * 0.05);
     }
     ctx.fill();
-    ctx.strokeStyle = hexToRgba(node.glowColor, (light ? 0.2 : 0.08) * pulse);
+    ctx.strokeStyle = hexToRgba(node.glowColor, (light ? 0.2 : 0.12) * pulse);
     ctx.lineWidth = 0.5 * bScale;
     ctx.stroke();
 
@@ -111,10 +111,7 @@ export function renderStack(
     if (light) {
       ctx.fillStyle = darkenHex(deepTone, 0.75 + layer * 0.05);
     } else {
-      const gR = ctx.createLinearGradient(lrt.x, lrt.y, lrbD.x, lrbD.y);
-      gR.addColorStop(0, hexToRgba(faceFill, 0.18 * layerAlpha));
-      gR.addColorStop(1, hexToRgba(faceFill, 0.06 * layerAlpha));
-      ctx.fillStyle = gR;
+      ctx.fillStyle = darkenHex(node.glowColor, 0.60 + layer * 0.05);
     }
     ctx.fill();
 
@@ -126,10 +123,10 @@ export function renderStack(
       gTop.addColorStop(0.5, lightenHex(deepTone, 0.12 * layerLightFactor));
       gTop.addColorStop(1, deepTone);
     } else {
-      gTop.addColorStop(0, hexToRgba(faceFill, 0.85 * layerAlpha));
-      gTop.addColorStop(0.3, hexToRgba(faceFill, 0.52 * layerAlpha));
-      gTop.addColorStop(0.7, hexToRgba(faceFill, 0.28 * layerAlpha));
-      gTop.addColorStop(1, hexToRgba(faceFill, 0.14 * layerAlpha));
+      gTop.addColorStop(0, hexToRgba(node.glowColor, 0.90 * layerAlpha));
+      gTop.addColorStop(0.3, hexToRgba(node.glowColor, 0.60 * layerAlpha));
+      gTop.addColorStop(0.7, darkenHex(node.glowColor, 0.30));
+      gTop.addColorStop(1, darkenHex(node.glowColor, 0.50));
     }
     ctx.fillStyle = gTop;
     if (layer === 0) {

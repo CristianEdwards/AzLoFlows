@@ -121,8 +121,8 @@ export function renderCloud(
     ctx.fillStyle = g;
   } else {
     const g = ctx.createLinearGradient(cx - hx.x, cy - hx.y + depth, cx + hx.x, cy + hx.y + depth);
-    g.addColorStop(0, hexToRgba(faceFill, 0.32));
-    g.addColorStop(1, hexToRgba(faceFill, 0.14));
+    g.addColorStop(0, darkenHex(node.glowColor, 0.45));
+    g.addColorStop(1, darkenHex(node.glowColor, 0.65));
     ctx.fillStyle = g;
   }
   ctx.fill();
@@ -163,8 +163,8 @@ export function renderCloud(
     ctx.fillStyle = g;
   } else {
     const g = ctx.createLinearGradient(cx, cy, cx, cy + depth);
-    g.addColorStop(0, hexToRgba(faceFill, 0.35));
-    g.addColorStop(1, hexToRgba(faceFill, 0.12));
+    g.addColorStop(0, hexToRgba(node.glowColor, 0.55));
+    g.addColorStop(1, darkenHex(node.glowColor, 0.50));
     ctx.fillStyle = g;
   }
   ctx.fill();
@@ -184,10 +184,10 @@ export function renderCloud(
     gTop.addColorStop(0.5, deepToneMid);
     gTop.addColorStop(1, deepTone);
   } else {
-    gTop.addColorStop(0, hexToRgba(faceFill, 0.85));
-    gTop.addColorStop(0.3, hexToRgba(faceFill, 0.55));
-    gTop.addColorStop(0.7, hexToRgba(faceFill, 0.30));
-    gTop.addColorStop(1, hexToRgba(faceFill, 0.15));
+    gTop.addColorStop(0, hexToRgba(node.glowColor, 0.90));
+    gTop.addColorStop(0.3, hexToRgba(node.glowColor, 0.62));
+    gTop.addColorStop(0.7, darkenHex(node.glowColor, 0.30));
+    gTop.addColorStop(1, darkenHex(node.glowColor, 0.50));
   }
   ctx.fillStyle = gTop;
   ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.40 : 0.55) * pulse);
