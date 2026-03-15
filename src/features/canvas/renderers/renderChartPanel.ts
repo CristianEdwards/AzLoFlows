@@ -64,7 +64,7 @@ export function renderChartPanel(
   });
 
   // ── Behind-panel reflection (ghost copy offset behind) ──
-  const reflOff = sideDepth * 3.5;
+  const reflOff = 18 * camera.zoom;
   const rwtl = { x: wtl.x + by.x * reflOff, y: wtl.y + by.y * reflOff };
   const rwtr = { x: wtr.x + by.x * reflOff, y: wtr.y + by.y * reflOff };
   const rwbr = { x: wbr.x + by.x * reflOff, y: wbr.y + by.y * reflOff };
@@ -72,19 +72,19 @@ export function renderChartPanel(
   drawPolygon(ctx, [rwtl, rwtr, rwbr, rwbl]);
   const reflGrad = ctx.createLinearGradient(rwtl.x, rwtl.y, rwbl.x, rwbl.y);
   if (light) {
-    reflGrad.addColorStop(0, hexToRgba(deepTone, 0.12));
-    reflGrad.addColorStop(0.6, hexToRgba(deepTone, 0.05));
-    reflGrad.addColorStop(1, hexToRgba(deepTone, 0.02));
+    reflGrad.addColorStop(0, hexToRgba(deepTone, 0.22));
+    reflGrad.addColorStop(0.7, hexToRgba(deepTone, 0.10));
+    reflGrad.addColorStop(1, hexToRgba(deepTone, 0.04));
   } else {
-    reflGrad.addColorStop(0, hexToRgba(faceFill, 0.10));
-    reflGrad.addColorStop(0.6, hexToRgba(faceFill, 0.04));
-    reflGrad.addColorStop(1, hexToRgba(faceFill, 0.01));
+    reflGrad.addColorStop(0, hexToRgba(faceFill, 0.28));
+    reflGrad.addColorStop(0.7, hexToRgba(faceFill, 0.12));
+    reflGrad.addColorStop(1, hexToRgba(faceFill, 0.04));
   }
   ctx.fillStyle = reflGrad;
   ctx.fill();
   drawPolygon(ctx, [rwtl, rwtr, rwbr, rwbl]);
-  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.06 : 0.04);
-  ctx.lineWidth = 0.5 * bScale;
+  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.18 : 0.22);
+  ctx.lineWidth = 1.2 * bScale;
   ctx.stroke();
 
   // ── Drop shadow ──
