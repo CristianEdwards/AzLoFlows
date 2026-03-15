@@ -240,6 +240,22 @@ export const nodeIconCatalog: Record<string, IconDef> = {
     ],
   },
 
+  analyticsPanel: {
+    label: 'Analytics Panel',
+    paths: [
+      // Header bar (top strip)
+      'M3 1h26v9H3z',
+      // Traffic light dots
+      'M6.5 5.5a1.5 1.5 0 103 0 1.5 1.5 0 10-3 0z M11.5 5.5a1.5 1.5 0 103 0 1.5 1.5 0 10-3 0z M16.5 5.5a1.5 1.5 0 103 0 1.5 1.5 0 10-3 0z',
+      // Content frame (outer CW, inner CCW → hollow)
+      'M3 11h26v19H3z M27 12H5v16h22z',
+      // Bar chart
+      'M7 23h3v5H7z M12 19h3v9h-3z M17 15h3v13h-3z',
+      // Pie circle
+      'M21 20a4 4 0 108 0 4 4 0 10-8 0z',
+    ],
+  },
+
   // ── Official Azure SVG icons (extracted from Icons/ folder) ──
 
   svgArcGateway: {

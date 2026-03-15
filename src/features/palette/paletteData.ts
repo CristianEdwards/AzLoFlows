@@ -2,7 +2,7 @@ import { palette, companionPalette } from '@/lib/rendering/tokens';
 import type { NodeShape } from '@/types/document';
 
 export interface PaletteShape {
-  id: 'area' | 'node' | 'text' | 'pipe' | 'serverRack' | 'card' | 'platform' | 'browser' | 'stack' | 'dashboard' | 'gauge' | 'chartPanel';
+  id: 'area' | 'node' | 'text' | 'pipe' | 'serverRack' | 'card' | 'platform' | 'browser' | 'stack' | 'dashboard' | 'gauge' | 'chartPanel' | 'analyticsPanel';
   title: string;
   /** Inline SVG markup (64×64 viewBox) showing an isometric preview */
   icon: string;
@@ -183,6 +183,18 @@ const chartPanelIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 
   <circle cx="48" cy="26" r="1.5" fill="rgba(0,229,255,0.5)"/>
 </svg>`;
 
+const analyticsPanelIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <rect x="10" y="10" width="44" height="34" rx="2" fill="rgba(77,141,255,0.18)" stroke="rgba(77,141,255,0.6)" stroke-width="1.2"/>
+  <line x1="10" y1="18" x2="54" y2="18" stroke="rgba(77,141,255,0.4)" stroke-width="0.8"/>
+  <circle cx="15" cy="14" r="1.5" fill="rgba(255,95,87,0.6)"/>
+  <circle cx="21" cy="14" r="1.5" fill="rgba(255,189,46,0.6)"/>
+  <circle cx="27" cy="14" r="1.5" fill="rgba(40,200,64,0.6)"/>
+  <polyline points="16,38 22,32 27,35 33,26 39,30 44,24" fill="none" stroke="rgba(77,141,255,0.7)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="27" cy="35" r="1.2" fill="rgba(77,141,255,0.5)"/>
+  <circle cx="39" cy="30" r="1.2" fill="rgba(77,141,255,0.5)"/>
+  <circle cx="44" cy="24" r="1.2" fill="rgba(77,141,255,0.5)"/>
+</svg>`;
+
 export const paletteShapes: PaletteShape[] = [
   { id: 'area', title: 'Flat Area', icon: areaIcon },
   { id: 'node', title: 'Node',      icon: nodeIcon },
@@ -194,6 +206,7 @@ export const paletteShapes: PaletteShape[] = [
   { id: 'dashboard', title: 'Dashboard', icon: dashboardIcon, nodeShape: 'dashboard' },
   { id: 'gauge',     title: 'Gauge',     icon: gaugeIcon,     nodeShape: 'gauge' },
   { id: 'chartPanel', title: 'Chart Panel', icon: chartPanelIcon, nodeShape: 'chartPanel' },
+  { id: 'analyticsPanel', title: 'Analytics Panel', icon: analyticsPanelIcon, nodeShape: 'analyticsPanel' },
   { id: 'text', title: 'Text Label', icon: textIcon },
   { id: 'pipe', title: 'Pipe',       icon: pipeIcon },
 ];
@@ -240,4 +253,5 @@ export const componentTemplates: ComponentTemplate[] = [
   { id: 'tpl-private-endpoint', title: 'Private Endpoint',      subtitle: '', glowColor: palette.teal,      fill: companionPalette.teal,      icon: 'privateEndpoint' },
   { id: 'tpl-internet',         title: 'Internet',              subtitle: '', glowColor: palette.darkGreen, fill: companionPalette.darkGreen, icon: 'svgGlobe' },
   { id: 'tpl-cloud',            title: 'Azure Cloud',           subtitle: '', glowColor: palette.blue,      fill: companionPalette.blue,      icon: 'cloud' },
+  { id: 'tpl-analytics-panel',  title: 'Analytics Panel',       subtitle: '', glowColor: palette.blue,      fill: companionPalette.blue,      icon: 'analyticsPanel' },
 ];
