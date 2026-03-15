@@ -48,12 +48,14 @@ export function renderBrowser(
   const wtr = { x: rb.x - bx.x * tiltBack, y: rb.y - windowH - bx.y * tiltBack };
 
   // Left-edge thickness (glass depth)
-  const sideDepth = 10 * camera.zoom;
+  const sideDepth = 22 * camera.zoom;
   const wblT = { x: wbl.x - by.x * sideDepth, y: wbl.y - by.y * sideDepth };
   const wtlT = { x: wtl.x - by.x * sideDepth, y: wtl.y - by.y * sideDepth };
+  const wtrT = { x: wtr.x - by.x * sideDepth, y: wtr.y - by.y * sideDepth };
+  const wbrT = { x: wbr.x - by.x * sideDepth, y: wbr.y - by.y * sideDepth };
 
   // Bottom-edge thickness (gives visible 3D base)
-  const bottomDepth = 6 * camera.zoom;
+  const bottomDepth = 14 * camera.zoom;
   const wblB = { x: wbl.x, y: wbl.y + bottomDepth };
   const wbrB = { x: wbr.x, y: wbr.y + bottomDepth };
   const wblTB = { x: wblT.x, y: wblT.y + bottomDepth };
@@ -101,43 +103,72 @@ export function renderBrowser(
     ctx.shadowOffsetY = 0;
   }
 
+  // ── Top edge face (glass slab top) ──
+  drawPolygon(ctx, [wtlT, wtl, wtr, wtrT]);
+  if (light) {
+    const gTop = ctx.createLinearGradient(wtlT.x, wtlT.y, wtr.x, wtr.y);
+    gTop.addColorStop(0, darkenHex(deepTone, 0.50));
+    gTop.addColorStop(1, darkenHex(deepTone, 0.62));
+    ctx.fillStyle = gTop;
+  } else {
+    const gTop = ctx.createLinearGradient(wtlT.x, wtlT.y, wtr.x, wtr.y);
+    gTop.addColorStop(0, hexToRgba(faceFill, 0.40));
+    gTop.addColorStop(0.5, hexToRgba(faceFill, 0.25));
+    gTop.addColorStop(1, hexToRgba(faceFill, 0.12));
+    ctx.fillStyle = gTop;
+  }
+  ctx.fill();
+  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.30 : 0.18);
+  ctx.lineWidth = 0.7 * bScale;
+  ctx.stroke();
+
   // ── Bottom edge thickness (3D base strip) ──
   drawPolygon(ctx, [wbl, wbr, wbrB, wblB]);
   if (light) {
     ctx.fillStyle = darkenHex(deepTone, 0.75);
   } else {
     const gBot = ctx.createLinearGradient(wbl.x, wbl.y, wblB.x, wblB.y);
-    gBot.addColorStop(0, hexToRgba(faceFill, 0.22));
-    gBot.addColorStop(1, hexToRgba(faceFill, 0.06));
+    gBot.addColorStop(0, hexToRgba(faceFill, 0.35));
+    gBot.addColorStop(1, hexToRgba(faceFill, 0.10));
     ctx.fillStyle = gBot;
   }
   ctx.fill();
-  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.15 : 0.08);
-  ctx.lineWidth = 0.5 * bScale;
+  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.20 : 0.12);
+  ctx.lineWidth = 0.7 * bScale;
   ctx.stroke();
+
+  // ── Bottom-right edge strip ──
+  drawPolygon(ctx, [wbr, wbrT, { x: wbrT.x, y: wbrT.y + bottomDepth }, wbrB]);
+  if (light) {
+    ctx.fillStyle = darkenHex(deepTone, 0.82);
+  } else {
+    ctx.fillStyle = hexToRgba(faceFill, 0.10);
+  }
+  ctx.fill();
 
   // ── Bottom-left corner strip ──  
   drawPolygon(ctx, [wblT, wbl, wblB, wblTB]);
-  ctx.fillStyle = light ? darkenHex(deepTone, 0.80) : hexToRgba(faceFill, 0.08);
+  ctx.fillStyle = light ? darkenHex(deepTone, 0.80) : hexToRgba(faceFill, 0.14);
   ctx.fill();
 
   // ── Left edge thickness ── (thicker glass edge)
   drawPolygon(ctx, [wtl, wbl, wblT, wtlT]);
   if (light) {
-    const gSide = ctx.createLinearGradient(wtl.x, wtl.y, wblT.x, wblT.y);
-    gSide.addColorStop(0, darkenHex(deepTone, 0.60));
-    gSide.addColorStop(1, darkenHex(deepTone, 0.75));
+    const gSide = ctx.createLinearGradient(wtlT.x, wtlT.y, wtl.x, wtl.y);
+    gSide.addColorStop(0, darkenHex(deepTone, 0.50));
+    gSide.addColorStop(0.5, darkenHex(deepTone, 0.60));
+    gSide.addColorStop(1, darkenHex(deepTone, 0.72));
     ctx.fillStyle = gSide;
   } else {
-    const gSide = ctx.createLinearGradient(wtl.x, wtl.y, wblT.x, wblT.y);
-    gSide.addColorStop(0, hexToRgba(faceFill, 0.25));
-    gSide.addColorStop(0.5, hexToRgba(faceFill, 0.14));
-    gSide.addColorStop(1, hexToRgba(faceFill, 0.08));
+    const gSide = ctx.createLinearGradient(wtlT.x, wtlT.y, wtl.x, wtl.y);
+    gSide.addColorStop(0, hexToRgba(faceFill, 0.42));
+    gSide.addColorStop(0.4, hexToRgba(faceFill, 0.28));
+    gSide.addColorStop(1, hexToRgba(faceFill, 0.14));
     ctx.fillStyle = gSide;
   }
   ctx.fill();
-  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.25 : 0.14);
-  ctx.lineWidth = 0.6 * bScale;
+  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.30 : 0.20);
+  ctx.lineWidth = 0.8 * bScale;
   ctx.stroke();
 
   // Glass specular highlight on left edge
@@ -146,8 +177,8 @@ export function renderBrowser(
   const seMid2 = { x: wbl.x * 0.5 + wblT.x * 0.5, y: wbl.y * 0.5 + wblT.y * 0.5 };
   ctx.moveTo(seMid1.x, seMid1.y);
   ctx.lineTo(seMid2.x, seMid2.y);
-  ctx.strokeStyle = light ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.07)';
-  ctx.lineWidth = 2 * bScale;
+  ctx.strokeStyle = light ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.10)';
+  ctx.lineWidth = 3 * bScale;
   ctx.stroke();
 
   // ── Main window face ── (glass surface)
