@@ -2,7 +2,7 @@ import { palette, companionPalette } from '@/lib/rendering/tokens';
 import type { NodeShape } from '@/types/document';
 
 export interface PaletteShape {
-  id: 'area' | 'node' | 'text' | 'pipe' | 'cylinder' | 'monitor' | 'serverRack' | 'diamond';
+  id: 'area' | 'node' | 'text' | 'pipe' | 'cylinder' | 'monitor' | 'serverRack' | 'diamond' | 'cloud' | 'card';
   title: string;
   /** Inline SVG markup (64×64 viewBox) showing an isometric preview */
   icon: string;
@@ -82,6 +82,25 @@ const diamondIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"
   <line x1="32" y1="8" x2="10" y2="24" stroke="rgba(255,0,102,0.9)" stroke-width="1.5"/>
 </svg>`;
 
+const cloudIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <ellipse cx="26" cy="24" rx="14" ry="10" fill="rgba(0,229,255,0.18)" stroke="rgba(0,229,255,0.5)" stroke-width="0.8"/>
+  <ellipse cx="38" cy="22" rx="12" ry="9" fill="rgba(0,229,255,0.22)" stroke="rgba(0,229,255,0.5)" stroke-width="0.8"/>
+  <ellipse cx="32" cy="18" rx="10" ry="8" fill="rgba(0,229,255,0.28)" stroke="rgba(0,229,255,0.6)" stroke-width="1"/>
+  <path d="M14,28 Q14,36 32,36 Q50,36 50,28" fill="rgba(0,229,255,0.10)" stroke="rgba(0,229,255,0.3)" stroke-width="0.8"/>
+</svg>`;
+
+const cardIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <polygon points="32,14 56,28 32,42 8,28" fill="rgba(77,141,255,0.22)" stroke="rgba(77,141,255,0.6)" stroke-width="1.2"/>
+  <line x1="32" y1="14" x2="56" y2="28" stroke="rgba(77,141,255,0.15)" stroke-width="0.6"/>
+  <polygon points="32,14 56,28 32,42 8,28" fill="none" stroke="rgba(77,141,255,0.3)" stroke-width="0.8"/>
+  <line x1="20" y1="21" x2="44" y2="35" stroke="rgba(77,141,255,0.25)" stroke-width="0.6"/>
+  <polygon points="8,28 32,42 32,45 8,31" fill="rgba(77,141,255,0.08)" stroke="rgba(77,141,255,0.2)" stroke-width="0.5"/>
+  <polygon points="56,28 32,42 32,45 56,31" fill="rgba(77,141,255,0.06)" stroke="rgba(77,141,255,0.15)" stroke-width="0.5"/>
+  <circle cx="14" cy="24" r="1.2" fill="rgba(77,141,255,0.5)"/>
+  <circle cx="18" cy="22" r="1.2" fill="rgba(77,141,255,0.4)"/>
+  <circle cx="22" cy="20" r="1.2" fill="rgba(77,141,255,0.3)"/>
+</svg>`;
+
 export const paletteShapes: PaletteShape[] = [
   { id: 'area', title: 'Flat Area', icon: areaIcon },
   { id: 'node', title: 'Node',      icon: nodeIcon },
@@ -89,6 +108,8 @@ export const paletteShapes: PaletteShape[] = [
   { id: 'monitor',  title: 'Monitor',  icon: monitorIcon,  nodeShape: 'monitor' },
   { id: 'serverRack', title: 'Server Rack', icon: serverRackIcon, nodeShape: 'serverRack' },
   { id: 'diamond',  title: 'Diamond',  icon: diamondIcon,  nodeShape: 'diamond' },
+  { id: 'cloud',    title: 'Cloud',    icon: cloudIcon,    nodeShape: 'cloud' },
+  { id: 'card',     title: 'Card',     icon: cardIcon,     nodeShape: 'card' },
   { id: 'text', title: 'Text Label', icon: textIcon },
   { id: 'pipe', title: 'Pipe',       icon: pipeIcon },
 ];

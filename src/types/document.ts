@@ -1,5 +1,5 @@
 export type EntityType = 'area' | 'node' | 'connector' | 'text' | 'pipe';
-export type NodeShape = 'box' | 'cylinder' | 'monitor' | 'serverRack' | 'diamond';
+export type NodeShape = 'box' | 'cylinder' | 'monitor' | 'serverRack' | 'diamond' | 'cloud' | 'card';
 export type ConnectorStyle = 'solid' | 'dashed' | 'animated';
 export type ToolMode = 'select' | 'pan';
 export type AnchorSide = 'top' | 'right' | 'bottom' | 'left';

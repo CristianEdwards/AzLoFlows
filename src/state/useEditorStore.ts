@@ -336,8 +336,12 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
           shape: templateOverrides?.shape,
           x: nextPoint.x,
           y: nextPoint.y,
-          width: 140,
-          height: 96,
+          width: templateOverrides?.shape === 'monitor' ? 160
+               : templateOverrides?.shape === 'card' ? 160
+               : 140,
+          height: templateOverrides?.shape === 'monitor' ? 40
+                : templateOverrides?.shape === 'card' ? 110
+                : 96,
           title: templateOverrides?.title ?? 'New Node',
           subtitle: templateOverrides?.subtitle ?? 'Editable',
           fill: templateOverrides?.fill ?? companionFor(state.preferredColor),

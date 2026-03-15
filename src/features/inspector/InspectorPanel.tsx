@@ -235,6 +235,8 @@ export default function InspectorPanel() {
                 <option value="monitor">Monitor</option>
                 <option value="serverRack">Server Rack</option>
                 <option value="diamond">Diamond</option>
+                <option value="cloud">Cloud</option>
+                <option value="card">Card / Panel</option>
               </select>
             </label>
             <label className="field">
