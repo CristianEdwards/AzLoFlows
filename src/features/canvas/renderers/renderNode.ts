@@ -7,6 +7,8 @@ import { renderCylinder } from './renderCylinder';
 import { renderMonitor } from './renderMonitor';
 import { renderServerRack } from './renderServerRack';
 import { renderDiamond } from './renderDiamond';
+import { renderCloud } from './renderCloud';
+import { renderCard } from './renderCard';
 import type { CameraState, NodeEntity } from '@/types/document';
 
 export function renderNode(
@@ -28,6 +30,10 @@ export function renderNode(
       return renderServerRack(ctx, node, selected, camera, viewport, time, theme);
     case 'diamond':
       return renderDiamond(ctx, node, selected, camera, viewport, time, theme);
+    case 'cloud':
+      return renderCloud(ctx, node, selected, camera, viewport, time, theme);
+    case 'card':
+      return renderCard(ctx, node, selected, camera, viewport, time, theme);
     default:
       break; // fall through to box rendering
   }
