@@ -1,10 +1,13 @@
 import { palette, companionPalette } from '@/lib/rendering/tokens';
+import type { NodeShape } from '@/types/document';
 
 export interface PaletteShape {
-  id: 'area' | 'node' | 'text' | 'pipe';
+  id: 'area' | 'node' | 'text' | 'pipe' | 'cylinder' | 'monitor' | 'serverRack' | 'diamond';
   title: string;
   /** Inline SVG markup (64×64 viewBox) showing an isometric preview */
   icon: string;
+  /** For node-variant shapes, specifies the NodeShape to create */
+  nodeShape?: NodeShape;
 }
 
 /** Predefined node component with preset title, color & icon. */
@@ -45,9 +48,47 @@ const pipeIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fi
   <line x1="54" y1="24" x2="54" y2="30" stroke="rgba(0,229,255,0.5)" stroke-width="1" transform="skewY(-6) translate(0,4)"/>
 </svg>`;
 
+/* ── New shape preview icons ── */
+
+const cylinderIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <ellipse cx="32" cy="20" rx="20" ry="8" fill="rgba(0,229,255,0.30)" stroke="rgba(0,229,255,0.7)" stroke-width="1.2"/>
+  <path d="M12,20 L12,40 Q12,48 32,48 Q52,48 52,40 L52,20" fill="rgba(0,229,255,0.12)" stroke="rgba(0,229,255,0.4)" stroke-width="0.8"/>
+  <ellipse cx="32" cy="40" rx="20" ry="8" fill="none" stroke="rgba(0,229,255,0.3)" stroke-width="0.8" stroke-dasharray="2 2"/>
+</svg>`;
+
+const monitorIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <rect x="14" y="8" width="36" height="28" rx="2" fill="rgba(77,141,255,0.30)" stroke="rgba(77,141,255,0.7)" stroke-width="1.2"/>
+  <line x1="32" y1="36" x2="32" y2="44" stroke="rgba(77,141,255,0.5)" stroke-width="2"/>
+  <line x1="22" y1="44" x2="42" y2="44" stroke="rgba(77,141,255,0.5)" stroke-width="1.5"/>
+  <line x1="18" y1="14" x2="46" y2="14" stroke="rgba(77,141,255,0.15)" stroke-width="0.8"/>
+  <circle cx="32" cy="33" r="1.5" fill="rgba(77,141,255,0.6)"/>
+</svg>`;
+
+const serverRackIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <polygon points="10,22 32,34 32,50 10,38" fill="rgba(191,90,242,0.18)" stroke="rgba(191,90,242,0.5)" stroke-width="0.8"/>
+  <polygon points="54,22 32,34 32,50 54,38" fill="rgba(191,90,242,0.12)" stroke="rgba(191,90,242,0.4)" stroke-width="0.8"/>
+  <polygon points="32,10 54,22 32,34 10,22" fill="rgba(191,90,242,0.30)" stroke="rgba(191,90,242,0.7)" stroke-width="1.2"/>
+  <line x1="10" y1="27" x2="32" y2="39" stroke="rgba(191,90,242,0.2)" stroke-width="0.6"/>
+  <line x1="10" y1="32" x2="32" y2="44" stroke="rgba(191,90,242,0.2)" stroke-width="0.6"/>
+  <circle cx="14" cy="25" r="1.2" fill="rgba(0,255,136,0.8)"/>
+  <circle cx="14" cy="30" r="1.2" fill="rgba(0,229,255,0.8)"/>
+  <circle cx="14" cy="35" r="1.2" fill="rgba(255,171,0,0.8)"/>
+</svg>`;
+
+const diamondIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <polygon points="32,8 54,24 32,40 10,24" fill="rgba(255,0,102,0.25)" stroke="rgba(255,0,102,0.7)" stroke-width="1.2"/>
+  <polygon points="10,24 32,40 32,48 10,32" fill="rgba(255,0,102,0.15)" stroke="rgba(255,0,102,0.4)" stroke-width="0.8"/>
+  <polygon points="54,24 32,40 32,48 54,32" fill="rgba(255,0,102,0.10)" stroke="rgba(255,0,102,0.35)" stroke-width="0.8"/>
+  <line x1="32" y1="8" x2="10" y2="24" stroke="rgba(255,0,102,0.9)" stroke-width="1.5"/>
+</svg>`;
+
 export const paletteShapes: PaletteShape[] = [
   { id: 'area', title: 'Flat Area', icon: areaIcon },
   { id: 'node', title: 'Node',      icon: nodeIcon },
+  { id: 'cylinder', title: 'Cylinder', icon: cylinderIcon, nodeShape: 'cylinder' },
+  { id: 'monitor',  title: 'Monitor',  icon: monitorIcon,  nodeShape: 'monitor' },
+  { id: 'serverRack', title: 'Server Rack', icon: serverRackIcon, nodeShape: 'serverRack' },
+  { id: 'diamond',  title: 'Diamond',  icon: diamondIcon,  nodeShape: 'diamond' },
   { id: 'text', title: 'Text Label', icon: textIcon },
   { id: 'pipe', title: 'Pipe',       icon: pipeIcon },
 ];

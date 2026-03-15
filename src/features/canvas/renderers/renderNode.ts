@@ -3,6 +3,10 @@ import { isoQuad, worldToScreen, type ViewportSize } from '@/lib/geometry/iso';
 import { nodeIconCatalog } from '@/lib/icons/nodeIcons';
 import { drawPolygon, drawTransformedText } from '@/lib/rendering/canvasPrimitives';
 import { hexToRgba, lightenHex, darkenHex, deepToneForGlow } from '@/lib/rendering/tokens';
+import { renderCylinder } from './renderCylinder';
+import { renderMonitor } from './renderMonitor';
+import { renderServerRack } from './renderServerRack';
+import { renderDiamond } from './renderDiamond';
 import type { CameraState, NodeEntity } from '@/types/document';
 
 export function renderNode(
@@ -14,6 +18,21 @@ export function renderNode(
   time: number,
   theme: 'dark' | 'light' = 'dark',
 ): void {
+  // Dispatch to shape-specific renderer
+  switch (node.shape) {
+    case 'cylinder':
+      return renderCylinder(ctx, node, selected, camera, viewport, time, theme);
+    case 'monitor':
+      return renderMonitor(ctx, node, selected, camera, viewport, time, theme);
+    case 'serverRack':
+      return renderServerRack(ctx, node, selected, camera, viewport, time, theme);
+    case 'diamond':
+      return renderDiamond(ctx, node, selected, camera, viewport, time, theme);
+    default:
+      break; // fall through to box rendering
+  }
+
+  // ── Default box rendering ──
   const light = theme === 'light';
   const points = isoQuad(node.x, node.y, node.width, node.height, camera, viewport);
   const leftTop = points[0];

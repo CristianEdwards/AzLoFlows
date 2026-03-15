@@ -16,6 +16,7 @@ import type {
   FlowSource,
   FlowType,
   NodeEntity,
+  NodeShape,
   PickerDef,
   PipeEntity,
   ScenarioId,
@@ -66,7 +67,7 @@ interface EditorStore {
   importDocument: (document: DiagramDocument) => void;
   selectEntities: (type: EntityType | null, ids: string[], additive?: boolean) => void;
   clearSelection: () => void;
-  addShape: (shape: 'area' | 'node' | 'text' | 'pipe', point: Point, templateOverrides?: { title?: string; subtitle?: string; fill?: string; glowColor?: string; icon?: string }) => void;
+  addShape: (shape: 'area' | 'node' | 'text' | 'pipe', point: Point, templateOverrides?: { title?: string; subtitle?: string; fill?: string; glowColor?: string; icon?: string; shape?: NodeShape }) => void;
   updateArea: (id: string, patch: Partial<AreaEntity>) => void;
   updateNode: (id: string, patch: Partial<NodeEntity>) => void;
   updateConnector: (id: string, patch: Partial<ConnectorEntity>) => void;
@@ -332,6 +333,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         document.nodes.push({
           id: crypto.randomUUID(),
           type: 'node',
+          shape: templateOverrides?.shape,
           x: nextPoint.x,
           y: nextPoint.y,
           width: 140,

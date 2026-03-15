@@ -1,4 +1,5 @@
 export type EntityType = 'area' | 'node' | 'connector' | 'text' | 'pipe';
+export type NodeShape = 'box' | 'cylinder' | 'monitor' | 'serverRack' | 'diamond';
 export type ConnectorStyle = 'solid' | 'dashed' | 'animated';
 export type ToolMode = 'select' | 'pan';
 export type AnchorSide = 'top' | 'right' | 'bottom' | 'left';
@@ -87,6 +88,7 @@ export interface AreaEntity {
 export interface NodeEntity {
   id: string;
   type: 'node';
+  shape?: NodeShape;
   x: number;
   y: number;
   width: number;

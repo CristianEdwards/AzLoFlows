@@ -3,7 +3,7 @@ import { nodeIconList } from '@/lib/icons/nodeIcons';
 import { colorSwatches, textColorSwatches } from '@/features/palette/paletteData';
 import { companionFillForGlow } from '@/lib/rendering/tokens';
 import { getDocScenarios, getDocFlowSources, getDocFlowTypes } from '@/types/document';
-import type { AreaEntity, PickerDef } from '@/types/document';
+import type { AreaEntity, NodeShape, PickerDef } from '@/types/document';
 import { getConnectorStyleOptions, getSelectedEntity, useEditorStore } from '@/state/useEditorStore';
 
 function PickerDefEditor({ label, items, onChange }: { label: string; items: PickerDef[]; onChange: (next: PickerDef[]) => void }) {
@@ -225,6 +225,16 @@ export default function InspectorPanel() {
                 {document.areas.map((area) => (
                   <option key={area.id} value={area.id}>{area.label}</option>
                 ))}
+              </select>
+            </label>
+            <label className="field">
+              <span>Shape</span>
+              <select value={selectedNode.shape ?? 'box'} onChange={(event) => updateNode(selectedNode.id, { shape: (event.target.value || 'box') as NodeShape })}>
+                <option value="box">Box</option>
+                <option value="cylinder">Cylinder</option>
+                <option value="monitor">Monitor</option>
+                <option value="serverRack">Server Rack</option>
+                <option value="diamond">Diamond</option>
               </select>
             </label>
             <label className="field">
