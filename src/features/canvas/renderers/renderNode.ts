@@ -11,6 +11,7 @@ import { renderStack } from './renderStack';
 import { renderDashboard } from './renderDashboard';
 import { renderGauge } from './renderGauge';
 import { renderChartPanel } from './renderChartPanel';
+import { renderAnalyticsPanel } from './renderAnalyticsPanel';
 import type { CameraState, NodeEntity } from '@/types/document';
 
 export function renderNode(
@@ -40,6 +41,8 @@ export function renderNode(
       return renderGauge(ctx, node, selected, camera, viewport, time, theme);
     case 'chartPanel':
       return renderChartPanel(ctx, node, selected, camera, viewport, time, theme);
+    case 'analyticsPanel':
+      return renderAnalyticsPanel(ctx, node, selected, camera, viewport, time, theme);
     default:
       break; // fall through to box rendering
   }

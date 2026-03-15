@@ -1,5 +1,5 @@
 export type EntityType = 'area' | 'node' | 'connector' | 'text' | 'pipe';
-export type NodeShape = 'box' | 'serverRack' | 'card' | 'platform' | 'browser' | 'stack' | 'dashboard' | 'gauge' | 'chartPanel';
+export type NodeShape = 'box' | 'serverRack' | 'card' | 'platform' | 'browser' | 'stack' | 'dashboard' | 'gauge' | 'chartPanel' | 'analyticsPanel';
 export type ConnectorStyle = 'solid' | 'dashed' | 'animated';
 export type ToolMode = 'select' | 'pan';
 export type AnchorSide = 'top' | 'right' | 'bottom' | 'left';
