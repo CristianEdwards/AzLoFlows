@@ -1,7 +1,7 @@
 import { NODE_DEPTH, DETAIL_ZOOM_THRESHOLD, NODE_ICON_SCALE, DEFAULT_FONT_SIZE } from '@/lib/config';
 import { isoQuad, worldToScreen, type ViewportSize } from '@/lib/geometry/iso';
 import { nodeIconCatalog } from '@/lib/icons/nodeIcons';
-import { drawPolygon, drawTransformedText } from '@/lib/rendering/canvasPrimitives';
+import { drawPolygon, drawRoundedPolygon, drawTransformedText } from '@/lib/rendering/canvasPrimitives';
 import { hexToRgba, lightenHex, darkenHex, deepToneForGlow } from '@/lib/rendering/tokens';
 import type { CameraState, NodeEntity } from '@/types/document';
 
@@ -28,6 +28,7 @@ export function renderPlatform(
   const topEdgeLen = Math.hypot(rt.x - lt.x, rt.y - lt.y) || 1;
   const leftEdgeLen = Math.hypot(lb.x - lt.x, lb.y - lt.y) || 1;
   const bScale = Math.min(1, Math.max(0.35, (topEdgeLen + leftEdgeLen) * 0.5 / 120));
+  const cornerR = Math.min(8, (topEdgeLen + leftEdgeLen) * 0.035);
 
   const bx = { x: (rt.x - lt.x) / topEdgeLen, y: (rt.y - lt.y) / topEdgeLen };
   const by = { x: (lb.x - lt.x) / leftEdgeLen, y: (lb.y - lt.y) / leftEdgeLen };
@@ -79,7 +80,7 @@ export function renderPlatform(
   ctx.stroke();
 
   // ── Top face (the platform surface) ──
-  drawPolygon(ctx, points);
+  drawRoundedPolygon(ctx, points, cornerR);
   const gTop = ctx.createLinearGradient(lt.x, lt.y, rb.x, rb.y);
   if (light) {
     gTop.addColorStop(0, lightenHex(deepTone, 0.15));
@@ -157,7 +158,7 @@ export function renderPlatform(
   ctx.stroke();
 
   // Inner platform border with glow
-  drawPolygon(ctx, [iLTu, iRTu, iRBu, iLBu]);
+  drawRoundedPolygon(ctx, [iLTu, iRTu, iRBu, iLBu], cornerR * 0.7);
   ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.90 : (light ? 0.65 : 0.50));
   ctx.lineWidth = (selected ? 2.5 : 1.8) * bScale;
   ctx.shadowColor = hexToRgba(node.glowColor, light ? 0.25 : 0.45);
@@ -209,7 +210,7 @@ export function renderPlatform(
   ctx.shadowBlur = 0;
 
   // ── Outer glow border ──
-  drawPolygon(ctx, points);
+  drawRoundedPolygon(ctx, points, cornerR);
   ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.22 : (light ? 0.08 : 0.12));
   ctx.lineWidth = (selected ? 6 : 4) * bScale;
   ctx.stroke();

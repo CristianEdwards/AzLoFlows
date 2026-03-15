@@ -25,6 +25,20 @@ export function drawPolygon(ctx: CanvasRenderingContext2D, points: Point[]): voi
   ctx.closePath();
 }
 
+/** Like drawPolygon but with rounded corners using arcTo. */
+export function drawRoundedPolygon(ctx: CanvasRenderingContext2D, points: Point[], radius: number): void {
+  const n = points.length;
+  if (n < 3) return;
+  ctx.beginPath();
+  const last = points[n - 1];
+  const first = points[0];
+  ctx.moveTo((last.x + first.x) / 2, (last.y + first.y) / 2);
+  for (let i = 0; i < n; i++) {
+    ctx.arcTo(points[i].x, points[i].y, points[(i + 1) % n].x, points[(i + 1) % n].y, radius);
+  }
+  ctx.closePath();
+}
+
 export function roundRectPath(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number): void {
   ctx.beginPath();
   ctx.moveTo(x + radius, y);

@@ -1,7 +1,7 @@
 import { NODE_DEPTH, DETAIL_ZOOM_THRESHOLD, NODE_ICON_SCALE, DEFAULT_FONT_SIZE } from '@/lib/config';
 import { isoQuad, worldToScreen, type ViewportSize } from '@/lib/geometry/iso';
 import { nodeIconCatalog } from '@/lib/icons/nodeIcons';
-import { drawPolygon, drawTransformedText } from '@/lib/rendering/canvasPrimitives';
+import { drawPolygon, drawRoundedPolygon, drawTransformedText } from '@/lib/rendering/canvasPrimitives';
 import { hexToRgba, lightenHex, darkenHex, deepToneForGlow } from '@/lib/rendering/tokens';
 import type { CameraState, NodeEntity } from '@/types/document';
 
@@ -27,6 +27,7 @@ export function renderStack(
   const topEdgeLen = Math.hypot(rt.x - lt.x, rt.y - lt.y) || 1;
   const leftEdgeLen = Math.hypot(lb.x - lt.x, lb.y - lt.y) || 1;
   const bScale = Math.min(1, Math.max(0.35, (topEdgeLen + leftEdgeLen) * 0.5 / 120));
+  const cornerR = Math.min(8, (topEdgeLen + leftEdgeLen) * 0.035);
 
   const bx = { x: (rt.x - lt.x) / topEdgeLen, y: (rt.y - lt.y) / topEdgeLen };
   const by = { x: (lb.x - lt.x) / leftEdgeLen, y: (lb.y - lt.y) / leftEdgeLen };
@@ -116,7 +117,7 @@ export function renderStack(
     ctx.fill();
 
     // Top face
-    drawPolygon(ctx, [llt, lrt, lrb, llb]);
+    drawRoundedPolygon(ctx, [llt, lrt, lrb, llb], cornerR);
     const gTop = ctx.createLinearGradient(llt.x, llt.y, lrb.x, lrb.y);
     if (light) {
       gTop.addColorStop(0, lightenHex(deepTone, 0.22 * layerLightFactor));
@@ -153,7 +154,7 @@ export function renderStack(
     ctx.stroke();
 
     // Top face border
-    drawPolygon(ctx, [llt, lrt, lrb, llb]);
+    drawRoundedPolygon(ctx, [llt, lrt, lrb, llb], cornerR);
     ctx.strokeStyle = hexToRgba(node.glowColor, (layer === 0 ? (selected ? 0.98 : (light ? 0.88 : 0.78)) : (light ? 0.50 : 0.38)));
     ctx.lineWidth = (layer === 0 ? (selected ? 3 : 2.2) : 1.4) * bScale;
     ctx.stroke();

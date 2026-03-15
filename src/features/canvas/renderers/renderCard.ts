@@ -1,7 +1,7 @@
 import { NODE_DEPTH, DETAIL_ZOOM_THRESHOLD, NODE_ICON_SCALE, DEFAULT_FONT_SIZE } from '@/lib/config';
 import { isoQuad, worldToScreen, type ViewportSize } from '@/lib/geometry/iso';
 import { nodeIconCatalog } from '@/lib/icons/nodeIcons';
-import { drawPolygon, drawTransformedText } from '@/lib/rendering/canvasPrimitives';
+import { drawPolygon, drawRoundedPolygon, drawTransformedText } from '@/lib/rendering/canvasPrimitives';
 import { hexToRgba, lightenHex, darkenHex, deepToneForGlow } from '@/lib/rendering/tokens';
 import type { CameraState, NodeEntity } from '@/types/document';
 
@@ -29,6 +29,7 @@ export function renderCard(
   const topEdgeLen = Math.hypot(rt.x - lt.x, rt.y - lt.y) || 1;
   const leftEdgeLen = Math.hypot(lb.x - lt.x, lb.y - lt.y) || 1;
   const bScale = Math.min(1, Math.max(0.35, (topEdgeLen + leftEdgeLen) * 0.5 / 120));
+  const cornerR = Math.min(10, (topEdgeLen + leftEdgeLen) * 0.04);
 
   const bxDir = { x: (rt.x - lt.x) / topEdgeLen, y: (rt.y - lt.y) / topEdgeLen };
   const byDir = { x: (lb.x - lt.x) / leftEdgeLen, y: (lb.y - lt.y) / leftEdgeLen };
@@ -106,7 +107,7 @@ export function renderCard(
   ctx.stroke();
 
   // ── Top face (card surface — brightest, solid) ──
-  drawPolygon(ctx, points);
+  drawRoundedPolygon(ctx, points, cornerR);
   const grad = ctx.createLinearGradient(lt.x, lt.y, rb.x, rb.y);
   if (light) {
     grad.addColorStop(0, lightenHex(deepTone, 0.42));
@@ -167,12 +168,12 @@ export function renderCard(
   ctx.stroke();
 
   // ── Top face border ──
-  drawPolygon(ctx, points);
+  drawRoundedPolygon(ctx, points, cornerR);
   ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.98 : (light ? 0.82 : 0.68));
   ctx.lineWidth = (selected ? 2.8 : 2) * bScale;
   ctx.stroke();
   // Outer glow
-  drawPolygon(ctx, points);
+  drawRoundedPolygon(ctx, points, cornerR);
   ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.25 : (light ? 0.10 : 0.14));
   ctx.lineWidth = (selected ? 6 : 4) * bScale;
   ctx.stroke();

@@ -1,7 +1,7 @@
 import { NODE_DEPTH, DETAIL_ZOOM_THRESHOLD, NODE_ICON_SCALE, DEFAULT_FONT_SIZE } from '@/lib/config';
 import { isoQuad, worldToScreen, type ViewportSize } from '@/lib/geometry/iso';
 import { nodeIconCatalog } from '@/lib/icons/nodeIcons';
-import { drawPolygon, drawTransformedText } from '@/lib/rendering/canvasPrimitives';
+import { drawPolygon, drawRoundedPolygon, drawTransformedText } from '@/lib/rendering/canvasPrimitives';
 import { hexToRgba, lightenHex, darkenHex, deepToneForGlow } from '@/lib/rendering/tokens';
 import type { CameraState, NodeEntity, Point } from '@/types/document';
 
@@ -28,6 +28,7 @@ export function renderServerRack(
   const leftEdgeLength = Math.hypot(leftBottom.x - leftTop.x, leftBottom.y - leftTop.y) || 1;
   const avgEdge = (topEdgeLength + leftEdgeLength) * 0.5;
   const bScale = Math.min(1, Math.max(0.35, avgEdge / 120));
+  const cornerR = Math.min(6, avgEdge * 0.05);
 
   const topFaceBasisX = {
     x: (rightTop.x - leftTop.x) / topEdgeLength,
@@ -156,7 +157,7 @@ export function renderServerRack(
     ctx.fill();
 
     // ── Top face (blade top surface) ──
-    drawPolygon(ctx, [blt, brt, brb, blb]);
+    drawRoundedPolygon(ctx, [blt, brt, brb, blb], cornerR);
     const gTop = ctx.createLinearGradient(blt.x, blt.y, brb.x, brb.y);
     if (light) {
       gTop.addColorStop(0, deepToneLit);
@@ -193,7 +194,7 @@ export function renderServerRack(
     ctx.stroke();
 
     // Top face border
-    drawPolygon(ctx, [blt, brt, brb, blb]);
+    drawRoundedPolygon(ctx, [blt, brt, brb, blb], cornerR);
     ctx.strokeStyle = hexToRgba(node.glowColor,
       blade === 0 ? (selected ? 0.98 : (light ? 0.88 : 0.75)) : (light ? 0.50 : 0.35));
     ctx.lineWidth = (blade === 0 ? (selected ? 3 : 2.2) : 1.2) * bScale;
@@ -258,7 +259,7 @@ export function renderServerRack(
   }
 
   // ── Outer glow on top blade ──
-  drawPolygon(ctx, points);
+  drawRoundedPolygon(ctx, points, cornerR);
   ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.28 : (light ? 0.12 : 0.18));
   ctx.lineWidth = (selected ? 7 : 5) * bScale;
   ctx.stroke();

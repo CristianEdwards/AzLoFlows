@@ -1,7 +1,7 @@
 import { NODE_DEPTH, DETAIL_ZOOM_THRESHOLD, NODE_ICON_SCALE, DEFAULT_FONT_SIZE } from '@/lib/config';
 import { isoQuad, worldToScreen, type ViewportSize } from '@/lib/geometry/iso';
 import { nodeIconCatalog } from '@/lib/icons/nodeIcons';
-import { drawPolygon, drawTransformedText } from '@/lib/rendering/canvasPrimitives';
+import { drawPolygon, drawRoundedPolygon, drawTransformedText } from '@/lib/rendering/canvasPrimitives';
 import { hexToRgba, lightenHex, darkenHex, deepToneForGlow } from '@/lib/rendering/tokens';
 import { renderCylinder } from './renderCylinder';
 import { renderMonitor } from './renderMonitor';
@@ -85,6 +85,7 @@ export function renderNode(
   // small nodes don't appear drowned in thick borders.
   const avgEdge = (topEdgeLength + leftEdgeLength) * 0.5;
   const bScale = Math.min(1, Math.max(0.35, avgEdge / 120));
+  const cornerR = Math.min(10, avgEdge * 0.08);
 
   const topFaceBasisX = {
     x: (rightTop.x - leftTop.x) / topEdgeLength,
@@ -198,7 +199,7 @@ export function renderNode(
   ctx.stroke();
 
   // ── Top face (main visible face) ── (solid rich gradient — brightest)
-  drawPolygon(ctx, points);
+  drawRoundedPolygon(ctx, points, cornerR);
   const gradient = ctx.createLinearGradient(points[0].x, points[0].y, points[2].x, points[2].y);
   if (light) {
     gradient.addColorStop(0, deepToneLit);
@@ -264,12 +265,12 @@ export function renderNode(
   ctx.lineWidth = 1 * bScale;
   ctx.stroke();
 
-  drawPolygon(ctx, points);
+  drawRoundedPolygon(ctx, points, cornerR);
   ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.98 : (light ? 0.88 : 0.78));
   ctx.lineWidth = (selected ? 3.2 : 2.4) * bScale;
   ctx.stroke();
 
-  drawPolygon(ctx, points);
+  drawRoundedPolygon(ctx, points, cornerR);
   ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.28 : (light ? 0.12 : 0.18));
   ctx.lineWidth = (selected ? 7 : 5) * bScale;
   ctx.stroke();
