@@ -56,25 +56,25 @@ export function renderPlatform(
 
   // ── Left side face ──
   drawPolygon(ctx, [lt, lb, lbD, ltD]);
-  ctx.fillStyle = light ? darkenHex(deepTone, 0.5) : hexToRgba(faceFill, 0.10);
+  ctx.fillStyle = light ? darkenHex(deepTone, 0.5) : darkenHex(node.glowColor, 0.55);
   ctx.fill();
-  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.2 : 0.08);
+  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.2 : 0.12);
   ctx.lineWidth = 0.5 * bScale;
   ctx.stroke();
 
   // ── Front face ──
   drawPolygon(ctx, [lb, rb, rbD, lbD]);
-  ctx.fillStyle = light ? darkenHex(deepTone, 0.55) : hexToRgba(faceFill, 0.14);
+  ctx.fillStyle = light ? darkenHex(deepTone, 0.55) : darkenHex(node.glowColor, 0.50);
   ctx.fill();
-  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.2 : 0.08);
+  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.2 : 0.12);
   ctx.lineWidth = 0.5 * bScale;
   ctx.stroke();
 
   // ── Right side face ──
   drawPolygon(ctx, [rt, rb, rbD, rtD]);
-  ctx.fillStyle = light ? darkenHex(deepTone, 0.6) : hexToRgba(faceFill, 0.08);
+  ctx.fillStyle = light ? darkenHex(deepTone, 0.6) : darkenHex(node.glowColor, 0.65);
   ctx.fill();
-  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.15 : 0.06);
+  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.15 : 0.08);
   ctx.lineWidth = 0.5 * bScale;
   ctx.stroke();
 
@@ -85,9 +85,9 @@ export function renderPlatform(
     gTop.addColorStop(0, lightenHex(deepTone, 0.15));
     gTop.addColorStop(1, deepTone);
   } else {
-    gTop.addColorStop(0, hexToRgba(faceFill, 0.32));
-    gTop.addColorStop(0.5, hexToRgba(faceFill, 0.18));
-    gTop.addColorStop(1, hexToRgba(faceFill, 0.08));
+    gTop.addColorStop(0, hexToRgba(node.glowColor, 0.65));
+    gTop.addColorStop(0.5, hexToRgba(node.glowColor, 0.40));
+    gTop.addColorStop(1, darkenHex(node.glowColor, 0.40));
   }
   ctx.fillStyle = gTop;
   ctx.fill();
@@ -118,12 +118,12 @@ export function renderPlatform(
 
   // Inner platform left face
   drawPolygon(ctx, [iLTu, iLBu, innerLB, innerLT]);
-  ctx.fillStyle = light ? darkenHex(deepTone, 0.55) : hexToRgba(faceFill, 0.14);
+  ctx.fillStyle = light ? darkenHex(deepTone, 0.55) : darkenHex(node.glowColor, 0.50);
   ctx.fill();
 
   // Inner platform front face
   drawPolygon(ctx, [iLBu, iRBu, innerRB, innerLB]);
-  ctx.fillStyle = light ? darkenHex(deepTone, 0.60) : hexToRgba(faceFill, 0.18);
+  ctx.fillStyle = light ? darkenHex(deepTone, 0.60) : darkenHex(node.glowColor, 0.45);
   ctx.fill();
 
   // Inner platform top face
@@ -133,14 +133,14 @@ export function renderPlatform(
     gInner.addColorStop(0, lightenHex(deepTone, 0.20));
     gInner.addColorStop(1, deepTone);
   } else {
-    gInner.addColorStop(0, hexToRgba(faceFill, 0.45));
-    gInner.addColorStop(0.5, hexToRgba(faceFill, 0.25));
-    gInner.addColorStop(1, hexToRgba(faceFill, 0.12));
+    gInner.addColorStop(0, hexToRgba(node.glowColor, 0.80));
+    gInner.addColorStop(0.5, hexToRgba(node.glowColor, 0.50));
+    gInner.addColorStop(1, darkenHex(node.glowColor, 0.35));
   }
   ctx.fillStyle = gInner;
   ctx.fill();
 
-  // Glass specular on inner top face
+  // Specular on inner top face
   ctx.beginPath();
   const iSpec1 = {
     x: iLTu.x * 0.55 + iRTu.x * 0.45,
@@ -152,7 +152,7 @@ export function renderPlatform(
   };
   ctx.moveTo(iSpec1.x, iSpec1.y);
   ctx.lineTo(iSpec2.x, iSpec2.y);
-  ctx.strokeStyle = light ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.06)';
+  ctx.strokeStyle = light ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.10)';
   ctx.lineWidth = 3 * bScale;
   ctx.stroke();
 

@@ -103,81 +103,80 @@ export function renderDashboard(
     ctx.shadowOffsetY = 0;
   }
 
-  // ── Top edge face (glass slab top) ──
+  // ── Top edge face (slab top — lightest face, catches light) ──
   drawPolygon(ctx, [wtlT, wtl, wtr, wtrT]);
   if (light) {
     const gTop = ctx.createLinearGradient(wtlT.x, wtlT.y, wtr.x, wtr.y);
-    gTop.addColorStop(0, darkenHex(deepTone, 0.48));
-    gTop.addColorStop(1, darkenHex(deepTone, 0.60));
+    gTop.addColorStop(0, lightenHex(deepTone, 0.18));
+    gTop.addColorStop(1, deepTone);
     ctx.fillStyle = gTop;
   } else {
     const gTop = ctx.createLinearGradient(wtlT.x, wtlT.y, wtr.x, wtr.y);
-    gTop.addColorStop(0, hexToRgba(faceFill, 0.42));
-    gTop.addColorStop(0.5, hexToRgba(faceFill, 0.26));
-    gTop.addColorStop(1, hexToRgba(faceFill, 0.12));
+    gTop.addColorStop(0, hexToRgba(node.glowColor, 0.55));
+    gTop.addColorStop(0.5, hexToRgba(node.glowColor, 0.35));
+    gTop.addColorStop(1, hexToRgba(node.glowColor, 0.20));
     ctx.fillStyle = gTop;
   }
   ctx.fill();
-  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.28 : 0.18);
-  ctx.lineWidth = 0.7 * bScale;
+  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.40 : 0.30);
+  ctx.lineWidth = 0.8 * bScale;
   ctx.stroke();
 
-  // ── Bottom edge thickness (3D base strip) ──
+  // ── Bottom edge thickness (3D base — darkest face) ──
   drawPolygon(ctx, [wbl, wbr, wbrB, wblB]);
   if (light) {
     ctx.fillStyle = darkenHex(deepTone, 0.78);
   } else {
     const gBot = ctx.createLinearGradient(wbl.x, wbl.y, wblB.x, wblB.y);
-    gBot.addColorStop(0, hexToRgba(faceFill, 0.35));
-    gBot.addColorStop(1, hexToRgba(faceFill, 0.10));
+    gBot.addColorStop(0, darkenHex(node.glowColor, 0.55));
+    gBot.addColorStop(1, darkenHex(node.glowColor, 0.75));
     ctx.fillStyle = gBot;
   }
   ctx.fill();
-  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.18 : 0.12);
-  ctx.lineWidth = 0.7 * bScale;
+  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.20 : 0.15);
+  ctx.lineWidth = 0.8 * bScale;
   ctx.stroke();
 
   // Bottom-right edge strip
   drawPolygon(ctx, [wbr, wbrT, { x: wbrT.x, y: wbrT.y + bottomDepth }, wbrB]);
-  ctx.fillStyle = light ? darkenHex(deepTone, 0.82) : hexToRgba(faceFill, 0.10);
+  ctx.fillStyle = light ? darkenHex(deepTone, 0.82) : darkenHex(node.glowColor, 0.70);
   ctx.fill();
 
   // Bottom-left corner strip
   drawPolygon(ctx, [wblT, wbl, wblB, wblTB]);
-  ctx.fillStyle = light ? darkenHex(deepTone, 0.82) : hexToRgba(faceFill, 0.14);
+  ctx.fillStyle = light ? darkenHex(deepTone, 0.82) : darkenHex(node.glowColor, 0.65);
   ctx.fill();
 
-  // ── Left edge thickness ── (glass depth face)
+  // ── Left edge thickness ── (side face — medium tone)
   drawPolygon(ctx, [wtl, wbl, wblT, wtlT]);
   if (light) {
     const gSide = ctx.createLinearGradient(wtlT.x, wtlT.y, wtl.x, wtl.y);
-    gSide.addColorStop(0, darkenHex(deepTone, 0.48));
-    gSide.addColorStop(0.5, darkenHex(deepTone, 0.58));
-    gSide.addColorStop(1, darkenHex(deepTone, 0.70));
+    gSide.addColorStop(0, lightenHex(deepTone, 0.10));
+    gSide.addColorStop(1, darkenHex(deepTone, 0.50));
     ctx.fillStyle = gSide;
   } else {
     const gSide = ctx.createLinearGradient(wtlT.x, wtlT.y, wtl.x, wtl.y);
-    gSide.addColorStop(0, hexToRgba(faceFill, 0.44));
-    gSide.addColorStop(0.4, hexToRgba(faceFill, 0.30));
-    gSide.addColorStop(1, hexToRgba(faceFill, 0.14));
+    gSide.addColorStop(0, hexToRgba(node.glowColor, 0.50));
+    gSide.addColorStop(0.5, darkenHex(node.glowColor, 0.40));
+    gSide.addColorStop(1, darkenHex(node.glowColor, 0.60));
     ctx.fillStyle = gSide;
   }
   ctx.fill();
-  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.28 : 0.20);
+  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.35 : 0.25);
   ctx.lineWidth = 0.8 * bScale;
   ctx.stroke();
 
-  // Glass specular on left edge
+  // Specular highlight on left edge
   ctx.beginPath();
   const dLMid1 = { x: wtl.x * 0.5 + wtlT.x * 0.5, y: wtl.y * 0.5 + wtlT.y * 0.5 };
   const dLMid2 = { x: wbl.x * 0.5 + wblT.x * 0.5, y: wbl.y * 0.5 + wblT.y * 0.5 };
   ctx.moveTo(dLMid1.x, dLMid1.y);
   ctx.lineTo(dLMid2.x, dLMid2.y);
-  ctx.strokeStyle = light ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.08)';
+  ctx.strokeStyle = light ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.14)';
   ctx.lineWidth = 3 * bScale;
   ctx.stroke();
 
-  // ── Main panel face ──
+  // ── Main panel face ── (front surface — rich solid gradient)
   const panelFace = [wtl, wtr, wbr, wbl];
   drawPolygon(ctx, panelFace);
   const grad = ctx.createLinearGradient(wtl.x, wtl.y, wbl.x, wbl.y);
@@ -186,10 +185,10 @@ export function renderDashboard(
     grad.addColorStop(0.35, deepToneMid);
     grad.addColorStop(1, deepTone);
   } else {
-    grad.addColorStop(0, hexToRgba(faceFill, 0.72));
-    grad.addColorStop(0.2, hexToRgba(faceFill, 0.45));
-    grad.addColorStop(0.6, hexToRgba(faceFill, 0.24));
-    grad.addColorStop(1, hexToRgba(faceFill, 0.10));
+    grad.addColorStop(0, hexToRgba(node.glowColor, 0.85));
+    grad.addColorStop(0.3, hexToRgba(node.glowColor, 0.55));
+    grad.addColorStop(0.7, darkenHex(node.glowColor, 0.35));
+    grad.addColorStop(1, darkenHex(node.glowColor, 0.55));
   }
   ctx.fillStyle = grad;
   ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.35 : 0.55) * pulse);
@@ -197,24 +196,24 @@ export function renderDashboard(
   ctx.fill();
   ctx.shadowBlur = 0;
 
-  // Glass specular diagonal on main panel face
+  // Specular highlight diagonal on main panel face
   ctx.beginPath();
-  const dSpec1 = panelPt(0.25, 0.15);
-  const dSpec2 = panelPt(0.75, 0.85);
+  const dSpec1 = panelPt(0.15, 0.10);
+  const dSpec2 = panelPt(0.55, 0.65);
   ctx.moveTo(dSpec1.x, dSpec1.y);
   ctx.lineTo(dSpec2.x, dSpec2.y);
-  ctx.strokeStyle = light ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.05)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
   ctx.lineWidth = 4 * bScale;
   ctx.stroke();
 
   // Panel border
   drawPolygon(ctx, panelFace);
-  ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.98 : (light ? 0.78 : 0.62));
+  ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.98 : (light ? 0.78 : 0.72));
   ctx.lineWidth = (selected ? 3 : 2) * bScale;
   ctx.stroke();
   // Outer glow
   drawPolygon(ctx, panelFace);
-  ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.22 : (light ? 0.08 : 0.14));
+  ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.22 : (light ? 0.08 : 0.18));
   ctx.lineWidth = (selected ? 7 : 5) * bScale;
   ctx.stroke();
 

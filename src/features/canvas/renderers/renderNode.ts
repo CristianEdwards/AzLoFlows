@@ -120,7 +120,7 @@ export function renderNode(
     ctx.shadowOffsetY = 0;
   }
 
-  // ── Left side face ── (glass panel)
+  // ── Left side face ── (medium tone)
   drawPolygon(ctx, [leftTop, leftBottom, frontLeftBottom, leftTopDepth]);
   if (light) {
     const gLeft = ctx.createLinearGradient(leftTop.x, leftTop.y, frontLeftBottom.x, frontLeftBottom.y);
@@ -129,27 +129,27 @@ export function renderNode(
     ctx.fillStyle = gLeft;
   } else {
     const gLeft = ctx.createLinearGradient(leftTop.x, leftTop.y, frontLeftBottom.x, frontLeftBottom.y);
-    gLeft.addColorStop(0, hexToRgba(faceFill, 0.35));
-    gLeft.addColorStop(0.5, hexToRgba(faceFill, 0.18));
-    gLeft.addColorStop(1, hexToRgba(faceFill, 0.12));
+    gLeft.addColorStop(0, hexToRgba(node.glowColor, 0.50));
+    gLeft.addColorStop(0.5, darkenHex(node.glowColor, 0.40));
+    gLeft.addColorStop(1, darkenHex(node.glowColor, 0.60));
     ctx.fillStyle = gLeft;
   }
   ctx.fill();
-  ctx.strokeStyle = hexToRgba(node.glowColor, (light ? 0.35 : 0.14) * pulse);
+  ctx.strokeStyle = hexToRgba(node.glowColor, (light ? 0.35 : 0.20) * pulse);
   ctx.lineWidth = 0.8 * bScale;
   ctx.stroke();
 
-  // Glass specular highlight on left face
+  // Specular highlight on left face
   ctx.beginPath();
   const lfMid1 = { x: leftTop.x * 0.7 + leftBottom.x * 0.3, y: leftTop.y * 0.7 + leftBottom.y * 0.3 };
   const lfMid2 = { x: leftTopDepth.x * 0.3 + frontLeftBottom.x * 0.7, y: leftTopDepth.y * 0.3 + frontLeftBottom.y * 0.7 };
   ctx.moveTo(lfMid1.x, lfMid1.y);
   ctx.lineTo(lfMid2.x, lfMid2.y);
-  ctx.strokeStyle = light ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.06)';
+  ctx.strokeStyle = light ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.10)';
   ctx.lineWidth = 2.5 * bScale;
   ctx.stroke();
 
-  // ── Front face ── (glass panel)
+  // ── Front face ── (darkest face)
   drawPolygon(ctx, [leftBottom, rightBottom, frontRightBottom, frontLeftBottom]);
   if (light) {
     const gFront = ctx.createLinearGradient(leftBottom.x, leftBottom.y, frontRightBottom.x, frontRightBottom.y);
@@ -158,27 +158,27 @@ export function renderNode(
     ctx.fillStyle = gFront;
   } else {
     const gFront = ctx.createLinearGradient(leftBottom.x, leftBottom.y, frontRightBottom.x, frontRightBottom.y);
-    gFront.addColorStop(0, hexToRgba(faceFill, 0.52));
-    gFront.addColorStop(0.4, hexToRgba(faceFill, 0.32));
-    gFront.addColorStop(1, hexToRgba(faceFill, 0.18));
+    gFront.addColorStop(0, darkenHex(node.glowColor, 0.45));
+    gFront.addColorStop(0.5, darkenHex(node.glowColor, 0.55));
+    gFront.addColorStop(1, darkenHex(node.glowColor, 0.70));
     ctx.fillStyle = gFront;
   }
   ctx.fill();
-  ctx.strokeStyle = hexToRgba(node.glowColor, (light ? 0.35 : 0.14) * pulse);
+  ctx.strokeStyle = hexToRgba(node.glowColor, (light ? 0.35 : 0.18) * pulse);
   ctx.lineWidth = 0.8 * bScale;
   ctx.stroke();
 
-  // Glass specular highlight on front face
+  // Specular highlight on front face
   ctx.beginPath();
   const ffMid1 = { x: leftBottom.x * 0.65 + rightBottom.x * 0.35, y: leftBottom.y * 0.65 + rightBottom.y * 0.35 };
   const ffMid2 = { x: frontLeftBottom.x * 0.35 + frontRightBottom.x * 0.65, y: frontLeftBottom.y * 0.35 + frontRightBottom.y * 0.65 };
   ctx.moveTo(ffMid1.x, ffMid1.y);
   ctx.lineTo(ffMid2.x, ffMid2.y);
-  ctx.strokeStyle = light ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.05)';
+  ctx.strokeStyle = light ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.06)';
   ctx.lineWidth = 3 * bScale;
   ctx.stroke();
 
-  // ── Right side face ── (glass panel)
+  // ── Right side face ── (darker side)
   drawPolygon(ctx, [rightTop, rightBottom, frontRightBottom, rightTopDepth]);
   if (light) {
     const gRight = ctx.createLinearGradient(rightTop.x, rightTop.y, frontRightBottom.x, frontRightBottom.y);
@@ -187,17 +187,17 @@ export function renderNode(
     ctx.fillStyle = gRight;
   } else {
     const gRight = ctx.createLinearGradient(rightTop.x, rightTop.y, frontRightBottom.x, frontRightBottom.y);
-    gRight.addColorStop(0, hexToRgba(faceFill, 0.30));
-    gRight.addColorStop(0.5, hexToRgba(faceFill, 0.16));
-    gRight.addColorStop(1, hexToRgba(faceFill, 0.08));
+    gRight.addColorStop(0, hexToRgba(node.glowColor, 0.35));
+    gRight.addColorStop(0.5, darkenHex(node.glowColor, 0.50));
+    gRight.addColorStop(1, darkenHex(node.glowColor, 0.65));
     ctx.fillStyle = gRight;
   }
   ctx.fill();
-  ctx.strokeStyle = hexToRgba(node.glowColor, (light ? 0.30 : 0.1) * pulse);
+  ctx.strokeStyle = hexToRgba(node.glowColor, (light ? 0.30 : 0.12) * pulse);
   ctx.lineWidth = 0.8 * bScale;
   ctx.stroke();
 
-  // ── Top face (main visible face) ── (glass surface)
+  // ── Top face (main visible face) ── (solid rich gradient — brightest)
   drawPolygon(ctx, points);
   const gradient = ctx.createLinearGradient(points[0].x, points[0].y, points[2].x, points[2].y);
   if (light) {
@@ -205,10 +205,10 @@ export function renderNode(
     gradient.addColorStop(0.5, deepToneMid);
     gradient.addColorStop(1, deepTone);
   } else {
-    gradient.addColorStop(0, hexToRgba(faceFill, 0.88));
-    gradient.addColorStop(0.3, hexToRgba(faceFill, 0.55));
-    gradient.addColorStop(0.7, hexToRgba(faceFill, 0.30));
-    gradient.addColorStop(1, hexToRgba(faceFill, 0.18));
+    gradient.addColorStop(0, hexToRgba(node.glowColor, 0.90));
+    gradient.addColorStop(0.3, hexToRgba(node.glowColor, 0.60));
+    gradient.addColorStop(0.7, darkenHex(node.glowColor, 0.30));
+    gradient.addColorStop(1, darkenHex(node.glowColor, 0.50));
   }
   ctx.fillStyle = gradient;
   ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.35 : 0.5) * pulse);
