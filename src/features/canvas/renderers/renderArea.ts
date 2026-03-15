@@ -131,7 +131,7 @@ export function renderArea(
     ctx.scale(scale, scale);
     ctx.translate(-16, -16);
     ctx.globalAlpha = light ? 1.0 : 0.6;
-    ctx.fillStyle = light ? darkenHex(area.borderColor, 0.55) : hexToRgba(area.borderColor, 1.0);
+    ctx.fillStyle = light ? '#ffffff' : hexToRgba(area.borderColor, 1.0);
     for (const d of iconDef.paths) {
       ctx.fill(new Path2D(d));
     }
@@ -146,5 +146,5 @@ export function renderArea(
     y: labelScreen.y + textStackDirection.y * iconOffsetPx * stackSign,
   };
 
-  drawTransformedText(ctx, area.label, label, textDirection, textStackDirection, light ? '#0d0d1a' : '#ffffff', `700 ${clampedFontSize}px Rajdhani, sans-serif`);
+  drawTransformedText(ctx, area.label, label, textDirection, textStackDirection, '#ffffff', `700 ${clampedFontSize}px Rajdhani, sans-serif`);
 }
