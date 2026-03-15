@@ -8,16 +8,9 @@ import type { CameraState, NodeEntity } from '@/types/document';
 /**
  * Renders a large glass dashboard wall panel in isometric.
  *
- * The panel **rises vertically from the back edge** (lt→rt) of the isoQuad,
- * so its face looks forward-left toward the viewer — matching the orientation
- * shown in professional isometric dashboard illustrations.
- *
- * Content decorations include:
- * – Dark header toolbar with action dots
- * – Thin sidebar on the left ~18 %
- * – 2×2 content card grid in the main area
- * – Faint line-chart squiggle in the bottom-right card
- * – Donut / gauge ring decoration near the bottom-left
+ * The panel **rises vertically from the right edge** (rt→rb) of the isoQuad,
+ * matching the Chart Panel orientation so all wall-panels face the same way.
+ * A translucent floor reflection mirrors the front face onto the iso plane.
  */
 export function renderDashboard(
   ctx: CanvasRenderingContext2D,
@@ -37,7 +30,6 @@ export function renderDashboard(
   const leftEdgeLen = Math.hypot(lb.x - lt.x, lb.y - lt.y) || 1;
   const bScale = Math.min(1, Math.max(0.35, (topEdgeLen + leftEdgeLen) * 0.5 / 120));
 
-  // Basis vectors
   const bx = { x: (rt.x - lt.x) / topEdgeLen, y: (rt.y - lt.y) / topEdgeLen };
   const by = { x: (lb.x - lt.x) / leftEdgeLen, y: (lb.y - lt.y) / leftEdgeLen };
 
@@ -46,29 +38,53 @@ export function renderDashboard(
   const deepToneLit = light ? lightenHex(deepTone, 0.22) : '';
   const deepToneMid = light ? lightenHex(deepTone, 0.12) : '';
 
-  // ── Panel rises from back edge (lt→rt) upward ──
-  const panelH = node.height * 0.82 * camera.zoom;   // screen-space height
-  const tiltBack = node.width * 0.04 * camera.zoom;   // subtle backward lean
+  // ── Panel rises from right edge (rt→rb) — same as ChartPanel ──
+  const panelH = node.height * 0.82 * camera.zoom;
+  const tiltBack = node.width * 0.04 * camera.zoom;
 
-  // Bottom corners = lt → rt (the BACK edge of the isoQuad)
-  const wbl = lt;
-  const wbr = rt;
-  // Top corners rise vertically upward (plus a tiny lean along by)
-  const wtl = { x: lt.x - by.x * tiltBack, y: lt.y - panelH - by.y * tiltBack };
-  const wtr = { x: rt.x - by.x * tiltBack, y: rt.y - panelH - by.y * tiltBack };
+  const wbl = rt;
+  const wbr = rb;
+  const wtl = { x: rt.x - bx.x * tiltBack, y: rt.y - panelH - bx.y * tiltBack };
+  const wtr = { x: rb.x - bx.x * tiltBack, y: rb.y - panelH - bx.y * tiltBack };
 
-  // Side thickness (thin glass edge along the by axis)
+  // Side thickness
   const sideDepth = 5 * camera.zoom;
-  const wblD = { x: wbl.x + by.x * sideDepth, y: wbl.y + by.y * sideDepth };
-  const wtlD = { x: wtl.x + by.x * sideDepth, y: wtl.y + by.y * sideDepth };
-  const wbrD = { x: wbr.x + by.x * sideDepth, y: wbr.y + by.y * sideDepth };
-  const wtrD = { x: wtr.x + by.x * sideDepth, y: wtr.y + by.y * sideDepth };
+  const wblT = { x: wbl.x - by.x * sideDepth, y: wbl.y - by.y * sideDepth };
+  const wtlT = { x: wtl.x - by.x * sideDepth, y: wtl.y - by.y * sideDepth };
 
-  // ── Helper: bilinear interpolation on panel face ──
+  // Helper: bilinear on panel face
   const panelPt = (u: number, v: number) => ({
     x: wtl.x + (wtr.x - wtl.x) * u + (wbl.x - wtl.x) * v,
     y: wtl.y + (wtr.y - wtl.y) * u + (wbl.y - wtl.y) * v,
   });
+
+  // ── Floor reflection (drawn first, behind everything) ──
+  // Mirror the panel face downward from the bottom edge onto the iso ground
+  const reflH = panelH * 0.55; // reflection shorter than panel
+  const rbl = { x: wbl.x, y: wbl.y };
+  const rbr = { x: wbr.x, y: wbr.y };
+  const rtl = { x: wbl.x + bx.x * tiltBack, y: wbl.y + reflH + bx.y * tiltBack };
+  const rtr = { x: wbr.x + bx.x * tiltBack, y: wbr.y + reflH + bx.y * tiltBack };
+  drawPolygon(ctx, [rbl, rbr, rtr, rtl]);
+  const reflGrad = ctx.createLinearGradient(rbl.x, rbl.y, rtl.x, rtl.y);
+  if (light) {
+    reflGrad.addColorStop(0, hexToRgba(deepTone, 0.18));
+    reflGrad.addColorStop(0.5, hexToRgba(deepTone, 0.06));
+    reflGrad.addColorStop(1, 'rgba(0,0,0,0)');
+  } else {
+    reflGrad.addColorStop(0, hexToRgba(faceFill, 0.14));
+    reflGrad.addColorStop(0.5, hexToRgba(faceFill, 0.05));
+    reflGrad.addColorStop(1, 'rgba(0,0,0,0)');
+  }
+  ctx.fillStyle = reflGrad;
+  ctx.fill();
+  // Faint reflection border at the base
+  ctx.beginPath();
+  ctx.moveTo(rbl.x, rbl.y);
+  ctx.lineTo(rbr.x, rbr.y);
+  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.12 : 0.08);
+  ctx.lineWidth = 0.6 * bScale;
+  ctx.stroke();
 
   // ── Drop shadow ──
   if (light) {
@@ -83,23 +99,15 @@ export function renderDashboard(
     ctx.shadowOffsetY = 0;
   }
 
-  // ── Bottom edge thickness (thin slab visible below panel) ──
-  drawPolygon(ctx, [wbl, wbr, wbrD, wblD]);
+  // ── Left edge thickness ──
+  drawPolygon(ctx, [wtl, wbl, wblT, wtlT]);
   ctx.fillStyle = light ? darkenHex(deepTone, 0.65) : hexToRgba(faceFill, 0.10);
   ctx.fill();
   ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.15 : 0.06);
   ctx.lineWidth = 0.5 * bScale;
   ctx.stroke();
 
-  // ── Right edge thickness ──
-  drawPolygon(ctx, [wbr, wtr, wtrD, wbrD]);
-  ctx.fillStyle = light ? darkenHex(deepTone, 0.60) : hexToRgba(faceFill, 0.08);
-  ctx.fill();
-  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.12 : 0.05);
-  ctx.lineWidth = 0.4 * bScale;
-  ctx.stroke();
-
-  // ── Main panel face (the primary visual) ──
+  // ── Main panel face ──
   const panelFace = [wtl, wtr, wbr, wbl];
   drawPolygon(ctx, panelFace);
   const grad = ctx.createLinearGradient(wtl.x, wtl.y, wbl.x, wbl.y);
@@ -134,7 +142,6 @@ export function renderDashboard(
   drawPolygon(ctx, [panelPt(0, 0), panelPt(1, 0), panelPt(1, hdrFrac), panelPt(0, hdrFrac)]);
   ctx.fillStyle = light ? hexToRgba(node.glowColor, 0.10) : hexToRgba(node.glowColor, 0.06);
   ctx.fill();
-  // Header separator
   ctx.beginPath();
   const hlL = panelPt(0, hdrFrac);
   const hlR = panelPt(1, hdrFrac);
@@ -158,7 +165,6 @@ export function renderDashboard(
   drawPolygon(ctx, [panelPt(0, hdrFrac), panelPt(sideW, hdrFrac), panelPt(sideW, 1), panelPt(0, 1)]);
   ctx.fillStyle = light ? 'rgba(0,0,0,0.05)' : 'rgba(0,0,0,0.12)';
   ctx.fill();
-  // Sidebar separator
   ctx.beginPath();
   const sT = panelPt(sideW, hdrFrac);
   const sB = panelPt(sideW, 1);
@@ -167,7 +173,6 @@ export function renderDashboard(
   ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.12 : 0.08);
   ctx.lineWidth = 0.6 * bScale;
   ctx.stroke();
-  // Sidebar nav items (faint lines)
   for (let i = 0; i < 5; i++) {
     const y = hdrFrac + 0.06 + i * 0.07;
     const lp = panelPt(0.03, y);
@@ -181,19 +186,18 @@ export function renderDashboard(
     ctx.stroke();
   }
 
-  // ── Content cards (2×2 grid in the main area) ──
+  // ── Content cards (2×2 grid) ──
   const contentL = sideW + 0.03;
   const contentR = 0.97;
   const contentT = hdrFrac + 0.04;
   const contentMidY = 0.52;
   const gap = 0.02;
   const midX = (contentL + contentR) / 2;
-
   const cards: [number, number, number, number][] = [
-    [contentL, contentT, midX - gap, contentMidY - gap],          // top-left
-    [midX + gap, contentT, contentR, contentMidY - gap],          // top-right
-    [contentL, contentMidY + gap, midX - gap, 0.96],              // bottom-left
-    [midX + gap, contentMidY + gap, contentR, 0.96],              // bottom-right
+    [contentL, contentT, midX - gap, contentMidY - gap],
+    [midX + gap, contentT, contentR, contentMidY - gap],
+    [contentL, contentMidY + gap, midX - gap, 0.96],
+    [midX + gap, contentMidY + gap, contentR, 0.96],
   ];
   for (const [cl, ct, cr, cb] of cards) {
     const tl = panelPt(cl, ct);
@@ -220,8 +224,7 @@ export function renderDashboard(
     const u = cCL + (cCR - cCL) * chartPts[i];
     const v = cCB - (cCB - cCT) * chartVals[i];
     const p = panelPt(u, v);
-    if (i === 0) ctx.moveTo(p.x, p.y);
-    else ctx.lineTo(p.x, p.y);
+    if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
   }
   ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.45 : 0.35);
   ctx.lineWidth = 1.5 * bScale;
@@ -233,14 +236,12 @@ export function renderDashboard(
   const gaugeU = (contentL + midX - gap) / 2;
   const gaugeV = (contentMidY + gap + 0.96) / 2;
   const gCenter = panelPt(gaugeU, gaugeV);
-  const gRadius = Math.max(6, (midX - gap - contentL) * topEdgeLen * 0.18);
-  // Background ring
+  const gRadius = Math.max(6, (midX - gap - contentL) * leftEdgeLen * 0.18);
   ctx.beginPath();
   ctx.arc(gCenter.x, gCenter.y, gRadius, 0, Math.PI * 2);
   ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.08 : 0.05);
   ctx.lineWidth = 3 * bScale;
   ctx.stroke();
-  // Filled arc (~72 %)
   ctx.beginPath();
   ctx.arc(gCenter.x, gCenter.y, gRadius, -Math.PI * 0.5, -Math.PI * 0.5 + Math.PI * 1.44);
   ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.55 : 0.40);
@@ -248,7 +249,7 @@ export function renderDashboard(
   ctx.lineCap = 'round';
   ctx.stroke();
 
-  // ── Metric bar placeholders in top-left card ──
+  // ── Metric bars in top-left card ──
   for (let i = 0; i < 3; i++) {
     const barY = contentT + 0.06 + i * 0.10;
     const barL = contentL + 0.02;
@@ -265,7 +266,7 @@ export function renderDashboard(
     ctx.stroke();
   }
 
-  // ── Leading edge glow (left vertical edge) ──
+  // ── Leading edge glow (left vertical) ──
   ctx.beginPath();
   ctx.moveTo(wtl.x, wtl.y);
   ctx.lineTo(wbl.x, wbl.y);
@@ -291,13 +292,14 @@ export function renderDashboard(
   const showDetail = camera.zoom >= DETAIL_ZOOM_THRESHOLD;
   const panelCX = (wtl.x + wtr.x + wbl.x + wbr.x) / 4;
   const panelCY = (wtl.y + wtr.y + wbl.y + wbr.y) / 4;
+  const panelBasisX = by;
 
   if (node.icon && nodeIconCatalog[node.icon] && showDetail) {
     const iconDef = nodeIconCatalog[node.icon];
-    const iconSize = Math.min(node.width, panelH / camera.zoom) * NODE_ICON_SCALE * camera.zoom * 0.9;
+    const iconSize = Math.min(node.height, panelH / camera.zoom) * NODE_ICON_SCALE * camera.zoom * 0.9;
     ctx.save();
     ctx.translate(panelCX, panelCY - panelH * 0.08);
-    ctx.transform(bx.x, bx.y, 0, 1, 0, 0);
+    ctx.transform(panelBasisX.x, panelBasisX.y, 0, 1, 0, 0);
     const scale = iconSize / 32;
     ctx.scale(scale, scale);
     ctx.translate(-16, -16);
@@ -308,18 +310,16 @@ export function renderDashboard(
   }
 
   if (showDetail) {
-    // Title below the panel (on the platform surface)
     const titlePt = { x: (wbl.x + wbr.x) / 2, y: (wbl.y + wbr.y) / 2 + 14 * camera.zoom };
     const fontSize = node.fontSize ?? DEFAULT_FONT_SIZE;
     const scaledSize = Math.round(fontSize * camera.zoom * 0.9);
-
-    drawTransformedText(ctx, node.title, titlePt, bx, { x: 0, y: 1 },
+    drawTransformedText(ctx, node.title, titlePt, panelBasisX, { x: 0, y: 1 },
       light ? 'rgba(255,255,255,0.95)' : '#ffffff',
       `700 ${scaledSize}px Inter, sans-serif`);
 
     if (node.subtitle) {
       const subPt = { x: titlePt.x, y: titlePt.y + scaledSize * 1.3 };
-      drawTransformedText(ctx, node.subtitle, subPt, bx, { x: 0, y: 1 },
+      drawTransformedText(ctx, node.subtitle, subPt, panelBasisX, { x: 0, y: 1 },
         light ? 'rgba(255,255,255,0.75)' : hexToRgba(node.glowColor, 0.95),
         `600 ${Math.round(scaledSize * 0.78)}px Inter, sans-serif`);
     }
