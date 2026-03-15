@@ -1,7 +1,7 @@
 import { NODE_DEPTH, DETAIL_ZOOM_THRESHOLD, NODE_ICON_SCALE, DEFAULT_FONT_SIZE } from '@/lib/config';
 import { isoQuad, worldToScreen, type ViewportSize } from '@/lib/geometry/iso';
 import { nodeIconCatalog } from '@/lib/icons/nodeIcons';
-import { drawPolygon, drawTransformedText } from '@/lib/rendering/canvasPrimitives';
+import { drawPolygon, drawRoundedPolygon, drawTransformedText } from '@/lib/rendering/canvasPrimitives';
 import { hexToRgba, lightenHex, darkenHex, deepToneForGlow } from '@/lib/rendering/tokens';
 import type { CameraState, NodeEntity } from '@/types/document';
 
@@ -28,6 +28,7 @@ export function renderLaptop(
   const topEdgeLen = Math.hypot(rt.x - lt.x, rt.y - lt.y) || 1;
   const leftEdgeLen = Math.hypot(lb.x - lt.x, lb.y - lt.y) || 1;
   const bScale = Math.min(1, Math.max(0.35, (topEdgeLen + leftEdgeLen) * 0.5 / 120));
+  const panelR = Math.min(12, (topEdgeLen + leftEdgeLen) * 0.04);
 
   const bx = { x: (rt.x - lt.x) / topEdgeLen, y: (rt.y - lt.y) / topEdgeLen };
   const by = { x: (lb.x - lt.x) / leftEdgeLen, y: (lb.y - lt.y) / leftEdgeLen };
@@ -261,25 +262,29 @@ export function renderLaptop(
   ctx.lineWidth = 2.5 * bScale;
   ctx.stroke();
 
-  // ── Screen panel (rising from right edge rt→rb) — rich solid gradient ──
+  // ── Screen panel (rising from right edge rt→rb) — dark glass ──
   const screenFace = [wtl, wtr, wbr, wbl];
-  drawPolygon(ctx, screenFace);
+  drawRoundedPolygon(ctx, screenFace, panelR);
+  // Dark glass base
+  ctx.fillStyle = 'rgba(8, 14, 28, 0.88)';
+  ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.40 : 0.55) * pulse);
+  ctx.shadowBlur = light ? (selected ? 24 : 16) : (selected ? 34 : 22);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  // Subtle color overlay
+  drawRoundedPolygon(ctx, screenFace, panelR);
   const scrGrad = ctx.createLinearGradient(wbl.x, wbl.y, wtl.x, wtl.y);
   if (light) {
     scrGrad.addColorStop(0, deepTone);
     scrGrad.addColorStop(0.3, deepToneMid);
     scrGrad.addColorStop(1, deepToneLit);
   } else {
-    scrGrad.addColorStop(0, darkenHex(node.glowColor, 0.55));
-    scrGrad.addColorStop(0.3, darkenHex(node.glowColor, 0.35));
-    scrGrad.addColorStop(0.7, hexToRgba(node.glowColor, 0.55));
-    scrGrad.addColorStop(1, hexToRgba(node.glowColor, 0.85));
+    scrGrad.addColorStop(0, hexToRgba(node.glowColor, 0.10));
+    scrGrad.addColorStop(0.4, hexToRgba(node.glowColor, 0.06));
+    scrGrad.addColorStop(1, hexToRgba(node.glowColor, 0.14));
   }
   ctx.fillStyle = scrGrad;
-  ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.40 : 0.55) * pulse);
-  ctx.shadowBlur = light ? (selected ? 24 : 16) : (selected ? 34 : 22);
   ctx.fill();
-  ctx.shadowBlur = 0;
 
   // Specular highlight diagonal on screen face
   ctx.beginPath();
@@ -292,13 +297,16 @@ export function renderLaptop(
   ctx.stroke();
 
   // Screen border
-  drawPolygon(ctx, screenFace);
+  drawRoundedPolygon(ctx, screenFace, panelR);
   ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.98 : (light ? 0.88 : 0.78));
   ctx.lineWidth = (selected ? 3 : 2.4) * bScale;
+  ctx.shadowColor = hexToRgba(node.glowColor, light ? 0.15 : 0.40);
+  ctx.shadowBlur = (light ? 4 : 10) * bScale;
   ctx.stroke();
+  ctx.shadowBlur = 0;
 
   // Outer glow
-  drawPolygon(ctx, screenFace);
+  drawRoundedPolygon(ctx, screenFace, panelR);
   ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.28 : (light ? 0.12 : 0.18));
   ctx.lineWidth = (selected ? 7 : 5) * bScale;
   ctx.stroke();
