@@ -49,14 +49,14 @@ export function renderDashboard(
   const wtr = { x: rb.x - bx.x * tiltBack, y: rb.y - panelH - bx.y * tiltBack };
 
   // Side thickness (glass depth)
-  const sideDepth = 22 * camera.zoom;
+  const sideDepth = 30 * camera.zoom;
   const wblT = { x: wbl.x - by.x * sideDepth, y: wbl.y - by.y * sideDepth };
   const wtlT = { x: wtl.x - by.x * sideDepth, y: wtl.y - by.y * sideDepth };
   const wtrT = { x: wtr.x - by.x * sideDepth, y: wtr.y - by.y * sideDepth };
   const wbrT = { x: wbr.x - by.x * sideDepth, y: wbr.y - by.y * sideDepth };
 
   // Bottom edge thickness
-  const bottomDepth = 14 * camera.zoom;
+  const bottomDepth = 18 * camera.zoom;
   const wblB = { x: wbl.x, y: wbl.y + bottomDepth };
   const wbrB = { x: wbr.x, y: wbr.y + bottomDepth };
   const wblTB = { x: wblT.x, y: wblT.y + bottomDepth };
@@ -105,7 +105,7 @@ export function renderDashboard(
   }
 
   // ── Top edge face (slab top — lightest face, catches light) ──
-  drawPolygon(ctx, [wtlT, wtl, wtr, wtrT]);
+  drawRoundedPolygon(ctx, [wtlT, wtl, wtr, wtrT], panelR);
   if (light) {
     const gTop = ctx.createLinearGradient(wtlT.x, wtlT.y, wtr.x, wtr.y);
     gTop.addColorStop(0, lightenHex(deepTone, 0.18));
@@ -113,9 +113,9 @@ export function renderDashboard(
     ctx.fillStyle = gTop;
   } else {
     const gTop = ctx.createLinearGradient(wtlT.x, wtlT.y, wtr.x, wtr.y);
-    gTop.addColorStop(0, hexToRgba(node.glowColor, 0.55));
-    gTop.addColorStop(0.5, hexToRgba(node.glowColor, 0.35));
-    gTop.addColorStop(1, hexToRgba(node.glowColor, 0.20));
+    gTop.addColorStop(0, hexToRgba(node.glowColor, 0.65));
+    gTop.addColorStop(0.5, hexToRgba(node.glowColor, 0.45));
+    gTop.addColorStop(1, hexToRgba(node.glowColor, 0.30));
     ctx.fillStyle = gTop;
   }
   ctx.fill();
@@ -124,13 +124,13 @@ export function renderDashboard(
   ctx.stroke();
 
   // ── Bottom edge thickness (3D base — darkest face) ──
-  drawPolygon(ctx, [wbl, wbr, wbrB, wblB]);
+  drawRoundedPolygon(ctx, [wbl, wbr, wbrB, wblB], panelR * 0.5);
   if (light) {
     ctx.fillStyle = darkenHex(deepTone, 0.78);
   } else {
     const gBot = ctx.createLinearGradient(wbl.x, wbl.y, wblB.x, wblB.y);
-    gBot.addColorStop(0, darkenHex(node.glowColor, 0.55));
-    gBot.addColorStop(1, darkenHex(node.glowColor, 0.75));
+    gBot.addColorStop(0, darkenHex(node.glowColor, 0.40));
+    gBot.addColorStop(1, darkenHex(node.glowColor, 0.60));
     ctx.fillStyle = gBot;
   }
   ctx.fill();
@@ -149,7 +149,7 @@ export function renderDashboard(
   ctx.fill();
 
   // ── Left edge thickness ── (side face — medium tone)
-  drawPolygon(ctx, [wtl, wbl, wblT, wtlT]);
+  drawRoundedPolygon(ctx, [wtl, wbl, wblT, wtlT], panelR);
   if (light) {
     const gSide = ctx.createLinearGradient(wtlT.x, wtlT.y, wtl.x, wtl.y);
     gSide.addColorStop(0, lightenHex(deepTone, 0.10));
@@ -157,9 +157,9 @@ export function renderDashboard(
     ctx.fillStyle = gSide;
   } else {
     const gSide = ctx.createLinearGradient(wtlT.x, wtlT.y, wtl.x, wtl.y);
-    gSide.addColorStop(0, hexToRgba(node.glowColor, 0.50));
-    gSide.addColorStop(0.5, darkenHex(node.glowColor, 0.40));
-    gSide.addColorStop(1, darkenHex(node.glowColor, 0.60));
+    gSide.addColorStop(0, hexToRgba(node.glowColor, 0.55));
+    gSide.addColorStop(0.5, darkenHex(node.glowColor, 0.30));
+    gSide.addColorStop(1, darkenHex(node.glowColor, 0.50));
     ctx.fillStyle = gSide;
   }
   ctx.fill();

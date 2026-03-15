@@ -2,7 +2,7 @@ import { palette, companionPalette } from '@/lib/rendering/tokens';
 import type { NodeShape } from '@/types/document';
 
 export interface PaletteShape {
-  id: 'area' | 'node' | 'text' | 'pipe' | 'cylinder' | 'monitor' | 'serverRack' | 'diamond' | 'cloud' | 'card' | 'platform' | 'laptop' | 'browser' | 'shield' | 'hexagon' | 'stack' | 'dashboard' | 'gauge' | 'chartPanel';
+  id: 'area' | 'node' | 'text' | 'pipe' | 'serverRack' | 'card' | 'platform' | 'browser' | 'stack' | 'dashboard' | 'gauge' | 'chartPanel';
   title: string;
   /** Inline SVG markup (64×64 viewBox) showing an isometric preview */
   icon: string;
@@ -186,17 +186,10 @@ const chartPanelIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 
 export const paletteShapes: PaletteShape[] = [
   { id: 'area', title: 'Flat Area', icon: areaIcon },
   { id: 'node', title: 'Node',      icon: nodeIcon },
-  { id: 'cylinder', title: 'Cylinder', icon: cylinderIcon, nodeShape: 'cylinder' },
-  { id: 'monitor',  title: 'Monitor',  icon: monitorIcon,  nodeShape: 'monitor' },
   { id: 'serverRack', title: 'Server Rack', icon: serverRackIcon, nodeShape: 'serverRack' },
-  { id: 'diamond',  title: 'Diamond',  icon: diamondIcon,  nodeShape: 'diamond' },
-  { id: 'cloud',    title: 'Cloud',    icon: cloudIcon,    nodeShape: 'cloud' },
   { id: 'card',     title: 'Card',     icon: cardIcon,     nodeShape: 'card' },
   { id: 'platform', title: 'Platform', icon: platformIcon, nodeShape: 'platform' },
-  { id: 'laptop',   title: 'Laptop',   icon: laptopIcon,   nodeShape: 'laptop' },
   { id: 'browser',  title: 'Browser',  icon: browserIcon,  nodeShape: 'browser' },
-  { id: 'shield',   title: 'Shield',   icon: shieldIcon,   nodeShape: 'shield' },
-  { id: 'hexagon',  title: 'Hexagon',  icon: hexagonIcon,  nodeShape: 'hexagon' },
   { id: 'stack',    title: 'Stack',    icon: stackIcon,    nodeShape: 'stack' },
   { id: 'dashboard', title: 'Dashboard', icon: dashboardIcon, nodeShape: 'dashboard' },
   { id: 'gauge',     title: 'Gauge',     icon: gaugeIcon,     nodeShape: 'gauge' },

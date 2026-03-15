@@ -3,17 +3,10 @@ import { isoQuad, worldToScreen, type ViewportSize } from '@/lib/geometry/iso';
 import { nodeIconCatalog } from '@/lib/icons/nodeIcons';
 import { drawPolygon, drawRoundedPolygon, drawTransformedText } from '@/lib/rendering/canvasPrimitives';
 import { hexToRgba, lightenHex, darkenHex, deepToneForGlow } from '@/lib/rendering/tokens';
-import { renderCylinder } from './renderCylinder';
-import { renderMonitor } from './renderMonitor';
 import { renderServerRack } from './renderServerRack';
-import { renderDiamond } from './renderDiamond';
-import { renderCloud } from './renderCloud';
 import { renderCard } from './renderCard';
 import { renderPlatform } from './renderPlatform';
-import { renderLaptop } from './renderLaptop';
 import { renderBrowser } from './renderBrowser';
-import { renderShield } from './renderShield';
-import { renderHexagon } from './renderHexagon';
 import { renderStack } from './renderStack';
 import { renderDashboard } from './renderDashboard';
 import { renderGauge } from './renderGauge';
@@ -31,28 +24,14 @@ export function renderNode(
 ): void {
   // Dispatch to shape-specific renderer
   switch (node.shape) {
-    case 'cylinder':
-      return renderCylinder(ctx, node, selected, camera, viewport, time, theme);
-    case 'monitor':
-      return renderMonitor(ctx, node, selected, camera, viewport, time, theme);
     case 'serverRack':
       return renderServerRack(ctx, node, selected, camera, viewport, time, theme);
-    case 'diamond':
-      return renderDiamond(ctx, node, selected, camera, viewport, time, theme);
-    case 'cloud':
-      return renderCloud(ctx, node, selected, camera, viewport, time, theme);
     case 'card':
       return renderCard(ctx, node, selected, camera, viewport, time, theme);
     case 'platform':
       return renderPlatform(ctx, node, selected, camera, viewport, time, theme);
-    case 'laptop':
-      return renderLaptop(ctx, node, selected, camera, viewport, time, theme);
     case 'browser':
       return renderBrowser(ctx, node, selected, camera, viewport, time, theme);
-    case 'shield':
-      return renderShield(ctx, node, selected, camera, viewport, time, theme);
-    case 'hexagon':
-      return renderHexagon(ctx, node, selected, camera, viewport, time, theme);
     case 'stack':
       return renderStack(ctx, node, selected, camera, viewport, time, theme);
     case 'dashboard':
@@ -122,7 +101,7 @@ export function renderNode(
   }
 
   // ── Left side face ── (medium tone)
-  drawPolygon(ctx, [leftTop, leftBottom, frontLeftBottom, leftTopDepth]);
+  drawRoundedPolygon(ctx, [leftTop, leftBottom, frontLeftBottom, leftTopDepth], cornerR);
   if (light) {
     const gLeft = ctx.createLinearGradient(leftTop.x, leftTop.y, frontLeftBottom.x, frontLeftBottom.y);
     gLeft.addColorStop(0, deepToneMid);
@@ -151,7 +130,7 @@ export function renderNode(
   ctx.stroke();
 
   // ── Front face ── (darkest face)
-  drawPolygon(ctx, [leftBottom, rightBottom, frontRightBottom, frontLeftBottom]);
+  drawRoundedPolygon(ctx, [leftBottom, rightBottom, frontRightBottom, frontLeftBottom], cornerR);
   if (light) {
     const gFront = ctx.createLinearGradient(leftBottom.x, leftBottom.y, frontRightBottom.x, frontRightBottom.y);
     gFront.addColorStop(0, deepTone);
@@ -180,7 +159,7 @@ export function renderNode(
   ctx.stroke();
 
   // ── Right side face ── (darker side)
-  drawPolygon(ctx, [rightTop, rightBottom, frontRightBottom, rightTopDepth]);
+  drawRoundedPolygon(ctx, [rightTop, rightBottom, frontRightBottom, rightTopDepth], cornerR);
   if (light) {
     const gRight = ctx.createLinearGradient(rightTop.x, rightTop.y, frontRightBottom.x, frontRightBottom.y);
     gRight.addColorStop(0, deepToneMid);
@@ -275,17 +254,17 @@ export function renderNode(
   ctx.lineWidth = (selected ? 7 : 5) * bScale;
   ctx.stroke();
 
-  drawPolygon(ctx, [leftTop, leftBottom, frontLeftBottom, leftTopDepth]);
+  drawRoundedPolygon(ctx, [leftTop, leftBottom, frontLeftBottom, leftTopDepth], cornerR);
   ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.48 : 0.34);
   ctx.lineWidth = 1.6 * bScale;
   ctx.stroke();
 
-  drawPolygon(ctx, [leftBottom, rightBottom, frontRightBottom, frontLeftBottom]);
+  drawRoundedPolygon(ctx, [leftBottom, rightBottom, frontRightBottom, frontLeftBottom], cornerR);
   ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.48 : 0.34);
   ctx.lineWidth = 1.6 * bScale;
   ctx.stroke();
 
-  drawPolygon(ctx, [rightTop, rightBottom, frontRightBottom, rightTopDepth]);
+  drawRoundedPolygon(ctx, [rightTop, rightBottom, frontRightBottom, rightTopDepth], cornerR);
   ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.42 : 0.3);
   ctx.lineWidth = 1.4 * bScale;
   ctx.stroke();

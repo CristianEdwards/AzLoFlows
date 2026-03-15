@@ -56,7 +56,7 @@ export function renderPlatform(
   }
 
   // ── Left side face ──
-  drawPolygon(ctx, [lt, lb, lbD, ltD]);
+  drawRoundedPolygon(ctx, [lt, lb, lbD, ltD], cornerR);
   ctx.fillStyle = light ? darkenHex(deepTone, 0.5) : darkenHex(node.glowColor, 0.55);
   ctx.fill();
   ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.2 : 0.12);
@@ -64,7 +64,7 @@ export function renderPlatform(
   ctx.stroke();
 
   // ── Front face ──
-  drawPolygon(ctx, [lb, rb, rbD, lbD]);
+  drawRoundedPolygon(ctx, [lb, rb, rbD, lbD], cornerR);
   ctx.fillStyle = light ? darkenHex(deepTone, 0.55) : darkenHex(node.glowColor, 0.50);
   ctx.fill();
   ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.2 : 0.12);
@@ -72,7 +72,7 @@ export function renderPlatform(
   ctx.stroke();
 
   // ── Right side face ──
-  drawPolygon(ctx, [rt, rb, rbD, rtD]);
+  drawRoundedPolygon(ctx, [rt, rb, rbD, rtD], cornerR);
   ctx.fillStyle = light ? darkenHex(deepTone, 0.6) : darkenHex(node.glowColor, 0.65);
   ctx.fill();
   ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.15 : 0.08);
