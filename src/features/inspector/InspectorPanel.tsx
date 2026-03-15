@@ -243,6 +243,9 @@ export default function InspectorPanel() {
                 <option value="shield">Shield</option>
                 <option value="hexagon">Hexagon</option>
                 <option value="stack">Stack</option>
+                <option value="dashboard">Dashboard</option>
+                <option value="gauge">Gauge</option>
+                <option value="chartPanel">Chart Panel</option>
               </select>
             </label>
             <label className="field">

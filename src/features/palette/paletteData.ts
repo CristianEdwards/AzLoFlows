@@ -2,7 +2,7 @@ import { palette, companionPalette } from '@/lib/rendering/tokens';
 import type { NodeShape } from '@/types/document';
 
 export interface PaletteShape {
-  id: 'area' | 'node' | 'text' | 'pipe' | 'cylinder' | 'monitor' | 'serverRack' | 'diamond' | 'cloud' | 'card' | 'platform' | 'laptop' | 'browser' | 'shield' | 'hexagon' | 'stack';
+  id: 'area' | 'node' | 'text' | 'pipe' | 'cylinder' | 'monitor' | 'serverRack' | 'diamond' | 'cloud' | 'card' | 'platform' | 'laptop' | 'browser' | 'shield' | 'hexagon' | 'stack' | 'dashboard' | 'gauge' | 'chartPanel';
   title: string;
   /** Inline SVG markup (64×64 viewBox) showing an isometric preview */
   icon: string;
@@ -150,6 +150,39 @@ const stackIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" f
   <polygon points="52,26 32,36 32,40 52,30" fill="rgba(77,141,255,0.06)" stroke="rgba(77,141,255,0.15)" stroke-width="0.4" transform="translate(0,14)"/>
 </svg>`;
 
+const dashboardIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <polygon points="12,36 52,36 48,10 8,10" fill="rgba(0,229,255,0.16)" stroke="rgba(0,229,255,0.55)" stroke-width="1.2"/>
+  <line x1="8" y1="10" x2="48" y2="10" stroke="rgba(0,229,255,0.8)" stroke-width="1.5"/>
+  <line x1="8" y1="10" x2="12" y2="36" stroke="rgba(0,229,255,0.9)" stroke-width="1.8"/>
+  <line x1="20" y1="14" x2="22" y2="34" stroke="rgba(0,229,255,0.12)" stroke-width="0.5"/>
+  <line x1="10" y1="16" x2="50" y2="16" stroke="rgba(0,229,255,0.15)" stroke-width="0.5"/>
+  <rect x="24" y="18" width="10" height="6" rx="0.5" fill="rgba(0,229,255,0.06)" stroke="rgba(0,229,255,0.08)" stroke-width="0.4"/>
+  <rect x="36" y="18" width="10" height="6" rx="0.5" fill="rgba(0,229,255,0.06)" stroke="rgba(0,229,255,0.08)" stroke-width="0.4"/>
+  <rect x="24" y="26" width="10" height="6" rx="0.5" fill="rgba(0,229,255,0.06)" stroke="rgba(0,229,255,0.08)" stroke-width="0.4"/>
+  <rect x="36" y="26" width="10" height="6" rx="0.5" fill="rgba(0,229,255,0.06)" stroke="rgba(0,229,255,0.08)" stroke-width="0.4"/>
+  <circle cx="14" cy="14" r="1.2" fill="rgba(255,95,87,0.5)"/>
+  <circle cx="18" cy="14" r="1.2" fill="rgba(255,189,46,0.5)"/>
+  <circle cx="22" cy="14" r="1.2" fill="rgba(40,200,64,0.5)"/>
+</svg>`;
+
+const gaugeIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <ellipse cx="32" cy="32" rx="22" ry="14" fill="rgba(0,229,255,0.10)" stroke="rgba(0,229,255,0.18)" stroke-width="0.8"/>
+  <ellipse cx="32" cy="32" rx="22" ry="14" fill="none" stroke="rgba(0,229,255,0.12)" stroke-width="5"/>
+  <path d="M10,32 A22,14 0 0,1 50,24" fill="none" stroke="rgba(0,229,255,0.7)" stroke-width="5" stroke-linecap="round"/>
+  <ellipse cx="32" cy="36" rx="22" ry="14" fill="rgba(0,229,255,0.04)" stroke="rgba(0,229,255,0.08)" stroke-width="0.5"/>
+  <text x="32" y="34" fill="rgba(0,229,255,0.6)" font-family="Inter,sans-serif" font-weight="700" font-size="8" text-anchor="middle">72%</text>
+</svg>`;
+
+const chartPanelIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <polygon points="14,12 54,22 50,50 10,40" fill="rgba(0,229,255,0.14)" stroke="rgba(0,229,255,0.50)" stroke-width="1"/>
+  <line x1="10" y1="40" x2="14" y2="12" stroke="rgba(0,229,255,0.85)" stroke-width="1.5"/>
+  <line x1="14" y1="16" x2="54" y2="26" stroke="rgba(0,229,255,0.12)" stroke-width="0.5"/>
+  <polyline points="18,34 24,28 30,32 36,24 42,30 48,26" fill="none" stroke="rgba(0,229,255,0.6)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="24" cy="28" r="1.5" fill="rgba(0,229,255,0.5)"/>
+  <circle cx="36" cy="24" r="1.5" fill="rgba(0,229,255,0.5)"/>
+  <circle cx="48" cy="26" r="1.5" fill="rgba(0,229,255,0.5)"/>
+</svg>`;
+
 export const paletteShapes: PaletteShape[] = [
   { id: 'area', title: 'Flat Area', icon: areaIcon },
   { id: 'node', title: 'Node',      icon: nodeIcon },
@@ -165,6 +198,9 @@ export const paletteShapes: PaletteShape[] = [
   { id: 'shield',   title: 'Shield',   icon: shieldIcon,   nodeShape: 'shield' },
   { id: 'hexagon',  title: 'Hexagon',  icon: hexagonIcon,  nodeShape: 'hexagon' },
   { id: 'stack',    title: 'Stack',    icon: stackIcon,    nodeShape: 'stack' },
+  { id: 'dashboard', title: 'Dashboard', icon: dashboardIcon, nodeShape: 'dashboard' },
+  { id: 'gauge',     title: 'Gauge',     icon: gaugeIcon,     nodeShape: 'gauge' },
+  { id: 'chartPanel', title: 'Chart Panel', icon: chartPanelIcon, nodeShape: 'chartPanel' },
   { id: 'text', title: 'Text Label', icon: textIcon },
   { id: 'pipe', title: 'Pipe',       icon: pipeIcon },
 ];

@@ -15,6 +15,9 @@ import { renderBrowser } from './renderBrowser';
 import { renderShield } from './renderShield';
 import { renderHexagon } from './renderHexagon';
 import { renderStack } from './renderStack';
+import { renderDashboard } from './renderDashboard';
+import { renderGauge } from './renderGauge';
+import { renderChartPanel } from './renderChartPanel';
 import type { CameraState, NodeEntity } from '@/types/document';
 
 export function renderNode(
@@ -52,6 +55,12 @@ export function renderNode(
       return renderHexagon(ctx, node, selected, camera, viewport, time, theme);
     case 'stack':
       return renderStack(ctx, node, selected, camera, viewport, time, theme);
+    case 'dashboard':
+      return renderDashboard(ctx, node, selected, camera, viewport, time, theme);
+    case 'gauge':
+      return renderGauge(ctx, node, selected, camera, viewport, time, theme);
+    case 'chartPanel':
+      return renderChartPanel(ctx, node, selected, camera, viewport, time, theme);
     default:
       break; // fall through to box rendering
   }
