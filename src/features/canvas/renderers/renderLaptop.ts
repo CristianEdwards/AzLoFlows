@@ -7,8 +7,8 @@ import type { CameraState, NodeEntity } from '@/types/document';
 
 /**
  * Renders an open laptop in isometric.
- * The isoQuad is the keyboard/base, and a tilted screen rises from the back
- * edge. Inspired by the Holowits & e-commerce reference images.
+ * The isoQuad is the keyboard/base, and the screen rises vertically from the
+ * **right edge** (rt→rb) — same orientation as ChartPanel, Dashboard, Browser.
  */
 export function renderLaptop(
   ctx: CanvasRenderingContext2D,
@@ -43,11 +43,51 @@ export function renderLaptop(
   const rbD = { x: rb.x, y: rb.y + baseDepth };
   const rtD = { x: rt.x, y: rt.y + baseDepth };
 
-  // Screen: rises vertically from the back edge (lt→rt), tilted slightly
+  // ── Screen rises from right edge (rt→rb) ──
   const screenH = node.width * 0.55 * camera.zoom;
-  const screenTilt = node.height * 0.08 * camera.zoom; // slight backward tilt
-  const stl = { x: lt.x - by.x * screenTilt, y: lt.y - screenH - by.y * screenTilt };
-  const str = { x: rt.x - by.x * screenTilt, y: rt.y - screenH - by.y * screenTilt };
+  const tiltBack = node.height * 0.05 * camera.zoom;
+
+  // Bottom corners of screen = right edge of base
+  const wbl = rt;
+  const wbr = rb;
+  // Top corners rise upward (with slight tilt along -bx)
+  const wtl = { x: rt.x - bx.x * tiltBack, y: rt.y - screenH - bx.y * tiltBack };
+  const wtr = { x: rb.x - bx.x * tiltBack, y: rb.y - screenH - bx.y * tiltBack };
+
+  // Side-edge thickness
+  const sideDepth = 4 * camera.zoom;
+  const wblT = { x: wbl.x - by.x * sideDepth, y: wbl.y - by.y * sideDepth };
+  const wtlT = { x: wtl.x - by.x * sideDepth, y: wtl.y - by.y * sideDepth };
+
+  // Bilinear helper on screen face
+  const pp = (u: number, v: number) => ({
+    x: wtl.x + (wtr.x - wtl.x) * u + (wbl.x - wtl.x) * v,
+    y: wtl.y + (wtr.y - wtl.y) * u + (wbl.y - wtl.y) * v,
+  });
+
+  // ── Behind-panel reflection (ghost copy offset behind) ──
+  const reflOff = sideDepth * 3.5;
+  const rwtl = { x: wtl.x + by.x * reflOff, y: wtl.y + by.y * reflOff };
+  const rwtr = { x: wtr.x + by.x * reflOff, y: wtr.y + by.y * reflOff };
+  const rwbr = { x: wbr.x + by.x * reflOff, y: wbr.y + by.y * reflOff };
+  const rwbl = { x: wbl.x + by.x * reflOff, y: wbl.y + by.y * reflOff };
+  drawPolygon(ctx, [rwtl, rwtr, rwbr, rwbl]);
+  const reflGrad = ctx.createLinearGradient(rwtl.x, rwtl.y, rwbl.x, rwbl.y);
+  if (light) {
+    reflGrad.addColorStop(0, hexToRgba(deepTone, 0.12));
+    reflGrad.addColorStop(0.6, hexToRgba(deepTone, 0.05));
+    reflGrad.addColorStop(1, hexToRgba(deepTone, 0.02));
+  } else {
+    reflGrad.addColorStop(0, hexToRgba(faceFill, 0.10));
+    reflGrad.addColorStop(0.6, hexToRgba(faceFill, 0.04));
+    reflGrad.addColorStop(1, hexToRgba(faceFill, 0.01));
+  }
+  ctx.fillStyle = reflGrad;
+  ctx.fill();
+  drawPolygon(ctx, [rwtl, rwtr, rwbr, rwbl]);
+  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.06 : 0.04);
+  ctx.lineWidth = 0.5 * bScale;
+  ctx.stroke();
 
   // ── Drop shadow ──
   if (light) {
@@ -140,10 +180,18 @@ export function renderLaptop(
   ctx.lineWidth = 0.8 * bScale;
   ctx.stroke();
 
-  // ── Screen panel (rising from back edge lt→rt) ──
-  const screenFace = [lt, rt, str, stl];
+  // ── Screen left-edge thickness ──
+  drawPolygon(ctx, [wtl, wbl, wblT, wtlT]);
+  ctx.fillStyle = light ? darkenHex(deepTone, 0.70) : hexToRgba(faceFill, 0.10);
+  ctx.fill();
+  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.15 : 0.06);
+  ctx.lineWidth = 0.4 * bScale;
+  ctx.stroke();
+
+  // ── Screen panel (rising from right edge rt→rb) ──
+  const screenFace = [wtl, wtr, wbr, wbl];
   drawPolygon(ctx, screenFace);
-  const scrGrad = ctx.createLinearGradient(lt.x, lt.y, stl.x, stl.y);
+  const scrGrad = ctx.createLinearGradient(wbl.x, wbl.y, wtl.x, wtl.y);
   if (light) {
     scrGrad.addColorStop(0, deepTone);
     scrGrad.addColorStop(0.3, deepToneMid);
@@ -173,28 +221,29 @@ export function renderLaptop(
 
   // Screen bezel line
   const bzFrac = 0.06;
-  const bzTL = { x: stl.x + (str.x - stl.x) * bzFrac + (lt.x - stl.x) * bzFrac, y: stl.y + (str.y - stl.y) * bzFrac + (lt.y - stl.y) * bzFrac };
-  const bzTR = { x: str.x - (str.x - stl.x) * bzFrac + (rt.x - str.x) * bzFrac, y: str.y - (str.y - stl.y) * bzFrac + (rt.y - str.y) * bzFrac };
-  const bzBR = { x: rt.x - (rt.x - lt.x) * bzFrac + (str.x - rt.x) * bzFrac, y: rt.y - (rt.y - lt.y) * bzFrac + (str.y - rt.y) * bzFrac };
-  const bzBL = { x: lt.x + (rt.x - lt.x) * bzFrac + (stl.x - lt.x) * bzFrac, y: lt.y + (rt.y - lt.y) * bzFrac + (stl.y - lt.y) * bzFrac };
+  const bzTL = { x: wtl.x + (wtr.x - wtl.x) * bzFrac + (wbl.x - wtl.x) * bzFrac, y: wtl.y + (wtr.y - wtl.y) * bzFrac + (wbl.y - wtl.y) * bzFrac };
+  const bzTR = { x: wtr.x - (wtr.x - wtl.x) * bzFrac + (wbr.x - wtr.x) * bzFrac, y: wtr.y - (wtr.y - wtl.y) * bzFrac + (wbr.y - wtr.y) * bzFrac };
+  const bzBR = { x: wbr.x - (wbr.x - wbl.x) * bzFrac + (wtr.x - wbr.x) * bzFrac, y: wbr.y - (wbr.y - wbl.y) * bzFrac + (wtr.y - wbr.y) * bzFrac };
+  const bzBL = { x: wbl.x + (wbr.x - wbl.x) * bzFrac + (wtl.x - wbl.x) * bzFrac, y: wbl.y + (wbr.y - wbl.y) * bzFrac + (wtl.y - wbl.y) * bzFrac };
   drawPolygon(ctx, [bzTL, bzTR, bzBR, bzBL]);
   ctx.strokeStyle = light ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.03)';
   ctx.lineWidth = 0.8 * bScale;
   ctx.stroke();
 
-  // Hinge line (where screen meets base)
+  // Hinge line (where screen meets base, along right edge)
   ctx.beginPath();
-  ctx.moveTo(lt.x, lt.y);
-  ctx.lineTo(rt.x, rt.y);
+  ctx.moveTo(rt.x, rt.y);
+  ctx.lineTo(rb.x, rb.y);
   ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.45 : 0.3);
   ctx.lineWidth = 1.5 * bScale;
   ctx.stroke();
 
   // ── Icon + text on screen ──
   const showDetail = camera.zoom >= DETAIL_ZOOM_THRESHOLD;
-  const screenCX = (lt.x + rt.x + stl.x + str.x) / 4;
-  const screenCY = (lt.y + rt.y + stl.y + str.y) / 4;
-  const screenBasisX = bx;
+  const screenCX = (wtl.x + wtr.x + wbl.x + wbr.x) / 4;
+  const screenCY = (wtl.y + wtr.y + wbl.y + wbr.y) / 4;
+  const rightEdgeLen = Math.hypot(rb.x - rt.x, rb.y - rt.y) || 1;
+  const screenBasisX = { x: (rb.x - rt.x) / rightEdgeLen, y: (rb.y - rt.y) / rightEdgeLen };
 
   if (node.icon && nodeIconCatalog[node.icon] && showDetail) {
     const iconDef = nodeIconCatalog[node.icon];
