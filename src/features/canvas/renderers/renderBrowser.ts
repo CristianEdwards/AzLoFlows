@@ -7,9 +7,10 @@ import type { CameraState, NodeEntity } from '@/types/document';
 
 /**
  * Renders an isometric browser / app window.
- * Tilted back (screen rises from the front-bottom edge of the isoQuad).
- * Has a title bar with dots and an address bar, then a content area.
- * Inspired by the "Live App" panel and dashboard reference images.
+ *
+ * The panel **rises vertically from the right edge** (rt→rb) of the isoQuad,
+ * matching the Dashboard and Chart Panel orientation. A translucent floor
+ * reflection mirrors the front face onto the iso ground plane.
  */
 export function renderBrowser(
   ctx: CanvasRenderingContext2D,
@@ -37,20 +38,52 @@ export function renderBrowser(
   const deepToneLit = light ? lightenHex(deepTone, 0.22) : '';
   const deepToneMid = light ? lightenHex(deepTone, 0.12) : '';
 
-  // Browser window: rises vertically from the front edge (lb→rb)
+  // ── Panel rises from right edge (rt→rb) — same as ChartPanel/Dashboard ──
   const windowH = node.height * 0.7 * camera.zoom;
-  const tiltBack = node.width * 0.06 * camera.zoom;
+  const tiltBack = node.width * 0.05 * camera.zoom;
 
-  // Window corners (bottom = lb→rb, top = above that)
-  const wbl = lb;
+  const wbl = rt;
   const wbr = rb;
-  const wtl = { x: lb.x + by.x * tiltBack, y: lb.y - windowH + by.y * tiltBack };
-  const wtr = { x: rb.x + by.x * tiltBack, y: rb.y - windowH + by.y * tiltBack };
+  const wtl = { x: rt.x - bx.x * tiltBack, y: rt.y - windowH - bx.y * tiltBack };
+  const wtr = { x: rb.x - bx.x * tiltBack, y: rb.y - windowH - bx.y * tiltBack };
 
-  // Thin side depth (thickness of the window frame)
+  // Left-edge thickness
   const sideDepth = 4 * camera.zoom;
-  const wtlD = { x: wtl.x - bx.x * sideDepth, y: wtl.y - bx.y * sideDepth };
-  const wblD = { x: wbl.x - bx.x * sideDepth, y: wbl.y - bx.y * sideDepth };
+  const wblT = { x: wbl.x - by.x * sideDepth, y: wbl.y - by.y * sideDepth };
+  const wtlT = { x: wtl.x - by.x * sideDepth, y: wtl.y - by.y * sideDepth };
+
+  // Helper: bilinear on panel face
+  const pp = (u: number, v: number) => ({
+    x: wtl.x + (wtr.x - wtl.x) * u + (wbl.x - wtl.x) * v,
+    y: wtl.y + (wtr.y - wtl.y) * u + (wbl.y - wtl.y) * v,
+  });
+
+  // ── Floor reflection (drawn first, behind everything) ──
+  const reflH = windowH * 0.50;
+  const rbl = { x: wbl.x, y: wbl.y };
+  const rbr = { x: wbr.x, y: wbr.y };
+  const rtl = { x: wbl.x + bx.x * tiltBack, y: wbl.y + reflH + bx.y * tiltBack };
+  const rtr = { x: wbr.x + bx.x * tiltBack, y: wbr.y + reflH + bx.y * tiltBack };
+  drawPolygon(ctx, [rbl, rbr, rtr, rtl]);
+  const reflGrad = ctx.createLinearGradient(rbl.x, rbl.y, rtl.x, rtl.y);
+  if (light) {
+    reflGrad.addColorStop(0, hexToRgba(deepTone, 0.16));
+    reflGrad.addColorStop(0.5, hexToRgba(deepTone, 0.05));
+    reflGrad.addColorStop(1, 'rgba(0,0,0,0)');
+  } else {
+    reflGrad.addColorStop(0, hexToRgba(faceFill, 0.12));
+    reflGrad.addColorStop(0.5, hexToRgba(faceFill, 0.04));
+    reflGrad.addColorStop(1, 'rgba(0,0,0,0)');
+  }
+  ctx.fillStyle = reflGrad;
+  ctx.fill();
+  // Faint reflection line at base
+  ctx.beginPath();
+  ctx.moveTo(rbl.x, rbl.y);
+  ctx.lineTo(rbr.x, rbr.y);
+  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.10 : 0.07);
+  ctx.lineWidth = 0.6 * bScale;
+  ctx.stroke();
 
   // ── Drop shadow ──
   if (light) {
@@ -66,7 +99,7 @@ export function renderBrowser(
   }
 
   // ── Left edge thickness ──
-  drawPolygon(ctx, [wtl, wbl, wblD, wtlD]);
+  drawPolygon(ctx, [wtl, wbl, wblT, wtlT]);
   ctx.fillStyle = light ? darkenHex(deepTone, 0.7) : hexToRgba(faceFill, 0.12);
   ctx.fill();
   ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.2 : 0.1);
@@ -103,24 +136,18 @@ export function renderBrowser(
   ctx.lineWidth = (selected ? 6 : 4) * bScale;
   ctx.stroke();
 
-  // ── Title bar (top ~8% of window) ──
+  // ── Title bar (top ~8%) ──
   const tbFrac = 0.08;
-  const tbBL = {
-    x: wtl.x + (wbl.x - wtl.x) * tbFrac,
-    y: wtl.y + (wbl.y - wtl.y) * tbFrac,
-  };
-  const tbBR = {
-    x: wtr.x + (wbr.x - wtr.x) * tbFrac,
-    y: wtr.y + (wbr.y - wtr.y) * tbFrac,
-  };
-  drawPolygon(ctx, [wtl, wtr, tbBR, tbBL]);
+  drawPolygon(ctx, [pp(0, 0), pp(1, 0), pp(1, tbFrac), pp(0, tbFrac)]);
   ctx.fillStyle = light ? hexToRgba(node.glowColor, 0.12) : hexToRgba(node.glowColor, 0.08);
   ctx.fill();
 
   // Title bar separator
   ctx.beginPath();
-  ctx.moveTo(tbBL.x, tbBL.y);
-  ctx.lineTo(tbBR.x, tbBR.y);
+  const tbL = pp(0, tbFrac);
+  const tbR = pp(1, tbFrac);
+  ctx.moveTo(tbL.x, tbL.y);
+  ctx.lineTo(tbR.x, tbR.y);
   ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.3 : 0.18);
   ctx.lineWidth = 0.8 * bScale;
   ctx.stroke();
@@ -128,59 +155,52 @@ export function renderBrowser(
   // Traffic light dots
   const dotColors = ['#ff5f57', '#ffbd2e', '#28c840'];
   for (let i = 0; i < 3; i++) {
-    const t = 0.04 + i * 0.03;
-    const dotX = wtl.x + (wtr.x - wtl.x) * t + (wbl.x - wtl.x) * tbFrac * 0.5;
-    const dotY = wtl.y + (wtr.y - wtl.y) * t + (wbl.y - wtl.y) * tbFrac * 0.5;
+    const d = pp(0.04 + i * 0.035, tbFrac * 0.5);
     ctx.beginPath();
-    ctx.arc(dotX, dotY, 1.8 * bScale, 0, Math.PI * 2);
+    ctx.arc(d.x, d.y, 1.8 * bScale, 0, Math.PI * 2);
     ctx.fillStyle = hexToRgba(dotColors[i], light ? 0.7 : 0.5);
     ctx.fill();
   }
 
-  // ── Address bar (next ~6% below title bar) ──
+  // ── Address bar (next ~6%) ──
   const abFrac = tbFrac + 0.06;
-  const abBL = {
-    x: wtl.x + (wbl.x - wtl.x) * abFrac,
-    y: wtl.y + (wbl.y - wtl.y) * abFrac,
-  };
-  const abBR = {
-    x: wtr.x + (wbr.x - wtr.x) * abFrac,
-    y: wtr.y + (wbr.y - wtr.y) * abFrac,
-  };
-  // Address bar background
-  const abTL = tbBL;
-  const abTR = tbBR;
-  // Address input box
-  const abInL = {
-    x: abTL.x + (abTR.x - abTL.x) * 0.08 + (abBL.x - abTL.x) * 0.2,
-    y: abTL.y + (abTR.y - abTL.y) * 0.08 + (abBL.y - abTL.y) * 0.2,
-  };
-  const abInR = {
-    x: abTL.x + (abTR.x - abTL.x) * 0.92 + (abBL.x - abTL.x) * 0.2,
-    y: abTL.y + (abTR.y - abTL.y) * 0.92 + (abBL.y - abTL.y) * 0.2,
-  };
-  const abInL2 = {
-    x: abTL.x + (abTR.x - abTL.x) * 0.08 + (abBL.x - abTL.x) * 0.8,
-    y: abTL.y + (abTR.y - abTL.y) * 0.08 + (abBL.y - abTL.y) * 0.8,
-  };
-  const abInR2 = {
-    x: abTL.x + (abTR.x - abTL.x) * 0.92 + (abBL.x - abTL.x) * 0.8,
-    y: abTL.y + (abTR.y - abTL.y) * 0.92 + (abBL.y - abTL.y) * 0.8,
-  };
-  drawPolygon(ctx, [abInL, abInR, abInR2, abInL2]);
+  const abInTL = pp(0.08, tbFrac + 0.012);
+  const abInTR = pp(0.92, tbFrac + 0.012);
+  const abInBL = pp(0.08, abFrac - 0.012);
+  const abInBR = pp(0.92, abFrac - 0.012);
+  drawPolygon(ctx, [abInTL, abInTR, abInBR, abInBL]);
   ctx.fillStyle = light ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.04)';
   ctx.fill();
   ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.15 : 0.08);
   ctx.lineWidth = 0.5 * bScale;
   ctx.stroke();
 
-  // Address bar bottom separator
+  // Address bar separator
   ctx.beginPath();
-  ctx.moveTo(abBL.x, abBL.y);
-  ctx.lineTo(abBR.x, abBR.y);
+  const abL = pp(0, abFrac);
+  const abR = pp(1, abFrac);
+  ctx.moveTo(abL.x, abL.y);
+  ctx.lineTo(abR.x, abR.y);
   ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.15 : 0.08);
   ctx.lineWidth = 0.5 * bScale;
   ctx.stroke();
+
+  // ── Content area: faint placeholder rectangles ──
+  const contentTop = abFrac + 0.04;
+  for (let row = 0; row < 2; row++) {
+    for (let col = 0; col < 2; col++) {
+      const top = contentTop + row * 0.22;
+      const left = 0.06 + col * 0.46;
+      const boxW = 0.42;
+      const boxH = 0.16;
+      drawPolygon(ctx, [pp(left, top), pp(left + boxW, top), pp(left + boxW, top + boxH), pp(left, top + boxH)]);
+      ctx.fillStyle = light ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.02)';
+      ctx.fill();
+      ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.08 : 0.04);
+      ctx.lineWidth = 0.5 * bScale;
+      ctx.stroke();
+    }
+  }
 
   // ── Leading edge glow ──
   ctx.beginPath();
@@ -193,52 +213,29 @@ export function renderBrowser(
   ctx.stroke();
   ctx.shadowBlur = 0;
 
-  // ── Content area: faint placeholder rectangles ──
-  const contentTop = abFrac + 0.04;
-  for (let row = 0; row < 2; row++) {
-    for (let col = 0; col < 2; col++) {
-      const top = contentTop + row * 0.22;
-      const left = 0.06 + col * 0.46;
-      const boxW = 0.42;
-      const boxH = 0.16;
-      const bTL = {
-        x: wtl.x + (wtr.x - wtl.x) * left + (wbl.x - wtl.x) * top,
-        y: wtl.y + (wtr.y - wtl.y) * left + (wbl.y - wtl.y) * top,
-      };
-      const bTR = {
-        x: wtl.x + (wtr.x - wtl.x) * (left + boxW) + (wbl.x - wtl.x) * top,
-        y: wtl.y + (wtr.y - wtl.y) * (left + boxW) + (wbl.y - wtl.y) * top,
-      };
-      const bBR = {
-        x: wtl.x + (wtr.x - wtl.x) * (left + boxW) + (wbl.x - wtl.x) * (top + boxH),
-        y: wtl.y + (wtr.y - wtl.y) * (left + boxW) + (wbl.y - wtl.y) * (top + boxH),
-      };
-      const bBL = {
-        x: wtl.x + (wtr.x - wtl.x) * left + (wbl.x - wtl.x) * (top + boxH),
-        y: wtl.y + (wtr.y - wtl.y) * left + (wbl.y - wtl.y) * (top + boxH),
-      };
-      drawPolygon(ctx, [bTL, bTR, bBR, bBL]);
-      ctx.fillStyle = light ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.02)';
-      ctx.fill();
-      ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.08 : 0.04);
-      ctx.lineWidth = 0.5 * bScale;
-      ctx.stroke();
-    }
-  }
+  // ── Top edge glow ──
+  ctx.beginPath();
+  ctx.moveTo(wtl.x, wtl.y);
+  ctx.lineTo(wtr.x, wtr.y);
+  ctx.strokeStyle = hexToRgba(node.glowColor, 0.60);
+  ctx.lineWidth = 1.6 * bScale;
+  ctx.shadowColor = hexToRgba(node.glowColor, light ? 0.08 : 0.20);
+  ctx.shadowBlur = (light ? 2 : 5) * bScale;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
 
   // ── Icon + text ──
   const showDetail = camera.zoom >= DETAIL_ZOOM_THRESHOLD;
-  const winCX = (wtl.x + wtr.x + wbl.x + wbr.x) / 4;
-  const winCY = (wtl.y + wtr.y + wbl.y + wbr.y) / 4;
-  // Basis along the top edge of the window
-  const winBasisX = bx;
+  const panelCX = (wtl.x + wtr.x + wbl.x + wbr.x) / 4;
+  const panelCY = (wtl.y + wtr.y + wbl.y + wbr.y) / 4;
+  const panelBasisX = by;
 
   if (node.icon && nodeIconCatalog[node.icon] && showDetail) {
     const iconDef = nodeIconCatalog[node.icon];
-    const iconSize = Math.min(node.width, windowH / camera.zoom) * NODE_ICON_SCALE * camera.zoom * 1.2;
+    const iconSize = Math.min(node.height, windowH / camera.zoom) * NODE_ICON_SCALE * camera.zoom * 1.2;
     ctx.save();
-    ctx.translate(winCX, winCY);
-    ctx.transform(winBasisX.x, winBasisX.y, 0, 1, 0, 0);
+    ctx.translate(panelCX, panelCY);
+    ctx.transform(panelBasisX.x, panelBasisX.y, 0, 1, 0, 0);
     const scale = iconSize / 32;
     ctx.scale(scale, scale);
     ctx.translate(-16, -16);
@@ -249,17 +246,17 @@ export function renderBrowser(
   }
 
   if (showDetail) {
-    const titlePt = { x: winCX, y: winCY + windowH * 0.18 };
+    const titlePt = { x: (wbl.x + wbr.x) / 2, y: (wbl.y + wbr.y) / 2 + 12 * camera.zoom };
     const fontSize = node.fontSize ?? DEFAULT_FONT_SIZE;
     const scaledSize = Math.round(fontSize * camera.zoom * 0.85);
 
-    drawTransformedText(ctx, node.title, titlePt, winBasisX, { x: 0, y: 1 },
+    drawTransformedText(ctx, node.title, titlePt, panelBasisX, { x: 0, y: 1 },
       light ? 'rgba(255,255,255,0.95)' : '#ffffff',
       `700 ${scaledSize}px Inter, sans-serif`);
 
     if (node.subtitle) {
       const subPt = { x: titlePt.x, y: titlePt.y + scaledSize * 1.2 };
-      drawTransformedText(ctx, node.subtitle, subPt, winBasisX, { x: 0, y: 1 },
+      drawTransformedText(ctx, node.subtitle, subPt, panelBasisX, { x: 0, y: 1 },
         light ? 'rgba(255,255,255,0.75)' : hexToRgba(node.glowColor, 0.95),
         `600 ${Math.round(scaledSize * 0.8)}px Inter, sans-serif`);
     }

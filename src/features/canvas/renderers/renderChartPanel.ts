@@ -63,6 +63,32 @@ export function renderChartPanel(
     y: wtl.y + (wtr.y - wtl.y) * u + (wbl.y - wtl.y) * v,
   });
 
+  // ── Floor reflection (drawn first, behind everything) ──
+  const reflH = panelH * 0.50;
+  const rbl = { x: wbl.x, y: wbl.y };
+  const rbr = { x: wbr.x, y: wbr.y };
+  const rtl = { x: wbl.x + bx.x * tiltBack, y: wbl.y + reflH + bx.y * tiltBack };
+  const rtr = { x: wbr.x + bx.x * tiltBack, y: wbr.y + reflH + bx.y * tiltBack };
+  drawPolygon(ctx, [rbl, rbr, rtr, rtl]);
+  const reflGrad = ctx.createLinearGradient(rbl.x, rbl.y, rtl.x, rtl.y);
+  if (light) {
+    reflGrad.addColorStop(0, hexToRgba(deepTone, 0.14));
+    reflGrad.addColorStop(0.5, hexToRgba(deepTone, 0.04));
+    reflGrad.addColorStop(1, 'rgba(0,0,0,0)');
+  } else {
+    reflGrad.addColorStop(0, hexToRgba(faceFill, 0.10));
+    reflGrad.addColorStop(0.5, hexToRgba(faceFill, 0.03));
+    reflGrad.addColorStop(1, 'rgba(0,0,0,0)');
+  }
+  ctx.fillStyle = reflGrad;
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(rbl.x, rbl.y);
+  ctx.lineTo(rbr.x, rbr.y);
+  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.08 : 0.06);
+  ctx.lineWidth = 0.5 * bScale;
+  ctx.stroke();
+
   // ── Drop shadow ──
   if (light) {
     drawPolygon(ctx, [wbl, wbr, wtr, wtl]);
