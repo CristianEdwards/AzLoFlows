@@ -160,6 +160,8 @@ function closestByCenter<T extends { x: number; y: number; width: number; height
 
 export function hitTestNodeScreen(nodes: NodeEntity[], screenPoint: Point, camera: CameraState, viewport: ViewportSize): NodeEntity | null {
   const depth = NODE_DEPTH * camera.zoom;
+  const PANEL_SHAPES = new Set(['browser', 'dashboard', 'chartPanel', 'analyticsPanel']);
+  const PANEL_SCREEN_H_FACTOR = 0.85;
   const sorted = [...nodes].sort((a, b) => b.zIndex - a.zIndex);
   return sorted.find((node) => {
     const quad = isoQuad(node.x, node.y, node.width, node.height, camera, viewport);
@@ -167,6 +169,21 @@ export function hitTestNodeScreen(nodes: NodeEntity[], screenPoint: Point, camer
     const topRight = quad[1];
     const bottomRight = quad[2];
     const bottomLeft = quad[3];
+
+    if (PANEL_SHAPES.has(node.shape ?? '')) {
+      // Standing panels extend upward from their footprint
+      const screenH = node.height * PANEL_SCREEN_H_FACTOR * camera.zoom;
+      const silhouette = [
+        { x: topLeft.x, y: topLeft.y - screenH },
+        { x: topRight.x, y: topRight.y - screenH },
+        topRight,
+        bottomRight,
+        bottomLeft,
+        topLeft,
+      ];
+      return pointInPolygon(screenPoint, silhouette);
+    }
+
     const silhouette = [
       topLeft,
       topRight,
