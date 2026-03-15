@@ -9,6 +9,12 @@ import { renderServerRack } from './renderServerRack';
 import { renderDiamond } from './renderDiamond';
 import { renderCloud } from './renderCloud';
 import { renderCard } from './renderCard';
+import { renderPlatform } from './renderPlatform';
+import { renderLaptop } from './renderLaptop';
+import { renderBrowser } from './renderBrowser';
+import { renderShield } from './renderShield';
+import { renderHexagon } from './renderHexagon';
+import { renderStack } from './renderStack';
 import type { CameraState, NodeEntity } from '@/types/document';
 
 export function renderNode(
@@ -34,6 +40,18 @@ export function renderNode(
       return renderCloud(ctx, node, selected, camera, viewport, time, theme);
     case 'card':
       return renderCard(ctx, node, selected, camera, viewport, time, theme);
+    case 'platform':
+      return renderPlatform(ctx, node, selected, camera, viewport, time, theme);
+    case 'laptop':
+      return renderLaptop(ctx, node, selected, camera, viewport, time, theme);
+    case 'browser':
+      return renderBrowser(ctx, node, selected, camera, viewport, time, theme);
+    case 'shield':
+      return renderShield(ctx, node, selected, camera, viewport, time, theme);
+    case 'hexagon':
+      return renderHexagon(ctx, node, selected, camera, viewport, time, theme);
+    case 'stack':
+      return renderStack(ctx, node, selected, camera, viewport, time, theme);
     default:
       break; // fall through to box rendering
   }

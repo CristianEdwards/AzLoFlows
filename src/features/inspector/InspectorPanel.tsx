@@ -237,6 +237,12 @@ export default function InspectorPanel() {
                 <option value="diamond">Diamond</option>
                 <option value="cloud">Cloud</option>
                 <option value="card">Card / Panel</option>
+                <option value="platform">Platform</option>
+                <option value="laptop">Laptop</option>
+                <option value="browser">Browser</option>
+                <option value="shield">Shield</option>
+                <option value="hexagon">Hexagon</option>
+                <option value="stack">Stack</option>
               </select>
             </label>
             <label className="field">

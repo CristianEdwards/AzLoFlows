@@ -2,7 +2,7 @@ import { palette, companionPalette } from '@/lib/rendering/tokens';
 import type { NodeShape } from '@/types/document';
 
 export interface PaletteShape {
-  id: 'area' | 'node' | 'text' | 'pipe' | 'cylinder' | 'monitor' | 'serverRack' | 'diamond' | 'cloud' | 'card';
+  id: 'area' | 'node' | 'text' | 'pipe' | 'cylinder' | 'monitor' | 'serverRack' | 'diamond' | 'cloud' | 'card' | 'platform' | 'laptop' | 'browser' | 'shield' | 'hexagon' | 'stack';
   title: string;
   /** Inline SVG markup (64×64 viewBox) showing an isometric preview */
   icon: string;
@@ -101,6 +101,55 @@ const cardIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fi
   <circle cx="22" cy="20" r="1.2" fill="rgba(77,141,255,0.3)"/>
 </svg>`;
 
+const platformIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <polygon points="32,22 56,36 32,50 8,36" fill="rgba(0,229,255,0.12)" stroke="rgba(0,229,255,0.4)" stroke-width="1"/>
+  <polygon points="8,36 32,50 32,54 8,40" fill="rgba(0,229,255,0.06)" stroke="rgba(0,229,255,0.2)" stroke-width="0.5"/>
+  <polygon points="56,36 32,50 32,54 56,40" fill="rgba(0,229,255,0.04)" stroke="rgba(0,229,255,0.15)" stroke-width="0.5"/>
+  <line x1="8" y1="36" x2="32" y2="22" stroke="rgba(0,229,255,0.9)" stroke-width="1.5"/>
+  <line x1="32" y1="22" x2="56" y2="36" stroke="rgba(0,229,255,0.5)" stroke-width="1"/>
+</svg>`;
+
+const laptopIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <polygon points="12,32 52,32 52,48 12,48" fill="rgba(77,141,255,0.12)" stroke="rgba(77,141,255,0.4)" stroke-width="0.8" transform="skewY(-6) translate(0,2)"/>
+  <polygon points="12,16 52,16 52,32 12,32" fill="rgba(77,141,255,0.30)" stroke="rgba(77,141,255,0.7)" stroke-width="1.2" transform="skewY(3) translate(0,4)"/>
+  <line x1="12" y1="32" x2="52" y2="32" stroke="rgba(77,141,255,0.5)" stroke-width="1" transform="skewY(-3) translate(0,6)"/>
+</svg>`;
+
+const browserIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <rect x="10" y="10" width="44" height="34" rx="2" fill="rgba(0,229,255,0.18)" stroke="rgba(0,229,255,0.6)" stroke-width="1.2"/>
+  <line x1="10" y1="18" x2="54" y2="18" stroke="rgba(0,229,255,0.4)" stroke-width="0.8"/>
+  <circle cx="15" cy="14" r="1.5" fill="rgba(255,95,87,0.6)"/>
+  <circle cx="21" cy="14" r="1.5" fill="rgba(255,189,46,0.6)"/>
+  <circle cx="27" cy="14" r="1.5" fill="rgba(40,200,64,0.6)"/>
+  <rect x="16" y="22" width="32" height="3" rx="1" fill="rgba(0,229,255,0.08)" stroke="rgba(0,229,255,0.15)" stroke-width="0.5"/>
+  <rect x="14" y="28" width="16" height="10" rx="1" fill="rgba(0,229,255,0.06)" stroke="rgba(0,229,255,0.1)" stroke-width="0.4"/>
+  <rect x="34" y="28" width="16" height="10" rx="1" fill="rgba(0,229,255,0.06)" stroke="rgba(0,229,255,0.1)" stroke-width="0.4"/>
+</svg>`;
+
+const shieldIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <path d="M32,8 L52,18 L52,34 Q52,48 32,56 Q12,48 12,34 L12,18 Z" fill="rgba(0,255,136,0.18)" stroke="rgba(0,255,136,0.7)" stroke-width="1.2"/>
+  <path d="M32,14 L46,22 L46,34 Q46,44 32,50 Q18,44 18,34 L18,22 Z" fill="none" stroke="rgba(0,255,136,0.25)" stroke-width="0.8"/>
+  <line x1="32" y1="8" x2="12" y2="18" stroke="rgba(0,255,136,0.9)" stroke-width="1.5"/>
+</svg>`;
+
+const hexagonIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <polygon points="32,8 54,20 54,38 32,50 10,38 10,20" fill="rgba(191,90,242,0.22)" stroke="rgba(191,90,242,0.7)" stroke-width="1.2"/>
+  <polygon points="10,38 32,50 32,56 10,44" fill="rgba(191,90,242,0.10)" stroke="rgba(191,90,242,0.3)" stroke-width="0.6"/>
+  <polygon points="54,38 32,50 32,56 54,44" fill="rgba(191,90,242,0.08)" stroke="rgba(191,90,242,0.25)" stroke-width="0.6"/>
+  <polygon points="32,14 48,24 48,36 32,46 16,36 16,24" fill="none" stroke="rgba(191,90,242,0.2)" stroke-width="0.6"/>
+</svg>`;
+
+const stackIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <polygon points="32,8 52,18 32,28 12,18" fill="rgba(77,141,255,0.35)" stroke="rgba(77,141,255,0.7)" stroke-width="1"/>
+  <polygon points="12,18 32,28 32,32 12,22" fill="rgba(77,141,255,0.15)" stroke="rgba(77,141,255,0.3)" stroke-width="0.5"/>
+  <polygon points="52,18 32,28 32,32 52,22" fill="rgba(77,141,255,0.10)" stroke="rgba(77,141,255,0.25)" stroke-width="0.5"/>
+  <line x1="12" y1="24" x2="32" y2="34" stroke="rgba(0,229,255,0.6)" stroke-width="1"/>
+  <line x1="52" y1="24" x2="32" y2="34" stroke="rgba(0,229,255,0.4)" stroke-width="0.8"/>
+  <polygon points="32,16 52,26 32,36 12,26" fill="rgba(77,141,255,0.25)" stroke="rgba(77,141,255,0.5)" stroke-width="0.8" transform="translate(0,14)"/>
+  <polygon points="12,26 32,36 32,40 12,30" fill="rgba(77,141,255,0.10)" stroke="rgba(77,141,255,0.2)" stroke-width="0.4" transform="translate(0,14)"/>
+  <polygon points="52,26 32,36 32,40 52,30" fill="rgba(77,141,255,0.06)" stroke="rgba(77,141,255,0.15)" stroke-width="0.4" transform="translate(0,14)"/>
+</svg>`;
+
 export const paletteShapes: PaletteShape[] = [
   { id: 'area', title: 'Flat Area', icon: areaIcon },
   { id: 'node', title: 'Node',      icon: nodeIcon },
@@ -110,6 +159,12 @@ export const paletteShapes: PaletteShape[] = [
   { id: 'diamond',  title: 'Diamond',  icon: diamondIcon,  nodeShape: 'diamond' },
   { id: 'cloud',    title: 'Cloud',    icon: cloudIcon,    nodeShape: 'cloud' },
   { id: 'card',     title: 'Card',     icon: cardIcon,     nodeShape: 'card' },
+  { id: 'platform', title: 'Platform', icon: platformIcon, nodeShape: 'platform' },
+  { id: 'laptop',   title: 'Laptop',   icon: laptopIcon,   nodeShape: 'laptop' },
+  { id: 'browser',  title: 'Browser',  icon: browserIcon,  nodeShape: 'browser' },
+  { id: 'shield',   title: 'Shield',   icon: shieldIcon,   nodeShape: 'shield' },
+  { id: 'hexagon',  title: 'Hexagon',  icon: hexagonIcon,  nodeShape: 'hexagon' },
+  { id: 'stack',    title: 'Stack',    icon: stackIcon,    nodeShape: 'stack' },
   { id: 'text', title: 'Text Label', icon: textIcon },
   { id: 'pipe', title: 'Pipe',       icon: pipeIcon },
 ];
