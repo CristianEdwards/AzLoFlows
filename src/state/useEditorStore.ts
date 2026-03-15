@@ -338,9 +338,15 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
           y: nextPoint.y,
           width: templateOverrides?.shape === 'monitor' ? 160
                : templateOverrides?.shape === 'card' ? 160
+               : templateOverrides?.shape === 'laptop' ? 160
+               : templateOverrides?.shape === 'browser' ? 140
+               : templateOverrides?.shape === 'platform' ? 180
                : 140,
           height: templateOverrides?.shape === 'monitor' ? 40
                 : templateOverrides?.shape === 'card' ? 110
+                : templateOverrides?.shape === 'laptop' ? 100
+                : templateOverrides?.shape === 'browser' ? 120
+                : templateOverrides?.shape === 'platform' ? 180
                 : 96,
           title: templateOverrides?.title ?? 'New Node',
           subtitle: templateOverrides?.subtitle ?? 'Editable',
