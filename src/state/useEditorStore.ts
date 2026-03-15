@@ -336,18 +336,14 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
           shape: templateOverrides?.shape,
           x: nextPoint.x,
           y: nextPoint.y,
-          width: templateOverrides?.shape === 'monitor' ? 160
-               : templateOverrides?.shape === 'card' ? 160
-               : templateOverrides?.shape === 'laptop' ? 160
+          width: templateOverrides?.shape === 'card' ? 160
                : templateOverrides?.shape === 'browser' ? 140
                : templateOverrides?.shape === 'platform' ? 180
                : templateOverrides?.shape === 'dashboard' ? 200
                : templateOverrides?.shape === 'gauge' ? 120
                : templateOverrides?.shape === 'chartPanel' ? 120
                : 140,
-          height: templateOverrides?.shape === 'monitor' ? 40
-                : templateOverrides?.shape === 'card' ? 110
-                : templateOverrides?.shape === 'laptop' ? 100
+          height: templateOverrides?.shape === 'card' ? 110
                 : templateOverrides?.shape === 'browser' ? 120
                 : templateOverrides?.shape === 'platform' ? 180
                 : templateOverrides?.shape === 'dashboard' ? 160

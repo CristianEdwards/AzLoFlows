@@ -59,7 +59,7 @@ export function renderCard(
   }
 
   // ── Left face (medium tone) ──
-  drawPolygon(ctx, [lt, lb, lbD, ltD]);
+  drawRoundedPolygon(ctx, [lt, lb, lbD, ltD], cornerR);
   if (light) {
     const gSide = ctx.createLinearGradient(lt.x, lt.y, lbD.x, lbD.y);
     gSide.addColorStop(0, darkenHex(deepTone, 0.60));
@@ -88,7 +88,7 @@ export function renderCard(
   ctx.stroke();
 
   // ── Front face (darkest) ──
-  drawPolygon(ctx, [lb, rb, rbD, lbD]);
+  drawRoundedPolygon(ctx, [lb, rb, rbD, lbD], cornerR);
   if (light) {
     const gFront = ctx.createLinearGradient(lb.x, lb.y, rbD.x, rbD.y);
     gFront.addColorStop(0, darkenHex(deepTone, 0.55));

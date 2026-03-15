@@ -99,7 +99,7 @@ export function renderServerRack(
     ctx.fill();
 
     // ── Front face (with LED) ──
-    drawPolygon(ctx, [blb, brb, brbD, blbD]);
+    drawRoundedPolygon(ctx, [blb, brb, brbD, blbD], cornerR);
     if (light) {
       const gFront = ctx.createLinearGradient(blb.x, blb.y, brbD.x, brbD.y);
       gFront.addColorStop(0, deepTone);
@@ -125,7 +125,7 @@ export function renderServerRack(
     ctx.stroke();
 
     // Front face border
-    drawPolygon(ctx, [blb, brb, brbD, blbD]);
+    drawRoundedPolygon(ctx, [blb, brb, brbD, blbD], cornerR);
     ctx.strokeStyle = hexToRgba(node.glowColor, (light ? 0.30 : 0.18) * pulse);
     ctx.lineWidth = 0.8 * bScale;
     ctx.stroke();
@@ -148,7 +148,7 @@ export function renderServerRack(
     ctx.shadowBlur = 0;
 
     // ── Right face ──
-    drawPolygon(ctx, [brt, brb, brbD, brtD]);
+    drawRoundedPolygon(ctx, [brt, brb, brbD, brtD], cornerR);
     if (light) {
       ctx.fillStyle = darkenHex(deepTone, 0.85);
     } else {

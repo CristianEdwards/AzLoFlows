@@ -81,7 +81,7 @@ export function renderStack(
     const layerLightFactor = 1 - layer * 0.12;
 
     // Left face
-    drawPolygon(ctx, [llt, llb, llbD, lltD]);
+    drawRoundedPolygon(ctx, [llt, llb, llbD, lltD], cornerR);
     if (light) {
       ctx.fillStyle = darkenHex(deepTone, 0.65 + layer * 0.05);
     } else {
@@ -93,7 +93,7 @@ export function renderStack(
     ctx.stroke();
 
     // Front face
-    drawPolygon(ctx, [llb, lrb, lrbD, llbD]);
+    drawRoundedPolygon(ctx, [llb, lrb, lrbD, llbD], cornerR);
     if (light) {
       const g = ctx.createLinearGradient(llb.x, llb.y, lrbD.x, lrbD.y);
       g.addColorStop(0, darkenHex(deepTone, 0.6 + layer * 0.05));
@@ -108,7 +108,7 @@ export function renderStack(
     ctx.stroke();
 
     // Right face
-    drawPolygon(ctx, [lrt, lrb, lrbD, lrtD]);
+    drawRoundedPolygon(ctx, [lrt, lrb, lrbD, lrtD], cornerR);
     if (light) {
       ctx.fillStyle = darkenHex(deepTone, 0.75 + layer * 0.05);
     } else {
