@@ -9,7 +9,7 @@ import type { ResizeHandle } from '@/lib/geometry/resize';
 import { normalizeBounds } from '@/lib/geometry/selection';
 import { renderScene } from '@/features/canvas/renderers/renderScene';
 import { useEditorStore } from '@/state/useEditorStore';
-import type { AnchorId } from '@/types/document';
+import type { AnchorId, NodeShape } from '@/types/document';
 
 interface CanvasViewportProps {
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
@@ -509,7 +509,7 @@ export default function CanvasViewport({ canvasRef, onCursorWorldChange, onViewp
     const rect = event.currentTarget.getBoundingClientRect();
     const world = screenToWorld({ x: event.clientX - rect.left, y: event.clientY - rect.top }, camera, viewport);
     const templateJson = event.dataTransfer.getData('application/x-isoflow-template');
-    let templateOverrides: { title?: string; subtitle?: string; fill?: string; glowColor?: string; icon?: string } | undefined;
+    let templateOverrides: { title?: string; subtitle?: string; fill?: string; glowColor?: string; icon?: string; shape?: NodeShape } | undefined;
     if (templateJson) {
       try {
         const parsed = JSON.parse(templateJson);
@@ -520,6 +520,7 @@ export default function CanvasViewport({ canvasRef, onCursorWorldChange, onViewp
             fill: typeof parsed.fill === 'string' ? parsed.fill : undefined,
             glowColor: typeof parsed.glowColor === 'string' ? parsed.glowColor : undefined,
             icon: typeof parsed.icon === 'string' ? parsed.icon : undefined,
+            shape: typeof parsed.shape === 'string' ? parsed.shape as NodeShape : undefined,
           };
         }
       } catch { /* ignore malformed JSON */ }

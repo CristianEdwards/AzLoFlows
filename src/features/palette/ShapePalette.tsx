@@ -17,7 +17,12 @@ export default function ShapePalette() {
               key={shape.id}
               className="component-tile"
               draggable
-              onDragStart={(event) => event.dataTransfer.setData('application/x-isoflow-shape', shape.id)}
+              onDragStart={(event) => {
+                event.dataTransfer.setData('application/x-isoflow-shape', shape.nodeShape ? 'node' : shape.id);
+                if (shape.nodeShape) {
+                  event.dataTransfer.setData('application/x-isoflow-template', JSON.stringify({ shape: shape.nodeShape }));
+                }
+              }}
             >
               <div className="component-tile__icon" dangerouslySetInnerHTML={{ __html: shape.icon }} />
               <span className="component-tile__label">{shape.title}</span>
