@@ -6,8 +6,10 @@ import { hexToRgba, lightenHex, darkenHex, deepToneForGlow } from '@/lib/renderi
 import type { CameraState, NodeEntity } from '@/types/document';
 
 /**
- * Renders an isometric analytics panel with header bar, line chart and pie chart.
- * Same panel orientation as Browser / Dashboard — rises from right edge (rt→rb).
+ * Renders a proper isometric 3D analytics panel – a thick slab with
+ * header bar, traffic-light dots, line chart, and pie chart drawn
+ * directly on the isometric top face.  Uses the same depth-extruded
+ * box geometry as the default node/card shapes.
  */
 export function renderAnalyticsPanel(
   ctx: CanvasRenderingContext2D,
@@ -21,79 +23,39 @@ export function renderAnalyticsPanel(
   const light = theme === 'light';
   const points = isoQuad(node.x, node.y, node.width, node.height, camera, viewport);
   const [lt, rt, rb, lb] = points;
+  const depth = NODE_DEPTH * 0.35 * camera.zoom;
   const pulse = 0.7 + Math.sin(time * 0.0015 + node.zIndex) * 0.18;
 
   const topEdgeLen = Math.hypot(rt.x - lt.x, rt.y - lt.y) || 1;
   const leftEdgeLen = Math.hypot(lb.x - lt.x, lb.y - lt.y) || 1;
   const bScale = Math.min(1, Math.max(0.35, (topEdgeLen + leftEdgeLen) * 0.5 / 120));
-  const panelR = Math.min(14, (topEdgeLen + leftEdgeLen) * 0.045);
+  const cornerR = Math.min(10, (topEdgeLen + leftEdgeLen) * 0.04);
 
   const bx = { x: (rt.x - lt.x) / topEdgeLen, y: (rt.y - lt.y) / topEdgeLen };
   const by = { x: (lb.x - lt.x) / leftEdgeLen, y: (lb.y - lt.y) / leftEdgeLen };
 
-  const faceFill = light ? node.glowColor : node.fill;
+  // Depth-extruded corners
+  const ltD = { x: lt.x, y: lt.y + depth };
+  const lbD = { x: lb.x, y: lb.y + depth };
+  const rbD = { x: rb.x, y: rb.y + depth };
+  const rtD = { x: rt.x, y: rt.y + depth };
+
   const deepTone = light ? deepToneForGlow(node.glowColor) : '';
-  const deepToneLit = light ? lightenHex(deepTone, 0.22) : '';
-  const deepToneMid = light ? lightenHex(deepTone, 0.12) : '';
+  const deepToneLit = light ? lightenHex(deepTone, 0.30) : '';
+  const deepToneMid = light ? lightenHex(deepTone, 0.18) : '';
 
-  // ── Panel rises from right edge (rt→rb) ──
-  const windowH = node.height * 0.7 * camera.zoom;
-  const tiltBack = node.width * 0.05 * camera.zoom;
-
-  const wbl = rt;
-  const wbr = rb;
-  const wtl = { x: rt.x - bx.x * tiltBack, y: rt.y - windowH - bx.y * tiltBack };
-  const wtr = { x: rb.x - bx.x * tiltBack, y: rb.y - windowH - bx.y * tiltBack };
-
-  // Left-edge thickness
-  const sideDepth = 30 * camera.zoom;
-  const wblT = { x: wbl.x - by.x * sideDepth, y: wbl.y - by.y * sideDepth };
-  const wtlT = { x: wtl.x - by.x * sideDepth, y: wtl.y - by.y * sideDepth };
-  const wtrT = { x: wtr.x - by.x * sideDepth, y: wtr.y - by.y * sideDepth };
-  const wbrT = { x: wbr.x - by.x * sideDepth, y: wbr.y - by.y * sideDepth };
-
-  // Bottom-edge thickness
-  const bottomDepth = 18 * camera.zoom;
-  const wblB = { x: wbl.x, y: wbl.y + bottomDepth };
-  const wbrB = { x: wbr.x, y: wbr.y + bottomDepth };
-  const wblTB = { x: wblT.x, y: wblT.y + bottomDepth };
-
-  // Helper: bilinear on panel face
-  const pp = (u: number, v: number) => ({
-    x: wtl.x + (wtr.x - wtl.x) * u + (wbl.x - wtl.x) * v,
-    y: wtl.y + (wtr.y - wtl.y) * u + (wbl.y - wtl.y) * v,
+  // Helper: point on the isometric top face by (u, v) in [0,1]
+  const tp = (u: number, v: number) => ({
+    x: lt.x + (rt.x - lt.x) * u + (lb.x - lt.x) * v,
+    y: lt.y + (rt.y - lt.y) * u + (lb.y - lt.y) * v,
   });
-
-  // ── Behind-panel reflection ──
-  const reflOff = 18 * camera.zoom;
-  const rwtl = { x: wtl.x + by.x * reflOff, y: wtl.y + by.y * reflOff };
-  const rwtr = { x: wtr.x + by.x * reflOff, y: wtr.y + by.y * reflOff };
-  const rwbr = { x: wbr.x + by.x * reflOff, y: wbr.y + by.y * reflOff };
-  const rwbl = { x: wbl.x + by.x * reflOff, y: wbl.y + by.y * reflOff };
-  drawPolygon(ctx, [rwtl, rwtr, rwbr, rwbl]);
-  const reflGrad = ctx.createLinearGradient(rwtl.x, rwtl.y, rwbl.x, rwbl.y);
-  if (light) {
-    reflGrad.addColorStop(0, hexToRgba(deepTone, 0.22));
-    reflGrad.addColorStop(0.7, hexToRgba(deepTone, 0.10));
-    reflGrad.addColorStop(1, hexToRgba(deepTone, 0.04));
-  } else {
-    reflGrad.addColorStop(0, hexToRgba(faceFill, 0.28));
-    reflGrad.addColorStop(0.7, hexToRgba(faceFill, 0.12));
-    reflGrad.addColorStop(1, hexToRgba(faceFill, 0.04));
-  }
-  ctx.fillStyle = reflGrad;
-  ctx.fill();
-  drawPolygon(ctx, [rwtl, rwtr, rwbr, rwbl]);
-  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.18 : 0.22);
-  ctx.lineWidth = 1.2 * bScale;
-  ctx.stroke();
 
   // ── Drop shadow ──
   if (light) {
-    drawPolygon(ctx, [wbl, wbr, wtr, wtl]);
-    ctx.shadowColor = 'rgba(0,0,0,0.28)';
-    ctx.shadowBlur = 24;
-    ctx.shadowOffsetY = 8;
+    drawPolygon(ctx, [lb, rb, rbD, lbD]);
+    ctx.shadowColor = 'rgba(0,0,0,0.22)';
+    ctx.shadowBlur = 18;
+    ctx.shadowOffsetY = 6;
     ctx.fillStyle = 'rgba(0,0,0,0)';
     ctx.fill();
     ctx.shadowColor = 'transparent';
@@ -101,215 +63,239 @@ export function renderAnalyticsPanel(
     ctx.shadowOffsetY = 0;
   }
 
-  // ── Top edge face ──
-  drawRoundedPolygon(ctx, [wtlT, wtl, wtr, wtrT], panelR);
+  // ── Left side face (medium tone) ──
+  drawRoundedPolygon(ctx, [lt, lb, lbD, ltD], cornerR);
   if (light) {
-    const gTop = ctx.createLinearGradient(wtlT.x, wtlT.y, wtr.x, wtr.y);
-    gTop.addColorStop(0, lightenHex(deepTone, 0.18));
-    gTop.addColorStop(1, deepTone);
-    ctx.fillStyle = gTop;
-  } else {
-    const gTop = ctx.createLinearGradient(wtlT.x, wtlT.y, wtr.x, wtr.y);
-    gTop.addColorStop(0, hexToRgba(node.glowColor, 0.65));
-    gTop.addColorStop(0.5, hexToRgba(node.glowColor, 0.45));
-    gTop.addColorStop(1, hexToRgba(node.glowColor, 0.30));
-    ctx.fillStyle = gTop;
-  }
-  ctx.fill();
-  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.40 : 0.30);
-  ctx.lineWidth = 0.8 * bScale;
-  ctx.stroke();
-
-  // ── Bottom edge thickness ──
-  drawRoundedPolygon(ctx, [wbl, wbr, wbrB, wblB], panelR * 0.5);
-  if (light) {
-    ctx.fillStyle = darkenHex(deepTone, 0.75);
-  } else {
-    const gBot = ctx.createLinearGradient(wbl.x, wbl.y, wblB.x, wblB.y);
-    gBot.addColorStop(0, darkenHex(node.glowColor, 0.40));
-    gBot.addColorStop(1, darkenHex(node.glowColor, 0.60));
-    ctx.fillStyle = gBot;
-  }
-  ctx.fill();
-  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.20 : 0.15);
-  ctx.lineWidth = 0.8 * bScale;
-  ctx.stroke();
-
-  // ── Bottom-right edge strip ──
-  drawPolygon(ctx, [wbr, wbrT, { x: wbrT.x, y: wbrT.y + bottomDepth }, wbrB]);
-  ctx.fillStyle = light ? darkenHex(deepTone, 0.82) : darkenHex(node.glowColor, 0.70);
-  ctx.fill();
-
-  // ── Bottom-left corner strip ──
-  drawPolygon(ctx, [wblT, wbl, wblB, wblTB]);
-  ctx.fillStyle = light ? darkenHex(deepTone, 0.80) : darkenHex(node.glowColor, 0.65);
-  ctx.fill();
-
-  // ── Left edge thickness ──
-  drawRoundedPolygon(ctx, [wtl, wbl, wblT, wtlT], panelR);
-  if (light) {
-    const gSide = ctx.createLinearGradient(wtlT.x, wtlT.y, wtl.x, wtl.y);
-    gSide.addColorStop(0, lightenHex(deepTone, 0.10));
-    gSide.addColorStop(1, darkenHex(deepTone, 0.50));
+    const gSide = ctx.createLinearGradient(lt.x, lt.y, lbD.x, lbD.y);
+    gSide.addColorStop(0, darkenHex(deepTone, 0.55));
+    gSide.addColorStop(1, darkenHex(deepTone, 0.70));
     ctx.fillStyle = gSide;
   } else {
-    const gSide = ctx.createLinearGradient(wtlT.x, wtlT.y, wtl.x, wtl.y);
-    gSide.addColorStop(0, hexToRgba(node.glowColor, 0.55));
-    gSide.addColorStop(0.5, darkenHex(node.glowColor, 0.30));
-    gSide.addColorStop(1, darkenHex(node.glowColor, 0.50));
+    const gSide = ctx.createLinearGradient(lt.x, lt.y, lbD.x, lbD.y);
+    gSide.addColorStop(0, hexToRgba(node.glowColor, 0.50));
+    gSide.addColorStop(0.5, darkenHex(node.glowColor, 0.40));
+    gSide.addColorStop(1, darkenHex(node.glowColor, 0.60));
     ctx.fillStyle = gSide;
   }
   ctx.fill();
-  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.35 : 0.25);
-  ctx.lineWidth = 0.8 * bScale;
+  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.25 : 0.18);
+  ctx.lineWidth = 0.6 * bScale;
   ctx.stroke();
 
-  // Specular highlight on left edge
+  // Specular on left face
   ctx.beginPath();
-  const seMid1 = { x: wtl.x * 0.5 + wtlT.x * 0.5, y: wtl.y * 0.5 + wtlT.y * 0.5 };
-  const seMid2 = { x: wbl.x * 0.5 + wblT.x * 0.5, y: wbl.y * 0.5 + wblT.y * 0.5 };
-  ctx.moveTo(seMid1.x, seMid1.y);
-  ctx.lineTo(seMid2.x, seMid2.y);
-  ctx.strokeStyle = light ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.14)';
-  ctx.lineWidth = 3 * bScale;
+  const lm1 = { x: lt.x * 0.5 + ltD.x * 0.5, y: lt.y * 0.5 + ltD.y * 0.5 };
+  const lm2 = { x: lb.x * 0.5 + lbD.x * 0.5, y: lb.y * 0.5 + lbD.y * 0.5 };
+  ctx.moveTo(lm1.x, lm1.y);
+  ctx.lineTo(lm2.x, lm2.y);
+  ctx.strokeStyle = light ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.10)';
+  ctx.lineWidth = 1.5 * bScale;
   ctx.stroke();
 
-  // ── Main window face ──
-  const winFace = [wtl, wtr, wbr, wbl];
-  drawRoundedPolygon(ctx, winFace, panelR);
-  ctx.fillStyle = 'rgba(8, 14, 28, 0.88)';
+  // ── Front face (darkest) ──
+  drawRoundedPolygon(ctx, [lb, rb, rbD, lbD], cornerR);
+  if (light) {
+    const gFront = ctx.createLinearGradient(lb.x, lb.y, rbD.x, rbD.y);
+    gFront.addColorStop(0, darkenHex(deepTone, 0.60));
+    gFront.addColorStop(1, darkenHex(deepTone, 0.80));
+    ctx.fillStyle = gFront;
+  } else {
+    const gFront = ctx.createLinearGradient(lb.x, lb.y, rbD.x, rbD.y);
+    gFront.addColorStop(0, darkenHex(node.glowColor, 0.45));
+    gFront.addColorStop(0.5, darkenHex(node.glowColor, 0.55));
+    gFront.addColorStop(1, darkenHex(node.glowColor, 0.70));
+    ctx.fillStyle = gFront;
+  }
+  ctx.fill();
+  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.25 : 0.18);
+  ctx.lineWidth = 0.6 * bScale;
+  ctx.stroke();
+
+  // ── Right side face (darker side) ──
+  drawRoundedPolygon(ctx, [rt, rb, rbD, rtD], cornerR);
+  if (light) {
+    const gRight = ctx.createLinearGradient(rt.x, rt.y, rbD.x, rbD.y);
+    gRight.addColorStop(0, darkenHex(deepTone, 0.65));
+    gRight.addColorStop(1, darkenHex(deepTone, 0.85));
+    ctx.fillStyle = gRight;
+  } else {
+    const gRight = ctx.createLinearGradient(rt.x, rt.y, rbD.x, rbD.y);
+    gRight.addColorStop(0, hexToRgba(node.glowColor, 0.35));
+    gRight.addColorStop(0.5, darkenHex(node.glowColor, 0.50));
+    gRight.addColorStop(1, darkenHex(node.glowColor, 0.65));
+    ctx.fillStyle = gRight;
+  }
+  ctx.fill();
+  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.20 : 0.12);
+  ctx.lineWidth = 0.6 * bScale;
+  ctx.stroke();
+
+  // ── Top face (panel surface — dark glass with glow) ──
+  drawRoundedPolygon(ctx, points, cornerR);
+  ctx.fillStyle = 'rgba(8, 14, 28, 0.92)';
   ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.35 : 0.55) * pulse);
-  ctx.shadowBlur = light ? (selected ? 24 : 16) : (selected ? 34 : 24);
+  ctx.shadowBlur = light ? (selected ? 22 : 14) : (selected ? 32 : 22);
   ctx.fill();
   ctx.shadowBlur = 0;
-  // Subtle color overlay
-  drawRoundedPolygon(ctx, winFace, panelR);
-  const winGrad = ctx.createLinearGradient(wtl.x, wtl.y, wbl.x, wbl.y);
+
+  // Subtle color overlay gradient
+  drawRoundedPolygon(ctx, points, cornerR);
+  const topGrad = ctx.createLinearGradient(lt.x, lt.y, rb.x, rb.y);
   if (light) {
-    winGrad.addColorStop(0, deepToneLit);
-    winGrad.addColorStop(0.3, deepToneMid);
-    winGrad.addColorStop(1, deepTone);
+    topGrad.addColorStop(0, deepToneLit);
+    topGrad.addColorStop(0.5, deepToneMid);
+    topGrad.addColorStop(1, deepTone);
   } else {
-    winGrad.addColorStop(0, hexToRgba(node.glowColor, 0.14));
-    winGrad.addColorStop(0.4, hexToRgba(node.glowColor, 0.06));
-    winGrad.addColorStop(1, hexToRgba(node.glowColor, 0.10));
+    topGrad.addColorStop(0, hexToRgba(node.glowColor, 0.16));
+    topGrad.addColorStop(0.4, hexToRgba(node.glowColor, 0.06));
+    topGrad.addColorStop(1, hexToRgba(node.glowColor, 0.12));
   }
-  ctx.fillStyle = winGrad;
+  ctx.fillStyle = topGrad;
   ctx.fill();
 
-  // Specular highlights
+  // Glass specular highlights
   ctx.beginPath();
-  ctx.moveTo(pp(0.15, 0.10).x, pp(0.15, 0.10).y);
-  ctx.lineTo(pp(0.55, 0.65).x, pp(0.55, 0.65).y);
-  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.moveTo(tp(0.55, 0.15).x, tp(0.55, 0.15).y);
+  ctx.lineTo(tp(0.35, 0.75).x, tp(0.35, 0.75).y);
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
   ctx.lineWidth = 4 * bScale;
   ctx.stroke();
 
   ctx.beginPath();
-  ctx.moveTo(pp(0.20, 0.08).x, pp(0.20, 0.08).y);
-  ctx.lineTo(pp(0.60, 0.62).x, pp(0.60, 0.62).y);
-  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.moveTo(tp(0.60, 0.12).x, tp(0.60, 0.12).y);
+  ctx.lineTo(tp(0.40, 0.72).x, tp(0.40, 0.72).y);
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
   ctx.lineWidth = 2 * bScale;
   ctx.stroke();
 
-  // Window border
-  drawRoundedPolygon(ctx, winFace, panelR);
+  // ── Top face border + glow ──
+  drawRoundedPolygon(ctx, points, cornerR);
   ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.98 : (light ? 0.85 : 0.72));
   ctx.lineWidth = (selected ? 3 : 2.2) * bScale;
   ctx.shadowColor = hexToRgba(node.glowColor, light ? 0.15 : 0.40);
-  ctx.shadowBlur = (light ? 4 : 12) * bScale;
+  ctx.shadowBlur = (light ? 4 : 10) * bScale;
   ctx.stroke();
   ctx.shadowBlur = 0;
-  // Outer glow
-  drawRoundedPolygon(ctx, winFace, panelR);
+
+  drawRoundedPolygon(ctx, points, cornerR);
   ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.25 : (light ? 0.10 : 0.15));
   ctx.lineWidth = (selected ? 6 : 4) * bScale;
   ctx.stroke();
 
-  // ── Title bar (top ~8%) ──
-  const tbFrac = 0.08;
-  drawPolygon(ctx, [pp(0, 0), pp(1, 0), pp(1, tbFrac), pp(0, tbFrac)]);
-  ctx.fillStyle = light ? hexToRgba(node.glowColor, 0.12) : hexToRgba(node.glowColor, 0.08);
+  // ── Side face edge strokes ──
+  drawRoundedPolygon(ctx, [lt, lb, lbD, ltD], cornerR);
+  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.40 : 0.30);
+  ctx.lineWidth = 1.4 * bScale;
+  ctx.stroke();
+
+  drawRoundedPolygon(ctx, [lb, rb, rbD, lbD], cornerR);
+  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.40 : 0.30);
+  ctx.lineWidth = 1.4 * bScale;
+  ctx.stroke();
+
+  drawRoundedPolygon(ctx, [rt, rb, rbD, rtD], cornerR);
+  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.35 : 0.25);
+  ctx.lineWidth = 1.2 * bScale;
+  ctx.stroke();
+
+  // ── Edge highlight lines ──
+  ctx.beginPath();
+  ctx.moveTo(lt.x, lt.y); ctx.lineTo(rt.x, rt.y);
+  ctx.strokeStyle = hexToRgba(node.glowColor, 0.72);
+  ctx.lineWidth = 2.2 * bScale;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(lt.x, lt.y); ctx.lineTo(lb.x, lb.y);
+  ctx.strokeStyle = hexToRgba(node.glowColor, 0.96);
+  ctx.lineWidth = 2.8 * bScale;
+  ctx.shadowColor = hexToRgba(node.glowColor, light ? 0.15 : 0.45);
+  ctx.shadowBlur = (light ? 3 : 10) * bScale;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  ctx.beginPath();
+  ctx.moveTo(lb.x, lb.y); ctx.lineTo(lbD.x, lbD.y);
+  ctx.strokeStyle = hexToRgba(node.glowColor, 0.72);
+  ctx.lineWidth = 2.2 * bScale;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(lbD.x, lbD.y); ctx.lineTo(rbD.x, rbD.y);
+  ctx.strokeStyle = hexToRgba(node.glowColor, 0.40);
+  ctx.lineWidth = 1.4 * bScale;
+  ctx.stroke();
+
+  // ── Panel content on isometric top face ──
+  const showDetail = camera.zoom >= DETAIL_ZOOM_THRESHOLD;
+
+  // Header bar (top ~15% of face, along the v-axis from lt→lb)
+  const hdrFrac = 0.15;
+  drawPolygon(ctx, [tp(0, 0), tp(1, 0), tp(1, hdrFrac), tp(0, hdrFrac)]);
+  ctx.fillStyle = light ? hexToRgba(node.glowColor, 0.14) : hexToRgba(node.glowColor, 0.10);
   ctx.fill();
 
-  // Title bar separator
+  // Header separator line
   ctx.beginPath();
-  const tbL = pp(0, tbFrac);
-  const tbR = pp(1, tbFrac);
-  ctx.moveTo(tbL.x, tbL.y);
-  ctx.lineTo(tbR.x, tbR.y);
-  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.3 : 0.18);
+  ctx.moveTo(tp(0, hdrFrac).x, tp(0, hdrFrac).y);
+  ctx.lineTo(tp(1, hdrFrac).x, tp(1, hdrFrac).y);
+  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.30 : 0.20);
   ctx.lineWidth = 0.8 * bScale;
   ctx.stroke();
 
-  // Traffic light dots
-  const dotColors = ['#ff5f57', '#ffbd2e', '#28c840'];
-  for (let i = 0; i < 3; i++) {
-    const d = pp(0.04 + i * 0.035, tbFrac * 0.5);
-    ctx.beginPath();
-    ctx.arc(d.x, d.y, 1.8 * bScale, 0, Math.PI * 2);
-    ctx.fillStyle = hexToRgba(dotColors[i], light ? 0.7 : 0.5);
-    ctx.fill();
-  }
-
-  // ── Address bar (next ~6%) ──
-  const abFrac = tbFrac + 0.06;
-  const abInTL = pp(0.08, tbFrac + 0.012);
-  const abInTR = pp(0.92, tbFrac + 0.012);
-  const abInBL = pp(0.08, abFrac - 0.012);
-  const abInBR = pp(0.92, abFrac - 0.012);
-  drawPolygon(ctx, [abInTL, abInTR, abInBR, abInBL]);
-  ctx.fillStyle = light ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.04)';
-  ctx.fill();
-  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.15 : 0.08);
-  ctx.lineWidth = 0.5 * bScale;
-  ctx.stroke();
-
-  // Address bar separator
-  ctx.beginPath();
-  const abL = pp(0, abFrac);
-  const abR = pp(1, abFrac);
-  ctx.moveTo(abL.x, abL.y);
-  ctx.lineTo(abR.x, abR.y);
-  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.15 : 0.08);
-  ctx.lineWidth = 0.5 * bScale;
-  ctx.stroke();
-
-  const showDetail = camera.zoom >= DETAIL_ZOOM_THRESHOLD;
-
-  // ── Content area: Line chart (left half) + Pie chart (right half) ──
-  const contentTop = abFrac + 0.04;
-
   if (showDetail) {
-    // Subtle horizontal grid lines across the content area
-    const gridAlpha = light ? 0.08 : 0.04;
-    for (let i = 0; i < 4; i++) {
-      const gy = contentTop + i * 0.13;
+    // Traffic light dots (in header)
+    const dotColors = ['#ff5f57', '#ffbd2e', '#28c840'];
+    for (let i = 0; i < 3; i++) {
+      const d = tp(0.04 + i * 0.045, hdrFrac * 0.5);
       ctx.beginPath();
-      ctx.moveTo(pp(0.06, gy).x, pp(0.06, gy).y);
-      ctx.lineTo(pp(0.94, gy).x, pp(0.94, gy).y);
-      ctx.strokeStyle = hexToRgba(node.glowColor, gridAlpha);
+      ctx.arc(d.x, d.y, 2 * bScale, 0, Math.PI * 2);
+      ctx.fillStyle = hexToRgba(dotColors[i], light ? 0.75 : 0.55);
+      ctx.fill();
+    }
+
+    // Address bar placeholder
+    const abTL = tp(0.22, hdrFrac * 0.22);
+    const abTR = tp(0.72, hdrFrac * 0.22);
+    const abBR = tp(0.72, hdrFrac * 0.78);
+    const abBL = tp(0.22, hdrFrac * 0.78);
+    drawPolygon(ctx, [abTL, abTR, abBR, abBL]);
+    ctx.fillStyle = light ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.04)';
+    ctx.fill();
+    ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.12 : 0.08);
+    ctx.lineWidth = 0.5 * bScale;
+    ctx.stroke();
+
+    // ── Content area ──
+    const contentTop = hdrFrac + 0.04;
+
+    // Subtle horizontal grid lines
+    for (let i = 0; i < 4; i++) {
+      const gv = contentTop + i * 0.18;
+      ctx.beginPath();
+      ctx.moveTo(tp(0.06, gv).x, tp(0.06, gv).y);
+      ctx.lineTo(tp(0.94, gv).x, tp(0.94, gv).y);
+      ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.06 : 0.04);
       ctx.lineWidth = 0.5 * bScale;
       ctx.stroke();
     }
 
-    // Line chart data points (left half of content area)
+    // ── Line chart (left portion of content) ──
     const chartPts = [
-      { u: 0.06, v: contentTop + 0.42 },
-      { u: 0.14, v: contentTop + 0.30 },
-      { u: 0.22, v: contentTop + 0.36 },
-      { u: 0.30, v: contentTop + 0.18 },
-      { u: 0.38, v: contentTop + 0.24 },
-      { u: 0.46, v: contentTop + 0.10 },
+      { u: 0.06, v: contentTop + 0.55 },
+      { u: 0.14, v: contentTop + 0.38 },
+      { u: 0.22, v: contentTop + 0.45 },
+      { u: 0.30, v: contentTop + 0.22 },
+      { u: 0.38, v: contentTop + 0.30 },
+      { u: 0.46, v: contentTop + 0.14 },
     ];
 
-    // Draw line chart polyline
     ctx.beginPath();
-    const firstPt = pp(chartPts[0].u, chartPts[0].v);
-    ctx.moveTo(firstPt.x, firstPt.y);
+    const p0 = tp(chartPts[0].u, chartPts[0].v);
+    ctx.moveTo(p0.x, p0.y);
     for (let i = 1; i < chartPts.length; i++) {
-      const pt = pp(chartPts[i].u, chartPts[i].v);
-      ctx.lineTo(pt.x, pt.y);
+      const p = tp(chartPts[i].u, chartPts[i].v);
+      ctx.lineTo(p.x, p.y);
     }
     ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.85 : 0.70);
     ctx.lineWidth = 2 * bScale;
@@ -317,24 +303,24 @@ export function renderAnalyticsPanel(
     ctx.lineCap = 'round';
     ctx.stroke();
 
-    // Draw data point dots
+    // Data point dots
     for (const cp of chartPts) {
-      const pt = pp(cp.u, cp.v);
+      const p = tp(cp.u, cp.v);
       ctx.beginPath();
-      ctx.arc(pt.x, pt.y, 2.2 * bScale, 0, Math.PI * 2);
-      ctx.fillStyle = hexToRgba(node.glowColor, light ? 0.9 : 0.6);
+      ctx.arc(p.x, p.y, 2.2 * bScale, 0, Math.PI * 2);
+      ctx.fillStyle = hexToRgba(node.glowColor, light ? 0.90 : 0.65);
       ctx.fill();
     }
 
-    // Pie chart (right half of content area)
-    const pieCenter = pp(0.74, contentTop + 0.26);
-    const pieR = Math.min(topEdgeLen, leftEdgeLen) * 0.09;
+    // ── Pie chart (right portion of content) ──
+    const pieCenter = tp(0.74, contentTop + 0.36);
+    const pieR = Math.min(topEdgeLen, leftEdgeLen) * 0.10;
     const slices = [
       { start: 0, end: 0.38, color: node.glowColor, alpha: light ? 0.85 : 0.65 },
-      { start: 0.38, end: 0.62, color: '#ff5f57', alpha: light ? 0.8 : 0.55 },
-      { start: 0.62, end: 0.80, color: '#ffbd2e', alpha: light ? 0.8 : 0.55 },
-      { start: 0.80, end: 0.92, color: '#28c840', alpha: light ? 0.8 : 0.55 },
-      { start: 0.92, end: 1.0, color: '#a78bfa', alpha: light ? 0.8 : 0.55 },
+      { start: 0.38, end: 0.62, color: '#ff5f57', alpha: light ? 0.80 : 0.55 },
+      { start: 0.62, end: 0.80, color: '#ffbd2e', alpha: light ? 0.80 : 0.55 },
+      { start: 0.80, end: 0.92, color: '#28c840', alpha: light ? 0.80 : 0.55 },
+      { start: 0.92, end: 1.0, color: '#a78bfa', alpha: light ? 0.80 : 0.55 },
     ];
     for (const s of slices) {
       ctx.beginPath();
@@ -346,68 +332,54 @@ export function renderAnalyticsPanel(
       ctx.fillStyle = hexToRgba(s.color, s.alpha);
       ctx.fill();
     }
-    // Pie border
     ctx.beginPath();
     ctx.arc(pieCenter.x, pieCenter.y, pieR, 0, Math.PI * 2);
-    ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.3 : 0.18);
+    ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.25 : 0.15);
     ctx.lineWidth = 0.8 * bScale;
     ctx.stroke();
   }
 
-  // ── Leading edge glow ──
-  ctx.beginPath();
-  ctx.moveTo(wtl.x, wtl.y);
-  ctx.lineTo(wbl.x, wbl.y);
-  ctx.strokeStyle = hexToRgba(node.glowColor, 0.92);
-  ctx.lineWidth = 2.4 * bScale;
-  ctx.shadowColor = hexToRgba(node.glowColor, light ? 0.15 : 0.4);
-  ctx.shadowBlur = (light ? 3 : 8) * bScale;
-  ctx.stroke();
-  ctx.shadowBlur = 0;
-
-  // ── Top edge glow ──
-  ctx.beginPath();
-  ctx.moveTo(wtl.x, wtl.y);
-  ctx.lineTo(wtr.x, wtr.y);
-  ctx.strokeStyle = hexToRgba(node.glowColor, 0.60);
-  ctx.lineWidth = 1.6 * bScale;
-  ctx.shadowColor = hexToRgba(node.glowColor, light ? 0.08 : 0.20);
-  ctx.shadowBlur = (light ? 2 : 5) * bScale;
-  ctx.stroke();
-  ctx.shadowBlur = 0;
-
-  // ── Icon + text ──
-  const panelCX = (wtl.x + wtr.x + wbl.x + wbr.x) / 4;
-  const panelCY = (wtl.y + wtr.y + wbl.y + wbr.y) / 4;
-  const panelBasisX = by;
+  // ── Icon + Title/Subtitle (below the isometric slab) ──
+  const titlePoint = worldToScreen(
+    { x: node.x + node.width * 0.5, y: node.y + node.height * 0.46 },
+    camera, viewport,
+  );
+  const textDirection = by;
+  const textStackDirection = { x: -bx.x, y: -bx.y };
 
   if (node.icon && nodeIconCatalog[node.icon] && showDetail) {
     const iconDef = nodeIconCatalog[node.icon];
-    const iconSize = Math.min(node.height, windowH / camera.zoom) * NODE_ICON_SCALE * camera.zoom * 1.2;
+    const iconSize = Math.min(node.width, node.height) * NODE_ICON_SCALE * camera.zoom;
+    const iconCenter = worldToScreen(
+      { x: node.x + node.width * 0.75, y: node.y + node.height * 0.5 },
+      camera, viewport,
+    );
     ctx.save();
-    ctx.translate(panelCX, panelCY);
-    ctx.transform(panelBasisX.x, panelBasisX.y, 0, 1, 0, 0);
+    ctx.translate(iconCenter.x, iconCenter.y);
+    ctx.transform(by.x, by.y, -bx.x, -bx.y, 0, 0);
     const scale = iconSize / 32;
     ctx.scale(scale, scale);
     ctx.translate(-16, -16);
-    ctx.globalAlpha = light ? 0.9 : 0.75;
+    ctx.globalAlpha = light ? 0.9 : 0.7;
     ctx.fillStyle = light ? lightenHex(node.glowColor, 0.55) : hexToRgba(node.glowColor, 1.0);
     for (const d of iconDef.paths) ctx.fill(new Path2D(d));
     ctx.restore();
   }
 
   if (showDetail) {
-    const titlePt = { x: (wbl.x + wbr.x) / 2, y: (wbl.y + wbr.y) / 2 + 12 * camera.zoom };
     const fontSize = node.fontSize ?? DEFAULT_FONT_SIZE;
-    const scaledSize = Math.round(fontSize * camera.zoom * 0.85);
+    const scaledSize = Math.round(fontSize * camera.zoom);
 
-    drawTransformedText(ctx, node.title, titlePt, panelBasisX, { x: 0, y: 1 },
+    drawTransformedText(ctx, node.title, titlePoint, textDirection, textStackDirection,
       light ? 'rgba(255,255,255,0.95)' : '#ffffff',
-      `700 ${scaledSize}px Inter, sans-serif`);
+      `600 ${scaledSize}px Inter, sans-serif`);
 
     if (node.subtitle) {
-      const subPt = { x: titlePt.x, y: titlePt.y + scaledSize * 1.2 };
-      drawTransformedText(ctx, node.subtitle, subPt, panelBasisX, { x: 0, y: 1 },
+      const subPt = {
+        x: titlePoint.x + textStackDirection.x * 18,
+        y: titlePoint.y + textStackDirection.y * 18,
+      };
+      drawTransformedText(ctx, node.subtitle, subPt, textDirection, textStackDirection,
         light ? 'rgba(255,255,255,0.75)' : hexToRgba(node.glowColor, 0.95),
         `600 ${Math.round(scaledSize * 0.8)}px Inter, sans-serif`);
     }
