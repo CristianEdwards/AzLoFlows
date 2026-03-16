@@ -14,6 +14,7 @@ export default function StatusBar({ cursorWorld }: StatusBarProps) {
   return (
     <div className="status-bar">
       <span>{selectionLabel(selection, document)}</span>
+      <span>v{__APP_VERSION__}</span>
       <span>Zoom {Math.round(camera.zoom * 100)}%</span>
       <span>{snapEnabled ? 'Snap on' : 'Snap off'}</span>
       <span>
