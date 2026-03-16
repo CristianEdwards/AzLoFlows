@@ -259,7 +259,7 @@ export const paletteShapes: PaletteShape[] = [
   { id: 'browser2', title: 'Browser 2', icon: browser2Icon, nodeShape: 'browser2' },
   { id: 'stack',    title: 'Stack',    icon: stackIcon,    nodeShape: 'stack' },
   { id: 'dashboard', title: 'Dashboard', icon: dashboardIcon, nodeShape: 'dashboard' },
-  { id: 'database', title: 'Database', icon: databaseIcon, nodeShape: 'database' },
+  { id: 'database', title: 'Storage', icon: databaseIcon, nodeShape: 'database' },
     { id: 'gauge',     title: 'Gauge',     icon: gaugeIcon,     nodeShape: 'gauge' },
   { id: 'chartPanel', title: 'Chart Panel', icon: chartPanelIcon, nodeShape: 'chartPanel' },
   { id: 'analyticsPanel', title: 'Analytics Panel', icon: analyticsPanelIcon, nodeShape: 'analyticsPanel' },
