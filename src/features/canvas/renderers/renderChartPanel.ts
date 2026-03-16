@@ -109,11 +109,12 @@ export function renderChartPanel(
   ctx.strokeStyle = 'rgba(255,255,255,0.07)';
   ctx.lineWidth = 2.5 * bScale; ctx.stroke();
 
-  // Front face border
-  drawRoundedPolygon(ctx, [fTL, fTR, fBR, fBL], cornerR);
+  // Outer silhouette border (single path around the full 3D shape)
+  const silhouette = [fTL, bTL, bTR, bBR, fBR, fBL];
+  drawRoundedPolygon(ctx, silhouette, cornerR);
   ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.95 : (light ? 0.80 : 0.65));
   ctx.lineWidth = (selected ? 2.8 : 2) * bScale; ctx.stroke();
-  drawRoundedPolygon(ctx, [fTL, fTR, fBR, fBL], cornerR);
+  drawRoundedPolygon(ctx, silhouette, cornerR);
   ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.20 : 0.10);
   ctx.lineWidth = (selected ? 5 : 3.5) * bScale; ctx.stroke();
 
