@@ -2,7 +2,7 @@ import { palette, companionPalette } from '@/lib/rendering/tokens';
 import type { NodeShape } from '@/types/document';
 
 export interface PaletteShape {
-  id: 'area' | 'node' | 'standingNode' | 'text' | 'pipe' | 'serverRack' | 'card' | 'platform' | 'browser' | 'browser2' | 'stack' | 'dashboard' | 'gauge' | 'chartPanel' | 'analyticsPanel';
+  id: 'area' | 'node' | 'standingNode' | 'text' | 'pipe' | 'serverRack' | 'card' | 'platform' | 'browser' | 'browser2' | 'stack' | 'dashboard' | 'gauge' | 'chartPanel' | 'analyticsPanel' | 'database';
   title: string;
   /** Inline SVG markup (64×64 viewBox) showing an isometric preview */
   icon: string;
@@ -203,6 +203,13 @@ const dashboardIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 6
   <polygon points="55,27 50,29 50,34 55,32" fill="rgba(0,229,255,0.04)" stroke="rgba(0,229,255,0.06)" stroke-width="0.3"/>
 </svg>`;
 
+const databaseIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+    <ellipse cx="32" cy="16" rx="20" ry="7" fill="rgba(0,229,255,0.06)" stroke="rgba(0,229,255,0.6)" stroke-width="1.5"/>
+    <path d="M12,16 v10 A20,7 0 0,0 52,26 v-10" fill="rgba(0,229,255,0.04)" stroke="rgba(0,229,255,0.6)" stroke-width="1.5"/>
+    <path d="M12,26 v10 A20,7 0 0,0 52,36 v-10" fill="rgba(0,229,255,0.04)" stroke="rgba(0,229,255,0.6)" stroke-width="1.5"/>
+    <path d="M12,36 v10 A20,7 0 0,0 52,46 v-10" fill="rgba(0,229,255,0.04)" stroke="rgba(0,229,255,0.6)" stroke-width="1.5"/>
+</svg>`;
+
 const gaugeIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
   <polygon points="32,10 56,24 32,38 8,24" fill="rgba(0,229,255,0.06)" stroke="rgba(0,229,255,0.15)" stroke-width="0.6"/>
   <polygon points="8,24 32,38 32,44 8,30" fill="rgba(0,229,255,0.04)" stroke="rgba(0,229,255,0.1)" stroke-width="0.4"/>
@@ -252,7 +259,8 @@ export const paletteShapes: PaletteShape[] = [
   { id: 'browser2', title: 'Browser 2', icon: browser2Icon, nodeShape: 'browser2' },
   { id: 'stack',    title: 'Stack',    icon: stackIcon,    nodeShape: 'stack' },
   { id: 'dashboard', title: 'Dashboard', icon: dashboardIcon, nodeShape: 'dashboard' },
-  { id: 'gauge',     title: 'Gauge',     icon: gaugeIcon,     nodeShape: 'gauge' },
+  { id: 'database', title: 'Database', icon: databaseIcon, nodeShape: 'database' },
+    { id: 'gauge',     title: 'Gauge',     icon: gaugeIcon,     nodeShape: 'gauge' },
   { id: 'chartPanel', title: 'Chart Panel', icon: chartPanelIcon, nodeShape: 'chartPanel' },
   { id: 'analyticsPanel', title: 'Analytics Panel', icon: analyticsPanelIcon, nodeShape: 'analyticsPanel' },
   { id: 'text', title: 'Text Label', icon: textIcon },
