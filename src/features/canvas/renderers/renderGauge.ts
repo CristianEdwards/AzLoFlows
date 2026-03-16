@@ -2,7 +2,7 @@ import { NODE_DEPTH, DETAIL_ZOOM_THRESHOLD, NODE_ICON_SCALE, DEFAULT_FONT_SIZE }
 import { isoQuad, worldToScreen, type ViewportSize } from '@/lib/geometry/iso';
 import { nodeIconCatalog } from '@/lib/icons/nodeIcons';
 import { drawPolygon, drawTransformedText } from '@/lib/rendering/canvasPrimitives';
-import { hexToRgba, lightenHex, darkenHex, deepToneForGlow } from '@/lib/rendering/tokens';
+import { lightenHex, darkenHex, deepToneForGlow } from '@/lib/rendering/tokens';
 import type { CameraState, NodeEntity } from '@/types/document';
 
 /**
@@ -91,9 +91,9 @@ export function renderGauge(
     const p0d = isoRingPt(a0, outerR, depth);
     const p1d = isoRingPt(a1, outerR, depth);
     drawPolygon(ctx, [p0, p1, p1d, p0d]);
-    ctx.fillStyle = light ? darkenHex(deepTone, 0.65) : hexToRgba(faceFill, 0.12);
+    ctx.fillStyle = light ? darkenHex(deepTone, 0.65) : darkenHex(faceFill, 0.55);
     ctx.fill();
-    ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.10 : 0.04);
+    ctx.strokeStyle = darkenHex(node.glowColor, light ? 0.60 : 0.65);
     ctx.lineWidth = 0.3 * bScale;
     ctx.stroke();
   }
@@ -114,7 +114,7 @@ export function renderGauge(
     ctx.lineTo(p.x, p.y);
   }
   ctx.closePath();
-  ctx.fillStyle = light ? darkenHex(deepTone, 0.55) : hexToRgba(faceFill, 0.08);
+  ctx.fillStyle = light ? darkenHex(deepTone, 0.55) : darkenHex(faceFill, 0.65);
   ctx.fill();
 
   // ── Top face of the ring (the main visual — gauge track + arc) ──
@@ -137,13 +137,13 @@ export function renderGauge(
     trackGrad.addColorStop(0, lightenHex(deepTone, 0.18));
     trackGrad.addColorStop(1, deepTone);
   } else {
-    trackGrad.addColorStop(0, hexToRgba(faceFill, 0.22));
-    trackGrad.addColorStop(1, hexToRgba(faceFill, 0.08));
+    trackGrad.addColorStop(0, lightenHex(faceFill, 0.10));
+    trackGrad.addColorStop(1, darkenHex(faceFill, 0.30));
   }
   ctx.fillStyle = trackGrad;
   ctx.fill();
   // Track border
-  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.20 : 0.10);
+  ctx.strokeStyle = darkenHex(node.glowColor, light ? 0.40 : 0.50);
   ctx.lineWidth = 0.8 * bScale;
   ctx.stroke();
 
@@ -174,8 +174,8 @@ export function renderGauge(
     arcGrad.addColorStop(0, lightenHex(node.glowColor, 0.2));
     arcGrad.addColorStop(1, node.glowColor);
   } else {
-    arcGrad.addColorStop(0, hexToRgba(node.glowColor, 0.85));
-    arcGrad.addColorStop(1, hexToRgba(node.glowColor, 0.55));
+    arcGrad.addColorStop(0, lightenHex(node.glowColor, 0.15));
+    arcGrad.addColorStop(1, darkenHex(node.glowColor, 0.15));
   }
   ctx.fillStyle = arcGrad;
   
@@ -184,7 +184,7 @@ export function renderGauge(
   
 
   // Arc border
-  ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.95 : (light ? 0.70 : 0.55));
+  ctx.strokeStyle = selected ? lightenHex(node.glowColor, 0.10) : darkenHex(node.glowColor, light ? 0.20 : 0.25);
   ctx.lineWidth = (selected ? 2 : 1.2) * bScale;
   ctx.stroke();
 
@@ -202,7 +202,7 @@ export function renderGauge(
     const p0d = isoRingPt(a0, outerR, depth);
     const p1d = isoRingPt(a1, outerR, depth);
     drawPolygon(ctx, [p0, p1, p1d, p0d]);
-    ctx.fillStyle = light ? darkenHex(node.glowColor, 0.55) : hexToRgba(node.glowColor, 0.22);
+    ctx.fillStyle = light ? darkenHex(node.glowColor, 0.55) : darkenHex(node.glowColor, 0.40);
     ctx.fill();
   }
 
@@ -231,8 +231,8 @@ export function renderGauge(
     const scale = iconSize / 32;
     ctx.scale(scale, scale);
     ctx.translate(-16, -16);
-    ctx.globalAlpha = light ? 0.85 : 0.65;
-    ctx.fillStyle = light ? lightenHex(node.glowColor, 0.55) : hexToRgba(node.glowColor, 1.0);
+    ctx.globalAlpha = 1.0;
+    ctx.fillStyle = light ? lightenHex(node.glowColor, 0.55) : node.glowColor;
     for (const d of iconDef.paths) ctx.fill(new Path2D(d));
     ctx.restore();
   }
@@ -242,7 +242,7 @@ export function renderGauge(
     const fontSize = node.fontSize ?? DEFAULT_FONT_SIZE;
     const scaledSize = Math.round(fontSize * camera.zoom * 0.82);
     drawTransformedText(ctx, node.title, titlePt, bx, { x: 0, y: 1 },
-      light ? 'rgba(255,255,255,0.90)' : hexToRgba(node.glowColor, 0.95),
+      light ? '#ffffffee' : node.glowColor,
       `600 ${scaledSize}px Inter, sans-serif`);
   }
 }
