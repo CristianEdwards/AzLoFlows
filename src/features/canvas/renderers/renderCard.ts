@@ -59,7 +59,7 @@ export function renderCard(
   }
 
   // ── Left face (medium tone) ──
-  drawRoundedPolygon(ctx, [lt, lb, lbD, ltD], cornerR);
+  drawPolygon(ctx, [lt, lb, lbD, ltD]);
   if (light) {
     const gSide = ctx.createLinearGradient(lt.x, lt.y, lbD.x, lbD.y);
     gSide.addColorStop(0, darkenHex(deepTone, 0.60));
@@ -88,7 +88,7 @@ export function renderCard(
   ctx.stroke();
 
   // ── Front face (darkest) ──
-  drawRoundedPolygon(ctx, [lb, rb, rbD, lbD], cornerR);
+  drawPolygon(ctx, [lb, rb, rbD, lbD]);
   if (light) {
     const gFront = ctx.createLinearGradient(lb.x, lb.y, rbD.x, rbD.y);
     gFront.addColorStop(0, darkenHex(deepTone, 0.55));
@@ -107,7 +107,7 @@ export function renderCard(
   ctx.stroke();
 
   // ── Top face (card surface — brightest, solid) ──
-  drawRoundedPolygon(ctx, points, cornerR);
+  drawPolygon(ctx, points);
   const grad = ctx.createLinearGradient(lt.x, lt.y, rb.x, rb.y);
   if (light) {
     grad.addColorStop(0, lightenHex(deepTone, 0.42));
@@ -168,12 +168,12 @@ export function renderCard(
   ctx.stroke();
 
   // ── Top face border ──
-  drawRoundedPolygon(ctx, points, cornerR);
+  drawPolygon(ctx, points);
   ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.98 : (light ? 0.82 : 0.68));
   ctx.lineWidth = (selected ? 2.8 : 2) * bScale;
   ctx.stroke();
   // Outer glow
-  drawRoundedPolygon(ctx, points, cornerR);
+  drawPolygon(ctx, points);
   ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.25 : (light ? 0.10 : 0.14));
   ctx.lineWidth = (selected ? 6 : 4) * bScale;
   ctx.stroke();

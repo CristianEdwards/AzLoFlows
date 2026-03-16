@@ -264,7 +264,7 @@ export function renderLaptop(
 
   // ── Screen panel (rising from right edge rt→rb) — dark glass ──
   const screenFace = [wtl, wtr, wbr, wbl];
-  drawRoundedPolygon(ctx, screenFace, panelR);
+  drawPolygon(ctx, screenFace);
   // Dark glass base
   ctx.fillStyle = 'rgba(8, 14, 28, 0.88)';
   ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.40 : 0.55) * pulse);
@@ -272,7 +272,7 @@ export function renderLaptop(
   ctx.fill();
   ctx.shadowBlur = 0;
   // Subtle color overlay
-  drawRoundedPolygon(ctx, screenFace, panelR);
+  drawPolygon(ctx, screenFace);
   const scrGrad = ctx.createLinearGradient(wbl.x, wbl.y, wtl.x, wtl.y);
   if (light) {
     scrGrad.addColorStop(0, deepTone);
@@ -297,7 +297,7 @@ export function renderLaptop(
   ctx.stroke();
 
   // Screen border
-  drawRoundedPolygon(ctx, screenFace, panelR);
+  drawPolygon(ctx, screenFace);
   ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.98 : (light ? 0.88 : 0.78));
   ctx.lineWidth = (selected ? 3 : 2.4) * bScale;
   ctx.shadowColor = hexToRgba(node.glowColor, light ? 0.15 : 0.40);
@@ -306,7 +306,7 @@ export function renderLaptop(
   ctx.shadowBlur = 0;
 
   // Outer glow
-  drawRoundedPolygon(ctx, screenFace, panelR);
+  drawPolygon(ctx, screenFace);
   ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.28 : (light ? 0.12 : 0.18));
   ctx.lineWidth = (selected ? 7 : 5) * bScale;
   ctx.stroke();

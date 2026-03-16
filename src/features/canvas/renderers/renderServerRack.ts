@@ -99,7 +99,7 @@ export function renderServerRack(
     ctx.fill();
 
     // ── Front face (with LED) ──
-    drawRoundedPolygon(ctx, [blb, brb, brbD, blbD], cornerR);
+    drawPolygon(ctx, [blb, brb, brbD, blbD]);
     if (light) {
       const gFront = ctx.createLinearGradient(blb.x, blb.y, brbD.x, brbD.y);
       gFront.addColorStop(0, deepTone);
@@ -125,7 +125,7 @@ export function renderServerRack(
     ctx.stroke();
 
     // Front face border
-    drawRoundedPolygon(ctx, [blb, brb, brbD, blbD], cornerR);
+    drawPolygon(ctx, [blb, brb, brbD, blbD]);
     ctx.strokeStyle = hexToRgba(node.glowColor, (light ? 0.30 : 0.18) * pulse);
     ctx.lineWidth = 0.8 * bScale;
     ctx.stroke();
@@ -148,7 +148,7 @@ export function renderServerRack(
     ctx.shadowBlur = 0;
 
     // ── Right face ──
-    drawRoundedPolygon(ctx, [brt, brb, brbD, brtD], cornerR);
+    drawPolygon(ctx, [brt, brb, brbD, brtD]);
     if (light) {
       ctx.fillStyle = darkenHex(deepTone, 0.85);
     } else {
@@ -157,7 +157,7 @@ export function renderServerRack(
     ctx.fill();
 
     // ── Top face (blade top surface) ──
-    drawRoundedPolygon(ctx, [blt, brt, brb, blb], cornerR);
+    drawPolygon(ctx, [blt, brt, brb, blb]);
     const gTop = ctx.createLinearGradient(blt.x, blt.y, brb.x, brb.y);
     if (light) {
       gTop.addColorStop(0, deepToneLit);
@@ -194,7 +194,7 @@ export function renderServerRack(
     ctx.stroke();
 
     // Top face border
-    drawRoundedPolygon(ctx, [blt, brt, brb, blb], cornerR);
+    drawPolygon(ctx, [blt, brt, brb, blb]);
     ctx.strokeStyle = hexToRgba(node.glowColor,
       blade === 0 ? (selected ? 0.98 : (light ? 0.88 : 0.75)) : (light ? 0.50 : 0.35));
     ctx.lineWidth = (blade === 0 ? (selected ? 3 : 2.2) : 1.2) * bScale;
@@ -259,7 +259,7 @@ export function renderServerRack(
   }
 
   // ── Outer glow on top blade ──
-  drawRoundedPolygon(ctx, points, cornerR);
+  drawPolygon(ctx, points);
   ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.28 : (light ? 0.12 : 0.18));
   ctx.lineWidth = (selected ? 7 : 5) * bScale;
   ctx.stroke();

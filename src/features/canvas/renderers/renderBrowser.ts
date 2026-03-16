@@ -46,28 +46,28 @@ export function renderBrowser(
   });
 
   // ── Right side face ──
-  drawRoundedPolygon(ctx, [fTR, bTR, bBR, fBR], cornerR);
+  drawPolygon(ctx, [fTR, bTR, bBR, fBR]);
   const gRight = ctx.createLinearGradient(fTR.x, fTR.y, bBR.x, bBR.y);
   gRight.addColorStop(0, light ? darkenHex(deepTone, 0.50) : darkenHex(node.glowColor, 0.35));
   gRight.addColorStop(1, light ? darkenHex(deepTone, 0.70) : darkenHex(node.glowColor, 0.55));
   ctx.fillStyle = gRight; ctx.fill();
 
   // ── Top face (thin strip) ──
-  drawRoundedPolygon(ctx, [bTL, bTR, fTR, fTL], cornerR);
+  drawPolygon(ctx, [bTL, bTR, fTR, fTL]);
   const gTop = ctx.createLinearGradient(bTL.x, bTL.y, fTR.x, fTR.y);
   gTop.addColorStop(0, light ? darkenHex(deepTone, 0.35) : darkenHex(node.glowColor, 0.20));
   gTop.addColorStop(1, light ? darkenHex(deepTone, 0.50) : darkenHex(node.glowColor, 0.35));
   ctx.fillStyle = gTop; ctx.fill();
 
   // ── Left side face ──
-  drawRoundedPolygon(ctx, [bTL, bBL, fBL, fTL], cornerR);
+  drawPolygon(ctx, [bTL, bBL, fBL, fTL]);
   const gLeft = ctx.createLinearGradient(bTL.x, bTL.y, fBL.x, fBL.y);
   gLeft.addColorStop(0, light ? darkenHex(deepTone, 0.45) : darkenHex(node.glowColor, 0.25));
   gLeft.addColorStop(1, light ? darkenHex(deepTone, 0.65) : darkenHex(node.glowColor, 0.50));
   ctx.fillStyle = gLeft; ctx.fill();
 
   // ── Front face (screen) ──
-  drawRoundedPolygon(ctx, [fTL, fTR, fBR, fBL], cornerR);
+  drawPolygon(ctx, [fTL, fTR, fBR, fBL]);
   const gFront = ctx.createLinearGradient(fTL.x, fTL.y, fBR.x, fBR.y);
   gFront.addColorStop(0, light ? darkenHex(deepTone, 0.15) : darkenHex(node.glowColor, 0.10));
   gFront.addColorStop(1, light ? darkenHex(deepTone, 0.30) : darkenHex(node.glowColor, 0.25));
@@ -79,7 +79,7 @@ export function renderBrowser(
   // ── Glass screen inset ──
   const si = 0.05;
   const scr = [fp(si, si), fp(1 - si, si), fp(1 - si, 1 - si), fp(si, 1 - si)];
-  drawRoundedPolygon(ctx, scr, cornerR * 0.6);
+  drawPolygon(ctx, scr);
   ctx.fillStyle = light ? 'rgba(200,230,255,0.12)' : hexToRgba(lightenHex(node.glowColor, 0.40), 0.10);
   ctx.fill();
 
@@ -96,10 +96,10 @@ export function renderBrowser(
   ctx.lineWidth = 2.5 * bScale; ctx.stroke();
 
   // ── Front face border ──
-  drawRoundedPolygon(ctx, [fTL, fTR, fBR, fBL], cornerR);
+  drawPolygon(ctx, [fTL, fTR, fBR, fBL]);
   ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.95 : (light ? 0.80 : 0.65));
   ctx.lineWidth = (selected ? 2.8 : 2) * bScale; ctx.stroke();
-  drawRoundedPolygon(ctx, [fTL, fTR, fBR, fBL], cornerR);
+  drawPolygon(ctx, [fTL, fTR, fBR, fBL]);
   ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.20 : 0.10);
   ctx.lineWidth = (selected ? 5 : 3.5) * bScale; ctx.stroke();
 

@@ -81,7 +81,7 @@ export function renderStack(
     const layerLightFactor = 1 - layer * 0.12;
 
     // Left face
-    drawRoundedPolygon(ctx, [llt, llb, llbD, lltD], cornerR);
+    drawPolygon(ctx, [llt, llb, llbD, lltD]);
     if (light) {
       ctx.fillStyle = darkenHex(deepTone, 0.65 + layer * 0.05);
     } else {
@@ -93,7 +93,7 @@ export function renderStack(
     ctx.stroke();
 
     // Front face
-    drawRoundedPolygon(ctx, [llb, lrb, lrbD, llbD], cornerR);
+    drawPolygon(ctx, [llb, lrb, lrbD, llbD]);
     if (light) {
       const g = ctx.createLinearGradient(llb.x, llb.y, lrbD.x, lrbD.y);
       g.addColorStop(0, darkenHex(deepTone, 0.6 + layer * 0.05));
@@ -108,7 +108,7 @@ export function renderStack(
     ctx.stroke();
 
     // Right face
-    drawRoundedPolygon(ctx, [lrt, lrb, lrbD, lrtD], cornerR);
+    drawPolygon(ctx, [lrt, lrb, lrbD, lrtD]);
     if (light) {
       ctx.fillStyle = darkenHex(deepTone, 0.75 + layer * 0.05);
     } else {
@@ -117,7 +117,7 @@ export function renderStack(
     ctx.fill();
 
     // Top face
-    drawRoundedPolygon(ctx, [llt, lrt, lrb, llb], cornerR);
+    drawPolygon(ctx, [llt, lrt, lrb, llb]);
     const gTop = ctx.createLinearGradient(llt.x, llt.y, lrb.x, lrb.y);
     if (light) {
       gTop.addColorStop(0, lightenHex(deepTone, 0.22 * layerLightFactor));
@@ -154,7 +154,7 @@ export function renderStack(
     ctx.stroke();
 
     // Top face border
-    drawRoundedPolygon(ctx, [llt, lrt, lrb, llb], cornerR);
+    drawPolygon(ctx, [llt, lrt, lrb, llb]);
     ctx.strokeStyle = hexToRgba(node.glowColor, (layer === 0 ? (selected ? 0.98 : (light ? 0.88 : 0.78)) : (light ? 0.50 : 0.38)));
     ctx.lineWidth = (layer === 0 ? (selected ? 3 : 2.2) : 1.4) * bScale;
     ctx.stroke();

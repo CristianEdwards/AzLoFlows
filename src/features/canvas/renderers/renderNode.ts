@@ -107,7 +107,7 @@ export function renderNode(
   }
 
   // ── Left side face ── (medium tone)
-  drawRoundedPolygon(ctx, [leftTop, leftBottom, frontLeftBottom, leftTopDepth], cornerR);
+  drawPolygon(ctx, [leftTop, leftBottom, frontLeftBottom, leftTopDepth]);
   if (light) {
     const gLeft = ctx.createLinearGradient(leftTop.x, leftTop.y, frontLeftBottom.x, frontLeftBottom.y);
     gLeft.addColorStop(0, deepToneMid);
@@ -136,7 +136,7 @@ export function renderNode(
   ctx.stroke();
 
   // ── Front face ── (darkest face)
-  drawRoundedPolygon(ctx, [leftBottom, rightBottom, frontRightBottom, frontLeftBottom], cornerR);
+  drawPolygon(ctx, [leftBottom, rightBottom, frontRightBottom, frontLeftBottom]);
   if (light) {
     const gFront = ctx.createLinearGradient(leftBottom.x, leftBottom.y, frontRightBottom.x, frontRightBottom.y);
     gFront.addColorStop(0, deepTone);
@@ -165,7 +165,7 @@ export function renderNode(
   ctx.stroke();
 
   // ── Right side face ── (darker side)
-  drawRoundedPolygon(ctx, [rightTop, rightBottom, frontRightBottom, rightTopDepth], cornerR);
+  drawPolygon(ctx, [rightTop, rightBottom, frontRightBottom, rightTopDepth]);
   if (light) {
     const gRight = ctx.createLinearGradient(rightTop.x, rightTop.y, frontRightBottom.x, frontRightBottom.y);
     gRight.addColorStop(0, deepToneMid);
@@ -184,7 +184,7 @@ export function renderNode(
   ctx.stroke();
 
   // ── Top face (main visible face) ── (solid rich gradient — brightest)
-  drawRoundedPolygon(ctx, points, cornerR);
+  drawPolygon(ctx, points);
   const gradient = ctx.createLinearGradient(points[0].x, points[0].y, points[2].x, points[2].y);
   if (light) {
     gradient.addColorStop(0, deepToneLit);
@@ -250,27 +250,27 @@ export function renderNode(
   ctx.lineWidth = 1 * bScale;
   ctx.stroke();
 
-  drawRoundedPolygon(ctx, points, cornerR);
+  drawPolygon(ctx, points);
   ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.98 : (light ? 0.88 : 0.78));
   ctx.lineWidth = (selected ? 3.2 : 2.4) * bScale;
   ctx.stroke();
 
-  drawRoundedPolygon(ctx, points, cornerR);
+  drawPolygon(ctx, points);
   ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.28 : (light ? 0.12 : 0.18));
   ctx.lineWidth = (selected ? 7 : 5) * bScale;
   ctx.stroke();
 
-  drawRoundedPolygon(ctx, [leftTop, leftBottom, frontLeftBottom, leftTopDepth], cornerR);
+  drawPolygon(ctx, [leftTop, leftBottom, frontLeftBottom, leftTopDepth]);
   ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.48 : 0.34);
   ctx.lineWidth = 1.6 * bScale;
   ctx.stroke();
 
-  drawRoundedPolygon(ctx, [leftBottom, rightBottom, frontRightBottom, frontLeftBottom], cornerR);
+  drawPolygon(ctx, [leftBottom, rightBottom, frontRightBottom, frontLeftBottom]);
   ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.48 : 0.34);
   ctx.lineWidth = 1.6 * bScale;
   ctx.stroke();
 
-  drawRoundedPolygon(ctx, [rightTop, rightBottom, frontRightBottom, rightTopDepth], cornerR);
+  drawPolygon(ctx, [rightTop, rightBottom, frontRightBottom, rightTopDepth]);
   ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.42 : 0.3);
   ctx.lineWidth = 1.4 * bScale;
   ctx.stroke();
