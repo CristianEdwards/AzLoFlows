@@ -112,17 +112,17 @@ export function renderBrowser2(
   ctx.shadowColor = hexToRgba(node.glowColor, light ? 0.12 : 0.40);
   ctx.shadowBlur = (light ? 3 : 8) * bScale; ctx.stroke(); ctx.shadowBlur = 0;
 
-  // ── Code editor content ──
+  // ── Dashboard content (matches reference SVG layout) ──
   const showDetail = camera.zoom >= DETAIL_ZOOM_THRESHOLD;
 
-  // Title bar
-  const hdr = 0.09;
-  drawPolygon(ctx, [fp(si, si), fp(1 - si, si), fp(1 - si, si + hdr), fp(si, si + hdr)]);
-  ctx.fillStyle = hexToRgba(node.glowColor, light ? 0.10 : 0.08);
+  // Title bar strip
+  const hdr = 0.08;
+  drawPolygon(ctx, [fp(0.03, 0.04), fp(0.97, 0.04), fp(0.97, 0.04 + hdr), fp(0.03, 0.04 + hdr)]);
+  ctx.fillStyle = hexToRgba(node.glowColor, light ? 0.14 : 0.10);
   ctx.fill();
   ctx.beginPath();
-  ctx.moveTo(fp(si, si + hdr).x, fp(si, si + hdr).y);
-  ctx.lineTo(fp(1 - si, si + hdr).x, fp(1 - si, si + hdr).y);
+  ctx.moveTo(fp(0.03, 0.04 + hdr).x, fp(0.03, 0.04 + hdr).y);
+  ctx.lineTo(fp(0.97, 0.04 + hdr).x, fp(0.97, 0.04 + hdr).y);
   ctx.strokeStyle = hexToRgba(node.glowColor, 0.18);
   ctx.lineWidth = 0.8 * bScale; ctx.stroke();
 
@@ -130,40 +130,58 @@ export function renderBrowser2(
     // Traffic lights
     const dotColors = ['#ff5f57', '#ffbd2e', '#28c840'];
     for (let i = 0; i < 3; i++) {
-      const d = fp(si + 0.03 + i * 0.04, si + hdr * 0.5);
+      const d = fp(si + 0.03 + i * 0.04, 0.04 + hdr * 0.5);
       ctx.beginPath(); ctx.arc(d.x, d.y, 2 * bScale, 0, Math.PI * 2);
-      ctx.fillStyle = hexToRgba(dotColors[i], light ? 0.85 : 0.85); ctx.fill();
+      ctx.fillStyle = hexToRgba(dotColors[i], 0.75); ctx.fill();
     }
 
-    // Address / tab bar
-    const abTop = si + hdr + 0.02;
-    const abBot = abTop + 0.05;
-    drawPolygon(ctx, [fp(si + 0.02, abTop), fp(si + 0.22, abTop), fp(si + 0.22, abBot), fp(si + 0.02, abBot)]);
-    ctx.fillStyle = 'rgba(147,197,253,0.6)';
+    // ── Left panel: Bar chart ──
+    drawPolygon(ctx, [fp(0.06, 0.15), fp(0.47, 0.15), fp(0.47, 0.54), fp(0.06, 0.54)]);
+    ctx.fillStyle = light ? 'rgba(123,127,138,0.10)' : 'rgba(123,127,138,0.15)';
     ctx.fill();
 
-    // Colored code lines (matching the SVG: red, purple, green, yellow, blue)
-    const codeLines = [
-      { left: 0.08, width: 0.38, color: 'rgba(252,165,165,0.6)' },   // red
-      { left: 0.08, width: 0.55, color: 'rgba(196,181,253,0.6)' },   // purple
-      { left: 0.08, width: 0.24, color: 'rgba(110,231,183,0.6)' },   // green
-      { left: 0.04, width: 0.42, color: 'rgba(253,230,138,0.6)' },   // yellow
-      { left: 0.04, width: 0.58, color: 'rgba(147,197,253,0.6)' },   // blue
+    const bars = [
+      { uL: 0.083, uR: 0.139, vTop: 0.308 },
+      { uL: 0.161, uR: 0.217, vTop: 0.231 },
+      { uL: 0.239, uR: 0.295, vTop: 0.385 },
+      { uL: 0.317, uR: 0.373, vTop: 0.154 },
+      { uL: 0.395, uR: 0.451, vTop: 0.269 },
     ];
-    const lineH = 0.05;
-    const lineGap = 0.08;
-    const startV = abBot + 0.06;
+    for (const bar of bars) {
+      drawPolygon(ctx, [fp(bar.uL, bar.vTop), fp(bar.uR, bar.vTop), fp(bar.uR, 0.54), fp(bar.uL, 0.54)]);
+      ctx.fillStyle = 'rgba(96,165,250,0.6)';
+      ctx.fill();
+    }
 
-    for (let i = 0; i < codeLines.length; i++) {
-      const line = codeLines[i];
-      const ly = startV + i * lineGap;
-      drawPolygon(ctx, [
-        fp(si + line.left, ly),
-        fp(si + line.left + line.width, ly),
-        fp(si + line.left + line.width, ly + lineH),
-        fp(si + line.left, ly + lineH),
-      ]);
-      ctx.fillStyle = line.color;
+    // ── Right panel: Line chart ──
+    drawPolygon(ctx, [fp(0.53, 0.15), fp(0.97, 0.15), fp(0.97, 0.54), fp(0.53, 0.54)]);
+    ctx.fillStyle = light ? 'rgba(123,127,138,0.10)' : 'rgba(123,127,138,0.15)';
+    ctx.fill();
+
+    const linePoints: [number, number][] = [
+      [0.556, 0.384], [0.667, 0.269], [0.778, 0.423], [0.889, 0.231], [0.944, 0.308],
+    ];
+    ctx.beginPath();
+    for (let i = 0; i < linePoints.length; i++) {
+      const pt = fp(linePoints[i][0], linePoints[i][1]);
+      if (i === 0) ctx.moveTo(pt.x, pt.y); else ctx.lineTo(pt.x, pt.y);
+    }
+    ctx.strokeStyle = 'rgba(74,222,128,0.7)';
+    ctx.lineWidth = 1.2 * bScale; ctx.lineJoin = 'round'; ctx.stroke();
+
+    // ── Bottom cards: red / yellow / green ──
+    const cards = [
+      { uL: 0.056, uR: 0.333, sqL: 0.083, sqR: 0.194, color: 'rgba(248,113,113,0.65)' },
+      { uL: 0.361, uR: 0.639, sqL: 0.389, sqR: 0.500, color: 'rgba(251,191,36,0.65)' },
+      { uL: 0.667, uR: 0.944, sqL: 0.695, sqR: 0.806, color: 'rgba(74,222,128,0.65)' },
+    ];
+    for (const card of cards) {
+      drawPolygon(ctx, [fp(card.uL, 0.615), fp(card.uR, 0.615), fp(card.uR, 0.923), fp(card.uL, 0.923)]);
+      ctx.fillStyle = light ? 'rgba(123,127,138,0.10)' : 'rgba(123,127,138,0.15)';
+      ctx.fill();
+
+      drawPolygon(ctx, [fp(card.sqL, 0.654), fp(card.sqR, 0.654), fp(card.sqR, 0.808), fp(card.sqL, 0.808)]);
+      ctx.fillStyle = card.color;
       ctx.fill();
     }
   }

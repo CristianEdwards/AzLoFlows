@@ -139,12 +139,18 @@ const browser2Icon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64
   <circle cx="53" cy="9" r="1.3" fill="rgba(255,95,87,0.85)"/>
   <circle cx="50" cy="10" r="1.3" fill="rgba(255,189,46,0.85)"/>
   <circle cx="47" cy="11.5" r="1.3" fill="rgba(40,200,64,0.85)"/>
-  <polygon points="53,15 43,19 43,21 53,17" fill="rgba(147,197,253,0.6)"/>
-  <polygon points="51,22 37,28 37,30 51,24" fill="rgba(252,165,165,0.6)"/>
-  <polygon points="51,25 33,33 33,35 51,27" fill="rgba(196,181,253,0.6)"/>
-  <polygon points="51,28 43,31 43,33 51,30" fill="rgba(110,231,183,0.6)"/>
-  <polygon points="53,30 39,36 39,38 53,32" fill="rgba(253,230,138,0.6)"/>
-  <polygon points="53,33 35,41 35,43 53,35" fill="rgba(147,197,253,0.6)"/>
+  <polygon points="32,24 40,20 40,33 32,37" fill="rgba(123,127,138,0.2)"/>
+  <rect x="33" y="28" width="2" height="8" transform="skewY(23.5) translate(-4,-9)" fill="rgba(96,165,250,0.6)"/>
+  <rect x="36" y="27" width="2" height="10" transform="skewY(23.5) translate(-4,-9)" fill="rgba(96,165,250,0.6)"/>
+  <rect x="39" y="29" width="2" height="6" transform="skewY(23.5) translate(-4,-9)" fill="rgba(96,165,250,0.6)"/>
+  <polygon points="43,20 54,14 54,28 43,34" fill="rgba(123,127,138,0.2)"/>
+  <polyline points="44,30 47,26 50,31 53,22 55,27" fill="none" stroke="rgba(74,222,128,0.7)" stroke-width="1"/>
+  <polygon points="32,38 39,35 39,42 32,45" fill="rgba(123,127,138,0.2)"/>
+  <polygon points="33.5,39 36,37.5 36,41.5 33.5,43" fill="rgba(248,113,113,0.65)"/>
+  <polygon points="40,35 47,31 47,39 40,43" fill="rgba(123,127,138,0.2)"/>
+  <polygon points="41.5,36 44,34.5 44,38.5 41.5,40" fill="rgba(251,191,36,0.65)"/>
+  <polygon points="48,31 55,27 55,36 48,40" fill="rgba(123,127,138,0.2)"/>
+  <polygon points="49.5,32.5 52,31 52,35 49.5,36.5" fill="rgba(74,222,128,0.65)"/>
   <line x1="56" y1="6" x2="56" y2="44" stroke="rgba(0,229,255,0.9)" stroke-width="1.5"/>
 </svg>`;
 
