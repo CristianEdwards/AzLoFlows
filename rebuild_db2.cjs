@@ -1,15 +1,10 @@
-import { NODE_DEPTH, DETAIL_ZOOM_THRESHOLD, NODE_ICON_SCALE, DEFAULT_FONT_SIZE } from '@/lib/config';
-import { isoQuad, worldToScreen, type ViewportSize } from '@/lib/geometry/iso';
-import { nodeIconCatalog } from '@/lib/icons/nodeIcons';
-import { drawPolygon, drawTransformedText } from '@/lib/rendering/canvasPrimitives';
-import { hexToRgba, lightenHex, darkenHex, deepToneForGlow } from '@/lib/rendering/tokens';
-import { getTextRatios } from '@/lib/geometry/textPosition';
-import type { CameraState, NodeEntity } from '@/types/document';
+const fs = require('fs');
+let code = fs.readFileSync('src/features/canvas/renderers/renderDatabase.ts', 'utf8');
 
-/**
- * Renders a stacked 3-D donut/gauge rings in isometric space, representing a Database shape.
- */
-export function renderDatabase(
+const parts = code.split('export function renderDatabase(');
+const imports = parts[0];
+
+const newFunc = `export function renderDatabase(
   ctx: CanvasRenderingContext2D,
   node: NodeEntity,
   selected: boolean,
@@ -126,6 +121,10 @@ export function renderDatabase(
     const scaledSize = Math.round(fontSize * camera.zoom * 0.82);
     drawTransformedText(ctx, node.title, titlePt, bx, { x: 0, y: 1 },
       light ? 'rgba(255,255,255,0.90)' : hexToRgba(node.glowColor, 0.95),
-      `600 ${scaledSize}px Inter, sans-serif`);
+      \`600 \${scaledSize}px Inter, sans-serif\`);
   }
 }
+`;
+
+fs.writeFileSync('src/features/canvas/renderers/renderDatabase.ts', imports + newFunc);
+console.log('Update successful');
