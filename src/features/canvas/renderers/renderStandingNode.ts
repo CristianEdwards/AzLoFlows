@@ -23,11 +23,12 @@ export function renderStandingNode(
   const pulse = 0.7 + Math.sin(time * 0.0015 + node.zIndex) * 0.18;
   const screenH = node.width * SCREEN_H_FACTOR * camera.zoom;
 
-  // 3D Box corners
+  // 3D Box corners (reduced depth)
+  const depth = node.width * 0.15; // thin panel depth
   const p0 = worldToScreen({ x: node.x, y: node.y }, camera, viewport); // Top
   const p1 = worldToScreen({ x: node.x, y: node.y + node.height }, camera, viewport); // Left
-  const p2 = worldToScreen({ x: node.x + node.width, y: node.y + node.height }, camera, viewport); // Bottom
-  const p3 = worldToScreen({ x: node.x + node.width, y: node.y }, camera, viewport); // Right
+  const p2 = worldToScreen({ x: node.x + depth, y: node.y + node.height }, camera, viewport); // Bottom
+  const p3 = worldToScreen({ x: node.x + depth, y: node.y }, camera, viewport); // Right
 
   const t0 = { x: p0.x, y: p0.y - screenH };
   const t1 = { x: p1.x, y: p1.y - screenH };
