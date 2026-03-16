@@ -45,7 +45,37 @@ export function renderDashboard(
     y: fTL.y + (fTR.y - fTL.y) * u + (fBL.y - fTL.y) * v,
   });
 
-  // ── 1. Front face (main panel surface) — painted first per SVG order ──
+  // ── 1. Right depth strip (painted first — behind front face) ──
+  drawRoundedPolygon(ctx, [fTR, bTR, bBR, fBR], cornerR);
+  const gRight = ctx.createLinearGradient(fTR.x, fTR.y, fBR.x, fBR.y);
+  gRight.addColorStop(0, hexToRgba(lightenHex(node.glowColor, light ? 0.15 : 0.30), 0.82));
+  gRight.addColorStop(1, hexToRgba(node.glowColor, 0.60));
+  ctx.fillStyle = gRight; ctx.fill();
+  drawRoundedPolygon(ctx, [fTR, bTR, bBR, fBR], cornerR);
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.lineWidth = 0.5 * bScale; ctx.stroke();
+
+  // ── 2. Top depth strip (painted second — behind front face) ──
+  drawRoundedPolygon(ctx, [bTL, bTR, fTR, fTL], cornerR);
+  const gTop = ctx.createLinearGradient(bTL.x, bTL.y, fTL.x, fTL.y);
+  gTop.addColorStop(0, hexToRgba(lightenHex(node.glowColor, light ? 0.25 : 0.45), 0.92));
+  gTop.addColorStop(1, hexToRgba(lightenHex(node.glowColor, light ? 0.10 : 0.20), 0.70));
+  ctx.fillStyle = gTop; ctx.fill();
+  drawRoundedPolygon(ctx, [bTL, bTR, fTR, fTL], cornerR);
+  ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+  ctx.lineWidth = 0.5 * bScale; ctx.stroke();
+
+  // Top-edge highlight
+  ctx.beginPath(); ctx.moveTo(bTL.x, bTL.y); ctx.lineTo(bTR.x, bTR.y);
+  ctx.strokeStyle = hexToRgba(lightenHex(node.glowColor, 0.50), 0.6);
+  ctx.lineWidth = 0.7 * bScale; ctx.stroke();
+
+  // Right outer edge
+  ctx.beginPath(); ctx.moveTo(bTR.x, bTR.y); ctx.lineTo(bBR.x, bBR.y);
+  ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+  ctx.lineWidth = 0.4 * bScale; ctx.stroke();
+
+  // ── 3. Front face (painted last — in front, closest to viewer) ──
   drawRoundedPolygon(ctx, [fTL, fTR, fBR, fBL], cornerR);
   const gFront = ctx.createLinearGradient(fTL.x, fTL.y, fBL.x, fBL.y);
   gFront.addColorStop(0, hexToRgba(light ? darkenHex(deepTone, 0.15) : darkenHex(node.glowColor, 0.15), 0.82));
@@ -55,37 +85,13 @@ export function renderDashboard(
   ctx.shadowBlur = light ? (selected ? 20 : 12) : (selected ? 30 : 18);
   ctx.fill(); ctx.shadowBlur = 0;
 
-  // ── 2. Right depth strip — lighter/glassy, shows panel thickness ──
-  drawRoundedPolygon(ctx, [fTR, bTR, bBR, fBR], cornerR);
-  const gRight = ctx.createLinearGradient(fTR.x, fTR.y, fBR.x, fBR.y);
-  gRight.addColorStop(0, hexToRgba(lightenHex(node.glowColor, light ? 0.15 : 0.30), 0.82));
-  gRight.addColorStop(1, hexToRgba(node.glowColor, 0.60));
-  ctx.fillStyle = gRight; ctx.fill();
-
-  // ── 3. Top depth strip — lightest, semi-transparent ──
-  drawRoundedPolygon(ctx, [bTL, bTR, fTR, fTL], cornerR);
-  const gTop = ctx.createLinearGradient(bTL.x, bTL.y, fTL.x, fTL.y);
-  gTop.addColorStop(0, hexToRgba(lightenHex(node.glowColor, light ? 0.25 : 0.45), 0.92));
-  gTop.addColorStop(1, hexToRgba(lightenHex(node.glowColor, light ? 0.10 : 0.20), 0.70));
-  ctx.fillStyle = gTop; ctx.fill();
-
-  // ── 4. Top-edge highlight (brightest edge) ──
-  ctx.beginPath(); ctx.moveTo(bTL.x, bTL.y); ctx.lineTo(bTR.x, bTR.y);
-  ctx.strokeStyle = hexToRgba(lightenHex(node.glowColor, 0.50), 0.6);
-  ctx.lineWidth = 0.7 * bScale; ctx.stroke();
-
-  // ── 5. Right outer edge ──
-  ctx.beginPath(); ctx.moveTo(bTR.x, bTR.y); ctx.lineTo(bBR.x, bBR.y);
-  ctx.strokeStyle = 'rgba(255,255,255,0.18)';
-  ctx.lineWidth = 0.4 * bScale; ctx.stroke();
-
-  // ── 6. Highlight band on top ~23% of front face ──
+  // Highlight band on top ~23% of front face
   const si = 0.05;
   drawPolygon(ctx, [fTL, fTR, fp(1.0, 0.23), fp(0.0, 0.23)]);
   ctx.fillStyle = 'rgba(255,255,255,0.12)';
   ctx.fill();
 
-  // ── Glass screen inset ──
+  // Glass screen inset
   const scr = [fp(si, si), fp(1 - si, si), fp(1 - si, 1 - si), fp(si, 1 - si)];
   drawRoundedPolygon(ctx, scr, cornerR * 0.6);
   ctx.fillStyle = light ? 'rgba(200,230,255,0.12)' : hexToRgba(lightenHex(node.glowColor, 0.40), 0.10);
@@ -103,23 +109,13 @@ export function renderDashboard(
   ctx.strokeStyle = 'rgba(255,255,255,0.07)';
   ctx.lineWidth = 2.5 * bScale; ctx.stroke();
 
-  // ── Front face border ──
+  // Front face border
   drawRoundedPolygon(ctx, [fTL, fTR, fBR, fBL], cornerR);
   ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.95 : (light ? 0.80 : 0.65));
   ctx.lineWidth = (selected ? 2.8 : 2) * bScale; ctx.stroke();
   drawRoundedPolygon(ctx, [fTL, fTR, fBR, fBL], cornerR);
   ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.20 : 0.10);
   ctx.lineWidth = (selected ? 5 : 3.5) * bScale; ctx.stroke();
-
-  // ── Right strip border ──
-  drawRoundedPolygon(ctx, [fTR, bTR, bBR, fBR], cornerR);
-  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
-  ctx.lineWidth = 0.5 * bScale; ctx.stroke();
-
-  // ── Top strip border ──
-  drawRoundedPolygon(ctx, [bTL, bTR, fTR, fTL], cornerR);
-  ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-  ctx.lineWidth = 0.5 * bScale; ctx.stroke();
 
   // ── Dashboard content ──
   const showDetail = camera.zoom >= DETAIL_ZOOM_THRESHOLD;
