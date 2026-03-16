@@ -142,8 +142,10 @@ export default function InspectorPanel() {
               <span>Label Corner</span>
               <select value={selectedArea.labelAnchor ?? 'bottom-left'} onChange={(event) => updateArea(selectedArea.id, { labelAnchor: event.target.value as AreaEntity['labelAnchor'] })}>
                 <option value="bottom-left">Bottom Left</option>
+                  <option value="bottom-center">Bottom Center</option>
                 <option value="bottom-right">Bottom Right</option>
                 <option value="top-left">Top Left</option>
+                  <option value="top-center">Top Center</option>
                 <option value="top-right">Top Right</option>
               </select>
             </label>

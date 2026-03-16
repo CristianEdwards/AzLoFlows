@@ -116,7 +116,7 @@ export interface NodeEntity {
     yRatio: number;
   };
   textRotated?: boolean;
-    textPosition?: 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+    textPosition?: 'center' | 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
     fontSize?: number;
   zIndex: number;
   tags?: string[];
