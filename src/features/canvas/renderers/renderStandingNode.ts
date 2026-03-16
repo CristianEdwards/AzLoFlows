@@ -23,22 +23,46 @@ export function renderStandingNode(
   const pulse = 0.7 + Math.sin(time * 0.0015 + node.zIndex) * 0.18;
   const screenH = node.width * SCREEN_H_FACTOR * camera.zoom;
 
-  // Bottom edge directly maps world coordinates to screen coords
-  const bBL = worldToScreen({ x: node.x, y: node.y }, camera, viewport);
-  const bBR = worldToScreen({ x: node.x, y: node.y + node.height }, camera, viewport);
-  
-  // No thickness for the panel face, it stands straight up
-  const fBL = bBL;
-  const fBR = bBR;
-  
-  const fTL = { x: fBL.x, y: fBL.y - screenH };
-  const fTR = { x: fBR.x, y: fBR.y - screenH };
+  // 3D Box corners
+  const p0 = worldToScreen({ x: node.x, y: node.y }, camera, viewport); // Top
+  const p1 = worldToScreen({ x: node.x, y: node.y + node.height }, camera, viewport); // Left
+  const p2 = worldToScreen({ x: node.x + node.width, y: node.y + node.height }, camera, viewport); // Bottom
+  const p3 = worldToScreen({ x: node.x + node.width, y: node.y }, camera, viewport); // Right
+
+  const t0 = { x: p0.x, y: p0.y - screenH };
+  const t1 = { x: p1.x, y: p1.y - screenH };
+  const t2 = { x: p2.x, y: p2.y - screenH };
+  const t3 = { x: p3.x, y: p3.y - screenH };
+
+  const deepTone = light ? deepToneForGlow(node.glowColor) : '';
+
+  // Right Face (Thickness side) 
+  drawPolygon(ctx, [t1, t2, p2, p1]);
+  ctx.fillStyle = light ? darkenHex(deepTone, 0.4) : darkenHex(node.glowColor, 0.45);
+  ctx.fill();
+  ctx.strokeStyle = hexToRgba(node.glowColor, 0.3);
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Top Face (Thickness top) 
+  drawPolygon(ctx, [t0, t3, t2, t1]);
+  ctx.fillStyle = light ? darkenHex(deepTone, 0.3) : darkenHex(node.glowColor, 0.20);
+  ctx.fill();
+  ctx.strokeStyle = hexToRgba(node.glowColor, 0.4);
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Front face mapping for text and UI
+  const fBL = p0;
+  const fBR = p1;
+  const fTL = t0;
+  const fTR = t1;
 
   const screenW = Math.hypot(fBR.x - fBL.x, fBR.y - fBL.y) || 1;
   const bScale = Math.min(1, Math.max(0.35, screenW / 120));
-  const bx = { x: (fBR.x - fBL.x) / screenW, y: (fBR.y - fBL.y) / screenW };
+  const bx = { x: (fBR.x - fBL.x) / screenW, y: (fBR.y - fBL.y) / screenW };    
 
-  const deepTone = light ? deepToneForGlow(node.glowColor) : '';
+
 
   const fp = (u: number, v: number) => ({
     x: fTL.x + (fTR.x - fTL.x) * u + (fBL.x - fTL.x) * v,
