@@ -48,15 +48,35 @@ export function renderBrowser2(
 
   // ── 0. Outer silhouette backplate & glow (painted behind everything) ──
   const silhouette = [fTL, bTL, bTR, bBR, fBR, fBL];
+
+  ctx.save();
+  ctx.beginPath();
+  // Outer clipping rect encompassing the whole canvas
+  ctx.rect(-10000, -10000, 30000, 30000);
+  // Path for the silhouette
+  const n = silhouette.length;
+  ctx.moveTo((silhouette[n - 1].x + silhouette[0].x) / 2, (silhouette[n - 1].y + silhouette[0].y) / 2);
+  for (let i = 0; i < n; i++) {
+    ctx.arcTo(silhouette[i].x, silhouette[i].y, silhouette[(i + 1) % n].x, silhouette[(i + 1) % n].y, cornerR);
+  }
+  ctx.closePath();
+  // Clip to everything OUTSIDE the silhouette
+  ctx.clip('evenodd');
+
   ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.30 : 0.50) * pulse);
   ctx.shadowBlur = light ? (selected ? 20 : 12) : (selected ? 30 : 18);
+  
   drawRoundedPolygon(ctx, silhouette, cornerR);
   ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.95 : (light ? 0.80 : 0.65));
-  ctx.lineWidth = (selected ? 2.8 : 2) * bScale; ctx.stroke();
+  ctx.lineWidth = ((selected ? 2.8 : 2) * bScale) * 2; // double width because inside half is clipped
+  ctx.stroke();
+  
   drawRoundedPolygon(ctx, silhouette, cornerR);
   ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.20 : 0.10);
-  ctx.lineWidth = (selected ? 5 : 3.5) * bScale; ctx.stroke();
-  ctx.shadowBlur = 0;
+  ctx.lineWidth = ((selected ? 5 : 3.5) * bScale) * 2; // double width
+  ctx.stroke();
+
+  ctx.restore();
 
   // ── 1. Right depth strip (painted over the backplate) ──
   drawRoundedPolygon(ctx, [fTR, bTR, bBR, fBR], cornerR);
