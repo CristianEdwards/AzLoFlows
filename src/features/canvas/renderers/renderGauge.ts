@@ -78,6 +78,46 @@ export function renderGauge(
     ctx.shadowOffsetY = 0;
   }
 
+  // ── Solid body fill (covers the entire front-facing curved wall) ──
+  // Traces: top outer ellipse front half → right edge down → bottom outer
+  // ellipse front half → left edge up → closed fill.
+  {
+    ctx.beginPath();
+    // Top outer ellipse front half (right to left)
+    for (let i = 0; i <= segments / 2; i++) {
+      const a = (i / segments) * Math.PI * 2;
+      const p = isoRingPt(a, outerR);
+      if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
+    }
+    // Left edge down to bottom
+    const leftTop = isoRingPt(Math.PI, outerR);
+    const leftBot = isoRingPt(Math.PI, outerR, depth);
+    ctx.lineTo(leftBot.x, leftBot.y);
+    // Bottom outer ellipse front half (left to right)
+    for (let i = segments / 2; i >= 0; i--) {
+      const a = (i / segments) * Math.PI * 2;
+      const p = isoRingPt(a, outerR, depth);
+      ctx.lineTo(p.x, p.y);
+    }
+    // Right edge up
+    ctx.closePath();
+    const bodyGrad = ctx.createLinearGradient(
+      cx - outerR * bx.x, cy - outerR * bx.y,
+      cx + outerR * bx.x, cy + outerR * bx.y,
+    );
+    if (light) {
+      bodyGrad.addColorStop(0, lightenHex(deepTone, 0.15));
+      bodyGrad.addColorStop(0.5, darkenHex(deepTone, 0.40));
+      bodyGrad.addColorStop(1, darkenHex(deepTone, 0.65));
+    } else {
+      bodyGrad.addColorStop(0, lightenHex(faceFill, 0.10));
+      bodyGrad.addColorStop(0.5, darkenHex(faceFill, 0.30));
+      bodyGrad.addColorStop(1, darkenHex(faceFill, 0.55));
+    }
+    ctx.fillStyle = bodyGrad;
+    ctx.fill();
+  }
+
   // ── Outer rim depth (visible around the bottom half of the ring) ──
   for (let i = 0; i < segments; i++) {
     const a0 = (i / segments) * Math.PI * 2;
