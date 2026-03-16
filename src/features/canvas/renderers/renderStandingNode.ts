@@ -24,7 +24,7 @@ export function renderStandingNode(
   const screenH = node.width * SCREEN_H_FACTOR * camera.zoom;
 
   // 3D Box corners (reduced depth)
-  const depth = node.width * 0.15; // thin panel depth
+  const depth = node.width * 0.03; // very thin panel depth
   const p0 = worldToScreen({ x: node.x, y: node.y }, camera, viewport); // Top
   const p1 = worldToScreen({ x: node.x, y: node.y + node.height }, camera, viewport); // Left
   const p2 = worldToScreen({ x: node.x + depth, y: node.y + node.height }, camera, viewport); // Bottom
