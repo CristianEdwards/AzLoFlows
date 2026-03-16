@@ -2,7 +2,7 @@ import { NODE_DEPTH, DETAIL_ZOOM_THRESHOLD, NODE_ICON_SCALE, DEFAULT_FONT_SIZE }
 import { isoQuad, worldToScreen, type ViewportSize } from '@/lib/geometry/iso';
 import { nodeIconCatalog } from '@/lib/icons/nodeIcons';
 import { drawTransformedText } from '@/lib/rendering/canvasPrimitives';
-import { hexToRgba, lightenHex, darkenHex, deepToneForGlow } from '@/lib/rendering/tokens';
+import { lightenHex, darkenHex, deepToneForGlow } from '@/lib/rendering/tokens';
 import { getTextRatios } from '@/lib/geometry/textPosition';
 import type { CameraState, NodeEntity, Point } from '@/types/document';
 
@@ -123,17 +123,17 @@ export function renderDatabase(
     gBody.addColorStop(0.7, darkenHex(deep, 0.55));
     gBody.addColorStop(1, darkenHex(deep, 0.75));
   } else {
-    gBody.addColorStop(0, hexToRgba(faceFill, 0.92));
-    gBody.addColorStop(0.3, hexToRgba(faceFill, 0.72));
-    gBody.addColorStop(0.65, hexToRgba(faceFill, 0.45));
-    gBody.addColorStop(1, hexToRgba(faceFill, 0.25));
+    gBody.addColorStop(0, lightenHex(faceFill, 0.20));
+    gBody.addColorStop(0.3, faceFill);
+    gBody.addColorStop(0.65, darkenHex(faceFill, 0.35));
+    gBody.addColorStop(1, darkenHex(faceFill, 0.55));
   }
   ctx.fillStyle = gBody;
   ctx.fill();
 
   /* ── 3. Bottom ellipse (visible front half) ─────────────── */
   halfEllipsePath(ctx, bot, hx, hy);
-  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.55 : 0.50);
+  ctx.strokeStyle = light ? darkenHex(node.glowColor, 0.30) : darkenHex(node.glowColor, 0.25);
   ctx.lineWidth = 1.8 * bScale;
   ctx.stroke();
 
@@ -148,7 +148,7 @@ export function renderDatabase(
     halfEllipsePath(ctx, { x: bc.x, y: bc.y + 1.5 * camera.zoom }, hx, hy);
     ctx.strokeStyle = light
       ? darkenHex(deep, 0.50)
-      : hexToRgba(faceFill, 0.15);
+      : darkenHex(faceFill, 0.60);
     ctx.lineWidth = 3 * bScale;
     ctx.stroke();
 
@@ -156,7 +156,7 @@ export function renderDatabase(
     halfEllipsePath(ctx, bc, hx, hy);
     ctx.strokeStyle = light
       ? lightenHex(node.glowColor, 0.15)
-      : hexToRgba(node.glowColor, 0.90);
+      : lightenHex(node.glowColor, 0.10);
     ctx.lineWidth = 1.2 * bScale;
     ctx.stroke();
   }
@@ -179,7 +179,7 @@ export function renderDatabase(
     // Tiny highlight
     ctx.beginPath();
     ctx.arc(dotCx - dr * 0.25, dotCy - dr * 0.25, dr * 0.4, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.fillStyle = '#fff5cc';
     ctx.fill();
   }
 
@@ -192,7 +192,7 @@ export function renderDatabase(
     const py = center.y + Math.cos(t) * hx.y * f + Math.sin(t) * hy.y * f;
     if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
   }
-  ctx.strokeStyle = light ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.12)';
+  ctx.strokeStyle = light ? lightenHex(faceFill, 0.40) : lightenHex(faceFill, 0.18);
   ctx.lineWidth = 2.5 * bScale;
   ctx.stroke();
 
@@ -209,7 +209,7 @@ export function renderDatabase(
   };
   ctx.moveTo(spTop.x, spTop.y);
   ctx.lineTo(spBot.x, spBot.y);
-  ctx.strokeStyle = light ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.07)';
+  ctx.strokeStyle = light ? lightenHex(faceFill, 0.30) : lightenHex(faceFill, 0.10);
   ctx.lineWidth = 3 * bScale;
   ctx.stroke();
 
@@ -224,22 +224,22 @@ export function renderDatabase(
     gTop.addColorStop(0.5, lightenHex(deep, 0.15));
     gTop.addColorStop(1, deep);
   } else {
-    gTop.addColorStop(0, hexToRgba(faceFill, 0.95));
-    gTop.addColorStop(0.4, hexToRgba(faceFill, 0.70));
-    gTop.addColorStop(1, hexToRgba(faceFill, 0.40));
+    gTop.addColorStop(0, lightenHex(faceFill, 0.25));
+    gTop.addColorStop(0.4, faceFill);
+    gTop.addColorStop(1, darkenHex(faceFill, 0.25));
   }
   ctx.fillStyle = gTop;
   ctx.fill();
 
   /* ── 8. Top ellipse strokes ─────────────────────────────── */
   ellipsePath(ctx, center, hx, hy);
-  ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.98 : (light ? 0.85 : 0.75));
+  ctx.strokeStyle = selected ? lightenHex(node.glowColor, 0.15) : (light ? node.glowColor : darkenHex(node.glowColor, 0.10));
   ctx.lineWidth = (selected ? 3 : 2) * bScale;
   ctx.stroke();
 
-  // Outer glow
+  // Outer glow ring (solid, slightly darker)
   ellipsePath(ctx, center, hx, hy);
-  ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.25 : (light ? 0.10 : 0.15));
+  ctx.strokeStyle = selected ? darkenHex(node.glowColor, 0.40) : darkenHex(node.glowColor, light ? 0.55 : 0.50);
   ctx.lineWidth = (selected ? 7 : 5) * bScale;
   ctx.stroke();
 
@@ -252,7 +252,7 @@ export function renderDatabase(
     const py = center.y + Math.cos(t) * hx.y * f + Math.sin(t) * hy.y * f;
     if (i === 3) ctx.moveTo(px, py); else ctx.lineTo(px, py);
   }
-  ctx.strokeStyle = light ? 'rgba(255,255,255,0.30)' : 'rgba(255,255,255,0.12)';
+  ctx.strokeStyle = light ? lightenHex(faceFill, 0.45) : lightenHex(faceFill, 0.15);
   ctx.lineWidth = 1.8 * bScale;
   ctx.stroke();
 
@@ -262,7 +262,7 @@ export function renderDatabase(
   ctx.lineTo(bot.x + hx.x, bot.y + hx.y);
   ctx.moveTo(center.x - hx.x, center.y - hx.y);
   ctx.lineTo(bot.x - hx.x, bot.y - hx.y);
-  ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.90 : (light ? 0.55 : 0.50));
+  ctx.strokeStyle = selected ? lightenHex(node.glowColor, 0.10) : darkenHex(node.glowColor, light ? 0.30 : 0.25);
   ctx.lineWidth = (selected ? 2 : 1.2) * bScale;
   ctx.stroke();
 
@@ -277,7 +277,7 @@ export function renderDatabase(
     const fontSize = node.fontSize ?? DEFAULT_FONT_SIZE;
     const scaledSize = Math.round(fontSize * camera.zoom * 0.82);
     drawTransformedText(ctx, node.title, titlePt, bx, { x: 0, y: 1 },
-      light ? 'rgba(255,255,255,0.90)' : hexToRgba(node.glowColor, 0.95),
+      light ? '#ffffffee' : node.glowColor,
       `600 ${scaledSize}px Inter, sans-serif`);
   }
 }

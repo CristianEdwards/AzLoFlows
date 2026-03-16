@@ -44,7 +44,7 @@ export function renderGauge(
   const outerR = Math.min(topEdgeLen, leftEdgeLen) * 0.44;
   const ringW = outerR * 0.30;            // ring thickness
   const innerR = outerR - ringW;
-  const depth = NODE_DEPTH * 0.35 * camera.zoom;
+  const depth = NODE_DEPTH * 0.7 * camera.zoom;
 
   // Gauge fill fraction (we use zIndex as a seed to vary per instance visually)
   const fillFrac = 0.72 + Math.sin(node.zIndex * 1.7) * 0.15; // ~57–87 %
