@@ -25,14 +25,14 @@ export function renderAnalyticsPanel(
 ): void {
   const light = theme === 'light';
   const pulse = 0.7 + Math.sin(time * 0.0015 + node.zIndex) * 0.18;
-  const screenH = node.height * SCREEN_H_FACTOR * camera.zoom;
+  const screenH = node.width * SCREEN_H_FACTOR * camera.zoom;
 
-  // ── Back bottom edge (far from viewer, at y = node.y) ──
+  // ── Back bottom edge (far from viewer, at x = node.x) ──
   const bBL = worldToScreen({ x: node.x, y: node.y }, camera, viewport);
-  const bBR = worldToScreen({ x: node.x + node.width, y: node.y }, camera, viewport);
-  // ── Front bottom edge (toward viewer, shifted by thickness in iso-Y) ──
-  const fBL = worldToScreen({ x: node.x, y: node.y + PANEL_THICK }, camera, viewport);
-  const fBR = worldToScreen({ x: node.x + node.width, y: node.y + PANEL_THICK }, camera, viewport);
+  const bBR = worldToScreen({ x: node.x, y: node.y + node.height }, camera, viewport);
+  // ── Front bottom edge (toward viewer, shifted by thickness in iso-X) ──
+  const fBL = worldToScreen({ x: node.x + PANEL_THICK, y: node.y }, camera, viewport);
+  const fBR = worldToScreen({ x: node.x + PANEL_THICK, y: node.y + node.height }, camera, viewport);
   // ── Top edges (straight up by screenH) ──
   const fTL = { x: fBL.x, y: fBL.y - screenH };
   const fTR = { x: fBR.x, y: fBR.y - screenH };

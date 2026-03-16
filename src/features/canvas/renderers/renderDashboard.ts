@@ -23,12 +23,12 @@ export function renderDashboard(
 ): void {
   const light = theme === 'light';
   const pulse = 0.7 + Math.sin(time * 0.0015 + node.zIndex) * 0.18;
-  const screenH = node.height * SCREEN_H_FACTOR * camera.zoom;
+  const screenH = node.width * SCREEN_H_FACTOR * camera.zoom;
 
   const bBL = worldToScreen({ x: node.x, y: node.y }, camera, viewport);
-  const bBR = worldToScreen({ x: node.x + node.width, y: node.y }, camera, viewport);
-  const fBL = worldToScreen({ x: node.x, y: node.y + PANEL_THICK }, camera, viewport);
-  const fBR = worldToScreen({ x: node.x + node.width, y: node.y + PANEL_THICK }, camera, viewport);
+  const bBR = worldToScreen({ x: node.x, y: node.y + node.height }, camera, viewport);
+  const fBL = worldToScreen({ x: node.x + PANEL_THICK, y: node.y }, camera, viewport);
+  const fBR = worldToScreen({ x: node.x + PANEL_THICK, y: node.y + node.height }, camera, viewport);
   const fTL = { x: fBL.x, y: fBL.y - screenH };
   const fTR = { x: fBR.x, y: fBR.y - screenH };
   const bTL = { x: bBL.x, y: bBL.y - screenH };
