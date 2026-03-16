@@ -1,4 +1,4 @@
-import { isoQuad, type ViewportSize } from '@/lib/geometry/iso';
+import { isoQuad, worldToScreen, type ViewportSize } from '@/lib/geometry/iso';
 import type { AnchorId, AnchorSide, CameraState, NodeEntity, Point } from '@/types/document';
 
 export const TOP_ANCHOR_COUNT = 5;
@@ -15,6 +15,14 @@ const anchorCounts: Record<AnchorSide, number> = {
 export function getAnchorPoint(node: NodeEntity, anchorId: AnchorId): Point {
   const normalizedAnchor = normalizeAnchor(anchorId);
   const { side, index } = parseAnchorId(normalizedAnchor);
+  
+  if (node.shape === 'standingNode') {
+    // For standing nodes, force all anchors to the "bottom line" footprint in world space.
+    // The visual base corresponds to the line from (node.x, node.y) to (node.x, node.y + node.height)
+    const step = node.height / 6;
+    return { x: node.x, y: node.y + step * (index + 1) };
+  }
+
   if (side === 'top') {
     const step = node.width / (TOP_ANCHOR_COUNT + 1);
     return { x: node.x + step * (index + 1), y: node.y };
@@ -107,6 +115,16 @@ export function isValidAnchorId(anchorId: string): anchorId is AnchorId {
 }
 
 export function getScreenAnchorPoint(node: NodeEntity, anchorId: AnchorId, camera: CameraState, viewport: ViewportSize): Point {
+  const { side, index } = parseAnchorId(anchorId);
+  const t = (index + 1) / 6;
+
+  if (node.shape === 'standingNode') {
+    // Force all anchors to visually align with the bottom-most boundary line of the 2D plane
+    const bBL = worldToScreen({ x: node.x, y: node.y }, camera, viewport);
+    const bBR = worldToScreen({ x: node.x, y: node.y + node.height }, camera, viewport);
+    return lerp(bBL, bBR, t);
+  }
+
   const points = isoQuad(node.x, node.y, node.width, node.height, camera, viewport);
   const topLeft = points[0];
   const topRight = points[1];
@@ -117,8 +135,7 @@ export function getScreenAnchorPoint(node: NodeEntity, anchorId: AnchorId, camer
   const frontLeftBottom = { x: bottomLeft.x, y: bottomLeft.y + depth };
   const frontRightBottom = { x: bottomRight.x, y: bottomRight.y + depth };
   const rightTopDepth = { x: topRight.x, y: topRight.y + depth };
-  const { side, index } = parseAnchorId(anchorId);
-  const t = (index + 1) / 6;
+  
   if (side === 'top') return lerp(leftTopDepth, rightTopDepth, t);
   if (side === 'bottom') return lerp(frontLeftBottom, frontRightBottom, t);
   if (side === 'left') return lerp(leftTopDepth, frontLeftBottom, t);

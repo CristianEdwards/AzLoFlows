@@ -1,5 +1,5 @@
 import { isValidAnchorId } from '@/lib/geometry/anchors';
-import type { AnchorId, DiagramDocument, NodeEntity } from '@/types/document';
+import type { AnchorId, DiagramDocument, NodeEntity, NodeShape } from '@/types/document';
 import { DOCUMENT_VERSION } from '@/types/document';
 
 const STORAGE_KEY = 'isoflows.diagram.document';
@@ -92,6 +92,7 @@ function normalizeNode(node: unknown): NodeEntity {
     subtitle: typeof value.subtitle === 'string' ? value.subtitle : '',
     fill: typeof value.fill === 'string' ? value.fill : '#1f3f77',
     glowColor: typeof value.glowColor === 'string' ? value.glowColor : '#4d8dff',
+    shape: typeof value.shape === 'string' ? value.shape as NodeShape : undefined,
     parentAreaId: typeof value.parentAreaId === 'string' ? value.parentAreaId : undefined,
     parentLayout:
       value.parentLayout && typeof value.parentLayout.xRatio === 'number' && typeof value.parentLayout.yRatio === 'number'

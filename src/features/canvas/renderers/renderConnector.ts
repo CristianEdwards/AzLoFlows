@@ -37,7 +37,10 @@ export function renderConnector(
   const iyU = { x: iyR.x / iyL, y: iyR.y / iyL };
 
   const STUB = CONNECTOR_STUB;
-  function stubOffset(side: string): { x: number; y: number } {
+  function stubOffset(side: string, node: NodeEntity): { x: number; y: number } {
+    if (node.shape === 'standingNode') {
+      return { x: 0, y: -STUB * 1.5 }; // doing an up movement (pure vertical on screen)
+    }
     switch (side) {
       case 'top': return { x: -iyU.x * STUB, y: -iyU.y * STUB };
       case 'bottom': return { x: iyU.x * STUB, y: iyU.y * STUB };
@@ -47,8 +50,8 @@ export function renderConnector(
     }
   }
 
-  const sOff = stubOffset(parseAnchorId(connector.sourceAnchor).side);
-  const tOff = stubOffset(parseAnchorId(connector.targetAnchor).side);
+  const sOff = stubOffset(parseAnchorId(connector.sourceAnchor).side, source);
+  const tOff = stubOffset(parseAnchorId(connector.targetAnchor).side, target);
   const sourceStub = { x: start.x + sOff.x, y: start.y + sOff.y };
   const targetStub = { x: end.x + tOff.x, y: end.y + tOff.y };
 
