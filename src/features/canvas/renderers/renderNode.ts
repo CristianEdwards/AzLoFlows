@@ -13,7 +13,6 @@ import { renderDashboard } from './renderDashboard';
 import { renderGauge } from './renderGauge';
 import { renderChartPanel } from './renderChartPanel';
 import { renderAnalyticsPanel } from './renderAnalyticsPanel';
-import { renderDatabase } from './renderDatabase';
 import { renderBrowser2 } from './renderBrowser2';
 import { renderStandingNode } from './renderStandingNode';
 import type { CameraState, NodeEntity } from '@/types/document';
@@ -51,8 +50,6 @@ export function renderNode(
       return renderChartPanel(ctx, node, selected, camera, viewport, time, theme);
     case 'analyticsPanel':
         return renderAnalyticsPanel(ctx, node, selected, camera, viewport, time, theme);
-      case 'database':
-        return renderDatabase(ctx, node, selected, camera, viewport, time, theme);
     default:
       break; // fall through to box rendering
   }

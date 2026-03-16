@@ -10,7 +10,7 @@ export type NodeShape =
   | 'dashboard'
   | 'gauge'
   | 'chartPanel'
-  | 'analyticsPanel' | 'database'
+  | 'analyticsPanel'
   | 'standingNode';
 export type ConnectorStyle = 'solid' | 'dashed' | 'animated';
 export type ToolMode = 'select' | 'pan';
