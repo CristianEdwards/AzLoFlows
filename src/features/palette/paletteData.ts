@@ -2,7 +2,7 @@ import { palette, companionPalette } from '@/lib/rendering/tokens';
 import type { NodeShape } from '@/types/document';
 
 export interface PaletteShape {
-  id: 'area' | 'node' | 'text' | 'pipe' | 'serverRack' | 'card' | 'platform' | 'browser' | 'stack' | 'dashboard' | 'gauge' | 'chartPanel' | 'analyticsPanel';
+  id: 'area' | 'node' | 'text' | 'pipe' | 'serverRack' | 'card' | 'platform' | 'browser' | 'browser2' | 'stack' | 'dashboard' | 'gauge' | 'chartPanel' | 'analyticsPanel';
   title: string;
   /** Inline SVG markup (64×64 viewBox) showing an isometric preview */
   icon: string;
@@ -131,6 +131,23 @@ const browserIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"
   <line x1="56" y1="6" x2="56" y2="44" stroke="rgba(0,229,255,0.9)" stroke-width="1.5"/>
 </svg>`;
 
+const browser2Icon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <polygon points="28,17 20,13 20,51 28,55" fill="rgba(0,229,255,0.08)" stroke="rgba(0,229,255,0.3)" stroke-width="0.6"/>
+  <polygon points="56,6 28,17 20,13 48,2" fill="rgba(0,229,255,0.12)" stroke="rgba(0,229,255,0.5)" stroke-width="0.6"/>
+  <polygon points="56,6 28,17 28,55 56,44" fill="rgba(0,229,255,0.18)" stroke="rgba(0,229,255,0.6)" stroke-width="1.2"/>
+  <line x1="56" y1="12" x2="28" y2="23" stroke="rgba(0,229,255,0.4)" stroke-width="0.8"/>
+  <circle cx="53" cy="9" r="1.3" fill="rgba(255,95,87,0.85)"/>
+  <circle cx="50" cy="10" r="1.3" fill="rgba(255,189,46,0.85)"/>
+  <circle cx="47" cy="11.5" r="1.3" fill="rgba(40,200,64,0.85)"/>
+  <polygon points="53,15 43,19 43,21 53,17" fill="rgba(147,197,253,0.6)"/>
+  <polygon points="51,22 37,28 37,30 51,24" fill="rgba(252,165,165,0.6)"/>
+  <polygon points="51,25 33,33 33,35 51,27" fill="rgba(196,181,253,0.6)"/>
+  <polygon points="51,28 43,31 43,33 51,30" fill="rgba(110,231,183,0.6)"/>
+  <polygon points="53,30 39,36 39,38 53,32" fill="rgba(253,230,138,0.6)"/>
+  <polygon points="53,33 35,41 35,43 53,35" fill="rgba(147,197,253,0.6)"/>
+  <line x1="56" y1="6" x2="56" y2="44" stroke="rgba(0,229,255,0.9)" stroke-width="1.5"/>
+</svg>`;
+
 const shieldIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
   <path d="M32,8 L52,18 L52,34 Q52,48 32,56 Q12,48 12,34 L12,18 Z" fill="rgba(0,255,136,0.18)" stroke="rgba(0,255,136,0.7)" stroke-width="1.2"/>
   <path d="M32,14 L46,22 L46,34 Q46,44 32,50 Q18,44 18,34 L18,22 Z" fill="none" stroke="rgba(0,255,136,0.25)" stroke-width="0.8"/>
@@ -218,6 +235,7 @@ export const paletteShapes: PaletteShape[] = [
   { id: 'card',     title: 'Card',     icon: cardIcon,     nodeShape: 'card' },
   { id: 'platform', title: 'Platform', icon: platformIcon, nodeShape: 'platform' },
   { id: 'browser',  title: 'Browser',  icon: browserIcon,  nodeShape: 'browser' },
+  { id: 'browser2', title: 'Browser 2', icon: browser2Icon, nodeShape: 'browser2' },
   { id: 'stack',    title: 'Stack',    icon: stackIcon,    nodeShape: 'stack' },
   { id: 'dashboard', title: 'Dashboard', icon: dashboardIcon, nodeShape: 'dashboard' },
   { id: 'gauge',     title: 'Gauge',     icon: gaugeIcon,     nodeShape: 'gauge' },

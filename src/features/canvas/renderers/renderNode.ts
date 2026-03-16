@@ -12,6 +12,7 @@ import { renderDashboard } from './renderDashboard';
 import { renderGauge } from './renderGauge';
 import { renderChartPanel } from './renderChartPanel';
 import { renderAnalyticsPanel } from './renderAnalyticsPanel';
+import { renderBrowser2 } from './renderBrowser2';
 import type { CameraState, NodeEntity } from '@/types/document';
 
 export function renderNode(
@@ -33,6 +34,8 @@ export function renderNode(
       return renderPlatform(ctx, node, selected, camera, viewport, time, theme);
     case 'browser':
       return renderBrowser(ctx, node, selected, camera, viewport, time, theme);
+    case 'browser2':
+      return renderBrowser2(ctx, node, selected, camera, viewport, time, theme);
     case 'stack':
       return renderStack(ctx, node, selected, camera, viewport, time, theme);
     case 'dashboard':
