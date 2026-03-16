@@ -38,9 +38,6 @@ export function renderConnector(
 
   const STUB = CONNECTOR_STUB;
   function stubOffset(side: string, node: NodeEntity): { x: number; y: number } {
-    if (node.shape === 'standingNode') {
-      return { x: 0, y: -STUB * 1.5 }; // doing an up movement (pure vertical on screen)
-    }
     switch (side) {
       case 'top': return { x: -iyU.x * STUB, y: -iyU.y * STUB };
       case 'bottom': return { x: iyU.x * STUB, y: iyU.y * STUB };
