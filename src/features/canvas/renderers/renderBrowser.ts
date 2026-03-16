@@ -1,3 +1,4 @@
+import { getTextRatios } from '@/lib/geometry/textPosition';
 import { DETAIL_ZOOM_THRESHOLD, NODE_ICON_SCALE, DEFAULT_FONT_SIZE } from '@/lib/config';
 import { worldToScreen, type ViewportSize } from '@/lib/geometry/iso';
 import { nodeIconCatalog } from '@/lib/icons/nodeIcons';
@@ -162,7 +163,8 @@ export function renderBrowser(
 
   // ── Icon + text ──
   const showDetailIcons = camera.zoom >= DETAIL_ZOOM_THRESHOLD;
-  const titlePos = fp(0.5, 0.48);
+  const textRatios = getTextRatios(node, 0.48);
+  const titlePos = fp(textRatios.x, textRatios.y);
   const textDir = bx;
   const textStack = { x: 0, y: 1 };
 

@@ -1,3 +1,4 @@
+import { getTextRatios } from '@/lib/geometry/textPosition';
 import { NODE_DEPTH, DETAIL_ZOOM_THRESHOLD, NODE_ICON_SCALE, DEFAULT_FONT_SIZE } from '@/lib/config';
 import { isoQuad, worldToScreen, type ViewportSize } from '@/lib/geometry/iso';
 import { nodeIconCatalog } from '@/lib/icons/nodeIcons';
@@ -291,7 +292,8 @@ export function renderServerRack(
   }
 
   if (showDetail) {
-    const titlePoint = worldToScreen({ x: node.x + node.width * 0.5, y: node.y + node.height * 0.46 }, camera, viewport);
+    const textRatios = getTextRatios(node, 0.46);
+  const titlePoint = worldToScreen({ x: node.x + node.width * textRatios.x, y: node.y + node.height * textRatios.y }, camera, viewport);
     const nodeTitleSize = node.fontSize ?? DEFAULT_FONT_SIZE;
     const scaledTitleSize = Math.round(nodeTitleSize * camera.zoom);
     const textEdgeLength = node.textRotated ? topEdgeLength : leftEdgeLength;

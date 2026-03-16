@@ -1,3 +1,4 @@
+import { getTextRatios } from '@/lib/geometry/textPosition';
 import { NODE_DEPTH, DETAIL_ZOOM_THRESHOLD, NODE_ICON_SCALE, DEFAULT_FONT_SIZE } from '@/lib/config';
 import { isoQuad, worldToScreen, type ViewportSize } from '@/lib/geometry/iso';
 import { nodeIconCatalog } from '@/lib/icons/nodeIcons';
@@ -353,7 +354,11 @@ export function renderLaptop(
   }
 
   if (showDetail) {
-    const titlePt = { x: screenCX, y: screenCY + screenH * 0.18 };
+    const textRatios = getTextRatios(node, 0.48);
+    const screenW = Math.hypot(wbr.x - wbl.x, wbr.y - wbl.y);
+    const rx = (textRatios.x - 0.5) * screenW * 0.8;
+    const ry = (textRatios.y - 0.48) * screenH * 0.8;
+    const titlePt = { x: screenCX + rx, y: screenCY + ry + screenH * 0.18 };
     const fontSize = node.fontSize ?? DEFAULT_FONT_SIZE;
     const scaledSize = Math.round(fontSize * camera.zoom * 0.85);
 

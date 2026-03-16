@@ -1,3 +1,4 @@
+import { getTextRatios } from '@/lib/geometry/textPosition';
 import { NODE_DEPTH, DETAIL_ZOOM_THRESHOLD, NODE_ICON_SCALE, DEFAULT_FONT_SIZE } from '@/lib/config';
 import { isoQuad, worldToScreen, type ViewportSize } from '@/lib/geometry/iso';
 import { nodeIconCatalog } from '@/lib/icons/nodeIcons';
@@ -171,7 +172,10 @@ export function renderHexagon(
   }
 
   if (showDetail) {
-    const titlePoint = { x: cx, y: cy + 8 * camera.zoom };
+    const textRatios = getTextRatios(node, 0.5);
+    const dx = (textRatios.x - 0.5) * node.width * camera.zoom * 0.8;
+    const dy = (textRatios.y - 0.5) * node.height * camera.zoom * 0.8;
+    const titlePoint = { x: cx + dx, y: cy + dy + 8 * camera.zoom };
     const nodeTitleSize = node.fontSize ?? DEFAULT_FONT_SIZE;
     const scaledSize = Math.round(nodeTitleSize * camera.zoom * 0.85);
 
