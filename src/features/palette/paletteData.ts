@@ -2,7 +2,7 @@ import { palette, companionPalette } from '@/lib/rendering/tokens';
 import type { NodeShape } from '@/types/document';
 
 export interface PaletteShape {
-  id: 'area' | 'node' | 'text' | 'pipe' | 'serverRack' | 'card' | 'platform' | 'browser' | 'browser2' | 'stack' | 'dashboard' | 'gauge' | 'chartPanel' | 'analyticsPanel';
+  id: 'area' | 'node' | 'standingNode' | 'text' | 'pipe' | 'serverRack' | 'card' | 'platform' | 'browser' | 'browser2' | 'stack' | 'dashboard' | 'gauge' | 'chartPanel' | 'analyticsPanel';
   title: string;
   /** Inline SVG markup (64×64 viewBox) showing an isometric preview */
   icon: string;
@@ -34,6 +34,13 @@ const nodeIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fi
   <polygon points="54,26 32,38 32,46 54,34" fill="rgba(77,141,255,0.18)" stroke="rgba(77,141,255,0.4)" stroke-width="0.8"/>
   <polygon points="32,14 54,26 32,38 10,26" fill="rgba(77,141,255,0.35)" stroke="rgba(77,141,255,0.7)" stroke-width="1.2"/>
   <line x1="10" y1="26" x2="32" y2="14" stroke="rgba(77,141,255,0.9)" stroke-width="1.5"/>
+</svg>`;
+
+const standingNodeIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <polygon points="16,30 32,40 32,58 16,48" fill="rgba(77,141,255,0.25)" stroke="rgba(77,141,255,0.5)" stroke-width="0.8"/>
+  <polygon points="48,22 32,40 32,58 48,40" fill="rgba(77,141,255,0.18)" stroke="rgba(77,141,255,0.4)" stroke-width="0.8"/>
+  <polygon points="32,12 48,22 32,40 16,30" fill="rgba(77,141,255,0.35)" stroke="rgba(77,141,255,0.7)" stroke-width="1.2"/>
+  <line x1="16" y1="30" x2="32" y2="12" stroke="rgba(77,141,255,0.9)" stroke-width="1.5"/>
 </svg>`;
 
 const textIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
@@ -236,7 +243,8 @@ const analyticsPanelIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0
 
 export const paletteShapes: PaletteShape[] = [
   { id: 'area', title: 'Flat Area', icon: areaIcon },
-  { id: 'node', title: 'Node',      icon: nodeIcon },
+  { id: 'node', title: 'Lay-flat Node',      icon: nodeIcon },
+  { id: 'standingNode', title: 'Standing Node', icon: standingNodeIcon, nodeShape: 'standingNode' },
   { id: 'serverRack', title: 'Server Rack', icon: serverRackIcon, nodeShape: 'serverRack' },
   { id: 'card',     title: 'Card',     icon: cardIcon,     nodeShape: 'card' },
   { id: 'platform', title: 'Platform', icon: platformIcon, nodeShape: 'platform' },

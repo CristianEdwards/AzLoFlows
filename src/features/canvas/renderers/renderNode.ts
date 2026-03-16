@@ -13,6 +13,7 @@ import { renderGauge } from './renderGauge';
 import { renderChartPanel } from './renderChartPanel';
 import { renderAnalyticsPanel } from './renderAnalyticsPanel';
 import { renderBrowser2 } from './renderBrowser2';
+import { renderStandingNode } from './renderStandingNode';
 import type { CameraState, NodeEntity } from '@/types/document';
 
 export function renderNode(
@@ -30,6 +31,8 @@ export function renderNode(
       return renderServerRack(ctx, node, selected, camera, viewport, time, theme);
     case 'card':
       return renderCard(ctx, node, selected, camera, viewport, time, theme);
+    case 'standingNode':
+      return renderStandingNode(ctx, node, selected, camera, viewport, time, theme);
     case 'platform':
       return renderPlatform(ctx, node, selected, camera, viewport, time, theme);
     case 'browser':
