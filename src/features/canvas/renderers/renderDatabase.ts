@@ -1,14 +1,69 @@
 import { NODE_DEPTH, DETAIL_ZOOM_THRESHOLD, NODE_ICON_SCALE, DEFAULT_FONT_SIZE } from '@/lib/config';
 import { isoQuad, worldToScreen, type ViewportSize } from '@/lib/geometry/iso';
 import { nodeIconCatalog } from '@/lib/icons/nodeIcons';
-import { drawPolygon, drawTransformedText } from '@/lib/rendering/canvasPrimitives';
+import { drawTransformedText } from '@/lib/rendering/canvasPrimitives';
 import { hexToRgba, lightenHex, darkenHex, deepToneForGlow } from '@/lib/rendering/tokens';
 import { getTextRatios } from '@/lib/geometry/textPosition';
-import type { CameraState, NodeEntity } from '@/types/document';
+import type { CameraState, NodeEntity, Point } from '@/types/document';
+
+/* ── helpers ───────────────────────────────────────────────────── */
+
+/** Trace a full isometric ellipse path (48 segments). */
+function ellipsePath(
+  ctx: CanvasRenderingContext2D,
+  c: Point, hx: Point, hy: Point, segs = 48,
+) {
+  ctx.beginPath();
+  for (let i = 0; i <= segs; i++) {
+    const t = (i / segs) * Math.PI * 2;
+    const px = c.x + Math.cos(t) * hx.x + Math.sin(t) * hy.x;
+    const py = c.y + Math.cos(t) * hx.y + Math.sin(t) * hy.y;
+    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+}
+
+/** Trace only the front-visible half of an ellipse (i = 0‥24 of 48). */
+function halfEllipsePath(
+  ctx: CanvasRenderingContext2D,
+  c: Point, hx: Point, hy: Point,
+) {
+  ctx.beginPath();
+  for (let i = 0; i <= 24; i++) {
+    const t = (i / 48) * Math.PI * 2;
+    const px = c.x + Math.cos(t) * hx.x + Math.sin(t) * hy.x;
+    const py = c.y + Math.cos(t) * hx.y + Math.sin(t) * hy.y;
+    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+}
 
 /**
- * Renders a stacked 3-D donut/gauge rings in isometric space, representing a Database shape.
+ * Traces a closed "cylinder body" path: right side down → front-half of
+ * bottom ellipse → left side up → (implicit close via closePath).
  */
+function bodyPath(
+  ctx: CanvasRenderingContext2D,
+  topC: Point, botC: Point, hx: Point, hy: Point,
+) {
+  ctx.beginPath();
+  // right edge down
+  ctx.moveTo(topC.x + hx.x, topC.y + hx.y);
+  ctx.lineTo(botC.x + hx.x, botC.y + hx.y);
+  // front half of bottom ellipse (right → left)
+  for (let i = 0; i <= 24; i++) {
+    const t = (i / 48) * Math.PI * 2;
+    ctx.lineTo(
+      botC.x + Math.cos(t) * hx.x + Math.sin(t) * hy.x,
+      botC.y + Math.cos(t) * hx.y + Math.sin(t) * hy.y,
+    );
+  }
+  // left edge up
+  ctx.lineTo(topC.x - hx.x, topC.y - hx.y);
+  ctx.closePath();
+}
+
+/* ── main renderer ─────────────────────────────────────────────── */
+
 export function renderDatabase(
   ctx: CanvasRenderingContext2D,
   node: NodeEntity,
@@ -19,207 +74,206 @@ export function renderDatabase(
   theme: 'dark' | 'light' = 'dark',
 ): void {
   const light = theme === 'light';
-  const points = isoQuad(node.x, node.y, node.width, node.height, camera, viewport);
-  const [leftTop, rightTop, rightBottom, leftBottom] = points;
-  const depth = (NODE_DEPTH * 1.5) * camera.zoom; // Tall shape
-  const pulse = 0.7 + Math.sin(time * 0.0015 + node.zIndex) * 0.18;
+  const pts = isoQuad(node.x, node.y, node.width, node.height, camera, viewport);
+  const [lt, rt, rb, lb] = pts;
+  // Make the cylinder tall — 1.6× the standard depth
+  const depth = NODE_DEPTH * 1.6 * camera.zoom;
 
-  const topEdgeLength = Math.hypot(rightTop.x - leftTop.x, rightTop.y - leftTop.y) || 1;
-  const leftEdgeLength = Math.hypot(leftBottom.x - leftTop.x, leftBottom.y - leftTop.y) || 1;
-  const bScale = Math.min(1, Math.max(0.35, (topEdgeLength + leftEdgeLength) * 0.25 / 120));
+  const topLen = Math.hypot(rt.x - lt.x, rt.y - lt.y) || 1;
+  const leftLen = Math.hypot(lb.x - lt.x, lb.y - lt.y) || 1;
+  const bScale = Math.min(1, Math.max(0.35, (topLen + leftLen) * 0.5 / 120));
 
-  const bx = { x: (rightTop.x - leftTop.x) / topEdgeLength, y: (rightTop.y - leftTop.y) / topEdgeLength };
-  const by = { x: (leftBottom.x - leftTop.x) / leftEdgeLength, y: (leftBottom.y - leftTop.y) / leftEdgeLength };
+  const bx: Point = { x: (rt.x - lt.x) / topLen, y: (rt.y - lt.y) / topLen };
+  const by: Point = { x: (lb.x - lt.x) / leftLen, y: (lb.y - lt.y) / leftLen };
 
-  const center = {
-    x: (leftTop.x + rightTop.x + rightBottom.x + leftBottom.x) / 4,
-    y: (leftTop.y + rightTop.y + rightBottom.y + leftBottom.y) / 4,
+  // Ellipse geometry
+  const center: Point = {
+    x: (lt.x + rt.x + rb.x + lb.x) / 4,
+    y: (lt.y + rt.y + rb.y + lb.y) / 4,
   };
-  const halfX = { x: (rightTop.x - leftTop.x) / 2, y: (rightTop.y - leftTop.y) / 2 };
-  const halfY = { x: (leftBottom.x - leftTop.x) / 2, y: (leftBottom.y - leftTop.y) / 2 };
-  
-  // Storage logic
-  // Draw base drop shadow
-  const botCenter = { x: center.x, y: center.y + depth };
+  const hx: Point = { x: (rt.x - lt.x) / 2, y: (rt.y - lt.y) / 2 };
+  const hy: Point = { x: (lb.x - lt.x) / 2, y: (lb.y - lt.y) / 2 };
+  const bot: Point = { x: center.x, y: center.y + depth };
 
+  const faceFill = light ? node.glowColor : node.fill;
+  const deep = light ? deepToneForGlow(node.glowColor) : '';
+
+  /* ── 1. Drop shadow (light mode only) ─────────────────────── */
   if (light) {
-    ctx.beginPath();
-    for (let i = 0; i <= 48; i++) {
-      const t = (i / 48) * Math.PI * 2;
-      const px = botCenter.x + Math.cos(t) * halfX.x + Math.sin(t) * halfY.x;
-      const py = botCenter.y + Math.cos(t) * halfX.y + Math.sin(t) * halfY.y;
-      if (i === 0) ctx.moveTo(px, py);
-      else ctx.lineTo(px, py);
-    }
-    ctx.closePath();
+    ellipsePath(ctx, bot, hx, hy);
+    ctx.shadowColor = 'rgba(0,0,0,0.25)';
+    ctx.shadowBlur = 18;
     ctx.shadowOffsetY = 8;
     ctx.fillStyle = 'rgba(0,0,0,0)';
     ctx.fill();
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
     ctx.shadowOffsetY = 0;
   }
 
-  const gradientBody = ctx.createLinearGradient(
-    center.x - halfX.x, center.y - halfX.y,
-    center.x + halfX.x, center.y + halfX.y
+  /* ── 2. Cylinder body (solid, with left-to-right shading) ── */
+  bodyPath(ctx, center, bot, hx, hy);
+  const gBody = ctx.createLinearGradient(
+    center.x - hx.x * 1.1, center.y - hx.y * 1.1,
+    center.x + hx.x * 1.1, center.y + hx.y * 1.1,
   );
   if (light) {
-    gradientBody.addColorStop(0, lightenHex(node.glowColor, 0.15));
-    gradientBody.addColorStop(0.5, node.glowColor);
-    gradientBody.addColorStop(1, darkenHex(node.glowColor, 0.45));
+    gBody.addColorStop(0, lightenHex(deep, 0.25));
+    gBody.addColorStop(0.35, deep);
+    gBody.addColorStop(0.7, darkenHex(deep, 0.55));
+    gBody.addColorStop(1, darkenHex(deep, 0.75));
   } else {
-    gradientBody.addColorStop(0, hexToRgba(node.glowColor, 0.85));
-    gradientBody.addColorStop(0.5, hexToRgba(node.glowColor, 0.65));
-    gradientBody.addColorStop(1, hexToRgba(node.glowColor, 0.40));
+    gBody.addColorStop(0, hexToRgba(faceFill, 0.92));
+    gBody.addColorStop(0.3, hexToRgba(faceFill, 0.72));
+    gBody.addColorStop(0.65, hexToRgba(faceFill, 0.45));
+    gBody.addColorStop(1, hexToRgba(faceFill, 0.25));
   }
-
-  // Draw the entire tall body as one cylinder block first
-  ctx.beginPath();
-  const tbTopRight = { x: center.x + halfX.x, y: center.y + halfX.y };
-  const tbBotRight = { x: botCenter.x + halfX.x, y: botCenter.y + halfX.y };
-  const tbTopLeft = { x: center.x - halfX.x, y: center.y - halfX.y };
-  
-  ctx.moveTo(tbTopRight.x, tbTopRight.y);
-  ctx.lineTo(tbBotRight.x, tbBotRight.y);
-  for (let i = 0; i <= 24; i++) { // Front bottom edge
-      const t = (i / 48) * Math.PI * 2;
-      const px = botCenter.x + Math.cos(t) * halfX.x + Math.sin(t) * halfY.x;
-      const py = botCenter.y + Math.cos(t) * halfX.y + Math.sin(t) * halfY.y;
-      ctx.lineTo(px, py);
-  }
-  ctx.lineTo(tbTopLeft.x, tbTopLeft.y);
-  ctx.closePath();
-  ctx.fillStyle = gradientBody;
+  ctx.fillStyle = gBody;
   ctx.fill();
 
-  ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.95 : (light ? 0.6 : 0.85));
-  ctx.lineWidth = 1 * bScale;
+  /* ── 3. Bottom ellipse (visible front half) ─────────────── */
+  halfEllipsePath(ctx, bot, hx, hy);
+  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.55 : 0.50);
+  ctx.lineWidth = 1.8 * bScale;
   ctx.stroke();
 
-  // Draw the horizontal separator bands
+  /* ── 4. Horizontal separator bands ──────────────────────── */
   const bands = 3;
-  const bandDepth = depth / bands;
-
+  const bandH = depth / bands;
   for (let b = 1; b < bands; b++) {
-    const bandY = center.y + (b * bandDepth);
-    const bandCenter = { x: center.x, y: bandY };
+    const yOff = b * bandH;
+    const bc: Point = { x: center.x, y: center.y + yOff };
 
-    ctx.beginPath();
-    for (let i = 0; i <= 24; i++) { // Only draw visible front curve
-      const t = (i / 48) * Math.PI * 2;
-      const px = bandCenter.x + Math.cos(t) * halfX.x + Math.sin(t) * halfY.x;
-      const py = bandCenter.y + Math.cos(t) * halfX.y + Math.sin(t) * halfY.y;
-      if (i === 0) ctx.moveTo(px, py);
-      else ctx.lineTo(px, py);
-    }
-    
-    // Shadow under the band (thin darker line)
-    ctx.strokeStyle = light ? darkenHex(node.glowColor, 0.4) : hexToRgba(node.glowColor, 0.1);
-    ctx.lineWidth = 3 * bScale * camera.zoom;
-    ctx.stroke();
-    
-    // Bright band line to create illusion of separate stacked block
-    ctx.strokeStyle = light ? lightenHex(node.glowColor, 0.2) : hexToRgba(node.glowColor, 0.85);
-    ctx.lineWidth = 1 * bScale * camera.zoom;
+    // Dark shadow just below the line
+    halfEllipsePath(ctx, { x: bc.x, y: bc.y + 1.5 * camera.zoom }, hx, hy);
+    ctx.strokeStyle = light
+      ? darkenHex(deep, 0.50)
+      : hexToRgba(faceFill, 0.15);
+    ctx.lineWidth = 3 * bScale;
     ctx.stroke();
 
-    // Storage dots on the left face for each lower band
-    const dotAngle = Math.PI * 0.76;
-    const dotX = bandCenter.x + Math.cos(dotAngle) * halfX.x * 0.95 + Math.sin(dotAngle) * halfY.x * 0.95;
-    const dotY = bandCenter.y + Math.cos(dotAngle) * halfX.y * 0.95 + Math.sin(dotAngle) * halfY.y * 0.95 - (bandDepth * 0.5);
+    // Bright separator line
+    halfEllipsePath(ctx, bc, hx, hy);
+    ctx.strokeStyle = light
+      ? lightenHex(node.glowColor, 0.15)
+      : hexToRgba(node.glowColor, 0.90);
+    ctx.lineWidth = 1.2 * bScale;
+    ctx.stroke();
+  }
+
+  /* ── 5. Indicator dots (one per band) ───────────────────── */
+  for (let b = 0; b < bands; b++) {
+    const bandMidY = center.y + b * bandH + bandH * 0.55;
+    // Place the dot at ~130° on the front face (left-of-center)
+    const angle = Math.PI * 0.72;
+    const dx = Math.cos(angle) * hx.x * 0.88 + Math.sin(angle) * hy.x * 0.88;
+    const dy = Math.cos(angle) * hx.y * 0.88 + Math.sin(angle) * hy.y * 0.88;
+    const dotCx = center.x + dx;
+    const dotCy = bandMidY + dy;
+    const dr = 2.5 * camera.zoom;
 
     ctx.beginPath();
-    const rx = 3 * camera.zoom;
-    const ry = 1.5 * camera.zoom;
-    for (let i = 0; i <= 24; i++) {
-        const theta = (i / 24) * Math.PI * 2;
-        const eX = dotX + rx * Math.cos(theta);
-        const eY = dotY + ry * Math.sin(theta);
-        if (i === 0) ctx.moveTo(eX, eY);
-        else ctx.lineTo(eX, eY);
-    }
-    ctx.closePath();
-    ctx.fillStyle = '#ffc107'; // Yellow dot
+    ctx.arc(dotCx, dotCy, dr, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffc107';
     ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,0.4)';
-    ctx.fill(); // inner highlight on dot
-    ctx.strokeStyle = '#e0a800';
-    ctx.lineWidth = 0.5 * camera.zoom;
-    ctx.stroke();
+    // Tiny highlight
+    ctx.beginPath();
+    ctx.arc(dotCx - dr * 0.25, dotCy - dr * 0.25, dr * 0.4, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.fill();
   }
 
-  // Define Top dot since the loop misses the top band
-  const dotAngleTop = Math.PI * 0.76;
-  const dotXTop = center.x + (1 * bandDepth) * 0 + Math.cos(dotAngleTop) * halfX.x * 0.95 + Math.sin(dotAngleTop) * halfY.x * 0.95;
-  const dotYTop = center.y + (1 * bandDepth) * 0 + Math.cos(dotAngleTop) * halfX.y * 0.95 + Math.sin(dotAngleTop) * halfY.y * 0.95 + (bandDepth * 0.5);
+  /* ── 6. Glossy body highlight (left edge) ───────────────── */
   ctx.beginPath();
-  for (let i = 0; i <= 24; i++) {
-    const rx = 3 * camera.zoom;
-    const ry = 1.5 * camera.zoom;
-    const theta = (i / 24) * Math.PI * 2;
-    const eX = dotXTop + rx * Math.cos(theta);
-    const eY = dotYTop + ry * Math.sin(theta);
-    if (i === 0) ctx.moveTo(eX, eY);
-    else ctx.lineTo(eX, eY);
+  for (let i = 0; i <= 12; i++) {
+    const t = Math.PI * 0.62 + (i / 12) * Math.PI * 0.56;
+    const f = 0.92;
+    const px = center.x + Math.cos(t) * hx.x * f + Math.sin(t) * hy.x * f;
+    const py = center.y + Math.cos(t) * hx.y * f + Math.sin(t) * hy.y * f;
+    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
   }
-  ctx.closePath();
-  ctx.fillStyle = '#ffc107'; 
-  ctx.fill();
-  ctx.fillStyle = 'rgba(255,255,255,0.4)';
-  ctx.fill();
-  ctx.strokeStyle = '#e0a800';
-  ctx.lineWidth = 0.5 * camera.zoom;
+  ctx.strokeStyle = light ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.12)';
+  ctx.lineWidth = 2.5 * bScale;
   ctx.stroke();
 
-
-  // Draw ultimate Top face
+  // Vertical specular on body (left third)
   ctx.beginPath();
-  for (let i = 0; i <= 48; i++) {
-    const t = (i / 48) * Math.PI * 2;
-    const px = center.x + Math.cos(t) * halfX.x + Math.sin(t) * halfY.x;
-    const py = center.y + Math.cos(t) * halfX.y + Math.sin(t) * halfY.y;
-    if (i === 0) ctx.moveTo(px, py);
-    else ctx.lineTo(px, py);
-  }
-  ctx.closePath();
-  const topGrad = ctx.createLinearGradient(
-    center.x - halfX.x, center.y - halfX.y,
-    center.x + halfX.x, center.y + halfX.y
+  const specAngle = Math.PI * 0.78;
+  const spTop: Point = {
+    x: center.x + Math.cos(specAngle) * hx.x * 0.85 + Math.sin(specAngle) * hy.x * 0.85,
+    y: center.y + Math.cos(specAngle) * hx.y * 0.85 + Math.sin(specAngle) * hy.y * 0.85,
+  };
+  const spBot: Point = {
+    x: bot.x + Math.cos(specAngle) * hx.x * 0.85 + Math.sin(specAngle) * hy.x * 0.85,
+    y: bot.y + Math.cos(specAngle) * hx.y * 0.85 + Math.sin(specAngle) * hy.y * 0.85,
+  };
+  ctx.moveTo(spTop.x, spTop.y);
+  ctx.lineTo(spBot.x, spBot.y);
+  ctx.strokeStyle = light ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.07)';
+  ctx.lineWidth = 3 * bScale;
+  ctx.stroke();
+
+  /* ── 7. Top ellipse fill ────────────────────────────────── */
+  ellipsePath(ctx, center, hx, hy);
+  const gTop = ctx.createLinearGradient(
+    center.x + hy.x, center.y + hy.y,
+    center.x - hy.x, center.y - hy.y,
   );
   if (light) {
-    topGrad.addColorStop(0, lightenHex(node.glowColor, 0.2));
-    topGrad.addColorStop(1, lightenHex(node.glowColor, 0.05));
+    gTop.addColorStop(0, lightenHex(deep, 0.30));
+    gTop.addColorStop(0.5, lightenHex(deep, 0.15));
+    gTop.addColorStop(1, deep);
   } else {
-    topGrad.addColorStop(0, hexToRgba(node.glowColor, 1.0));
-    topGrad.addColorStop(1, hexToRgba(node.glowColor, 0.7));
+    gTop.addColorStop(0, hexToRgba(faceFill, 0.95));
+    gTop.addColorStop(0.4, hexToRgba(faceFill, 0.70));
+    gTop.addColorStop(1, hexToRgba(faceFill, 0.40));
   }
-  ctx.fillStyle = topGrad;
+  ctx.fillStyle = gTop;
   ctx.fill();
-  
-  ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 1.0 : 0.85);
-  ctx.lineWidth = (selected ? 2.5 : 1.5) * bScale;
+
+  /* ── 8. Top ellipse strokes ─────────────────────────────── */
+  ellipsePath(ctx, center, hx, hy);
+  ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.98 : (light ? 0.85 : 0.75));
+  ctx.lineWidth = (selected ? 3 : 2) * bScale;
   ctx.stroke();
 
-  // Highlight on top surface
+  // Outer glow
+  ellipsePath(ctx, center, hx, hy);
+  ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.25 : (light ? 0.10 : 0.15));
+  ctx.lineWidth = (selected ? 7 : 5) * bScale;
+  ctx.stroke();
+
+  // Glossy arc on top face
   ctx.beginPath();
-  for (let i = 2; i <= 22; i++) { // partial front edge inner
+  for (let i = 3; i <= 20; i++) {
     const t = (i / 48) * Math.PI * 2;
-    const px = center.x + Math.cos(t) * halfX.x * 0.85 + Math.sin(t) * halfY.x * 0.85;
-    const py = center.y + Math.cos(t) * halfX.y * 0.85 + Math.sin(t) * halfY.y * 0.85;
-    if (i === 2) ctx.moveTo(px, py);
-    else ctx.lineTo(px, py);
+    const f = 0.78;
+    const px = center.x + Math.cos(t) * hx.x * f + Math.sin(t) * hy.x * f;
+    const py = center.y + Math.cos(t) * hx.y * f + Math.sin(t) * hy.y * f;
+    if (i === 3) ctx.moveTo(px, py); else ctx.lineTo(px, py);
   }
-  ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-  ctx.lineWidth = 1 * bScale;
+  ctx.strokeStyle = light ? 'rgba(255,255,255,0.30)' : 'rgba(255,255,255,0.12)';
+  ctx.lineWidth = 1.8 * bScale;
   ctx.stroke();
 
+  /* ── 9. Body outline (side edges) ───────────────────────── */
+  ctx.beginPath();
+  ctx.moveTo(center.x + hx.x, center.y + hx.y);
+  ctx.lineTo(bot.x + hx.x, bot.y + hx.y);
+  ctx.moveTo(center.x - hx.x, center.y - hx.y);
+  ctx.lineTo(bot.x - hx.x, bot.y - hx.y);
+  ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.90 : (light ? 0.55 : 0.50));
+  ctx.lineWidth = (selected ? 2 : 1.2) * bScale;
+  ctx.stroke();
+
+  /* ── 10. Title below the cylinder ───────────────────────── */
   const showDetail = camera.zoom >= DETAIL_ZOOM_THRESHOLD;
   if (showDetail && node.title !== 'New Node') {
     const { x: rx, y: ry } = getTextRatios(node, 0.50);
-    const titlePt = {
-      x: leftTop.x + (rightTop.x - leftTop.x) * rx + (leftBottom.x - leftTop.x) * ry,
-      y: leftTop.y + (rightTop.y - leftTop.y) * rx + (leftBottom.y - leftTop.y) * ry + depth + 10 * camera.zoom
+    const titlePt: Point = {
+      x: lt.x + (rt.x - lt.x) * rx + (lb.x - lt.x) * ry,
+      y: lt.y + (rt.y - lt.y) * rx + (lb.y - lt.y) * ry + depth + 12 * camera.zoom,
     };
-
     const fontSize = node.fontSize ?? DEFAULT_FONT_SIZE;
     const scaledSize = Math.round(fontSize * camera.zoom * 0.82);
     drawTransformedText(ctx, node.title, titlePt, bx, { x: 0, y: 1 },

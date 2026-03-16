@@ -209,29 +209,10 @@ export function renderCard(
     ? { x: byDir.x, y: byDir.y }
     : { x: -bxDir.x, y: -bxDir.y };
 
-  if (node.icon && nodeIconCatalog[node.icon] && showDetail) {
-    const iconDef = nodeIconCatalog[node.icon];
-    const iconSize = Math.min(node.width, node.height) * NODE_ICON_SCALE * camera.zoom;
-    const iconCenter = worldToScreen(
-      { x: node.x + node.width * 0.75, y: node.y + node.height * 0.5 },
-      camera, viewport,
-    );
-    ctx.save();
-    ctx.translate(iconCenter.x, iconCenter.y);
-    ctx.transform(byDir.x, byDir.y, -bxDir.x, -bxDir.y, 0, 0);
-    const scale = iconSize / 32;
-    ctx.scale(scale, scale);
-    ctx.translate(-16, -16);
-    ctx.globalAlpha = light ? 0.9 : 0.7;
-    ctx.fillStyle = light ? lightenHex(node.glowColor, 0.55) : hexToRgba(node.glowColor, 1.0);
-    for (const d of iconDef.paths) ctx.fill(new Path2D(d));
-    ctx.restore();
-  }
-
   if (showDetail) {
     // Title sits below the header area
     const textRatios = getTextRatios(node, 0.48);
-  const titlePoint = worldToScreen(
+    const titlePoint = worldToScreen(
       { x: node.x + node.width * textRatios.x, y: node.y + node.height * textRatios.y },
       camera, viewport,
     );
@@ -249,10 +230,34 @@ export function renderCard(
       light ? 'rgba(255,255,255,0.95)' : '#ffffff',
       `${light ? 700 : 600} ${clampedSize}px Inter, sans-serif`);
 
+    // Icon positioned just below the title, following text position
+    if (node.icon && nodeIconCatalog[node.icon]) {
+      const iconDef = nodeIconCatalog[node.icon];
+      const iconSize = Math.min(node.width, node.height) * NODE_ICON_SCALE * camera.zoom * 0.55;
+      const iconOffset = clampedSize * 1.2;
+      const iconPt = {
+        x: titlePoint.x + textStackDirection.x * iconOffset,
+        y: titlePoint.y + textStackDirection.y * iconOffset,
+      };
+      ctx.save();
+      ctx.translate(iconPt.x, iconPt.y);
+      ctx.transform(byDir.x, byDir.y, -bxDir.x, -bxDir.y, 0, 0);
+      const scale = iconSize / 32;
+      ctx.scale(scale, scale);
+      ctx.translate(-16, -16);
+      ctx.globalAlpha = light ? 0.9 : 0.7;
+      ctx.fillStyle = light ? lightenHex(node.glowColor, 0.55) : hexToRgba(node.glowColor, 1.0);
+      for (const d of iconDef.paths) ctx.fill(new Path2D(d));
+      ctx.restore();
+    }
+
     if (node.subtitle) {
+      const subtitleOffset = (node.icon && nodeIconCatalog[node.icon])
+        ? clampedSize * 1.2 + Math.min(node.width, node.height) * NODE_ICON_SCALE * camera.zoom * 0.55 + 4 * camera.zoom
+        : 18;
       const subtitlePoint = {
-        x: titlePoint.x + textStackDirection.x * 18,
-        y: titlePoint.y + textStackDirection.y * 18,
+        x: titlePoint.x + textStackDirection.x * subtitleOffset,
+        y: titlePoint.y + textStackDirection.y * subtitleOffset,
       };
       drawTransformedText(ctx, node.subtitle, subtitlePoint, textDirection, textStackDirection,
         light ? 'rgba(255,255,255,0.75)' : hexToRgba(node.glowColor, 0.95),
