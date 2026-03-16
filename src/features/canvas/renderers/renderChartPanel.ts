@@ -45,39 +45,7 @@ export function renderChartPanel(
     y: fTL.y + (fTR.y - fTL.y) * u + (fBL.y - fTL.y) * v,
   });
 
-  // ── 0. Outer silhouette backplate & glow (painted behind everything) ──
-  const silhouette = [fTL, bTL, bTR, bBR, fBR, fBL];
-
-  ctx.save();
-  ctx.beginPath();
-  // Outer clipping rect encompassing the whole canvas
-  ctx.rect(-10000, -10000, 30000, 30000);
-  // Path for the silhouette
-  const n = silhouette.length;
-  ctx.moveTo((silhouette[n - 1].x + silhouette[0].x) / 2, (silhouette[n - 1].y + silhouette[0].y) / 2);
-  for (let i = 0; i < n; i++) {
-    ctx.arcTo(silhouette[i].x, silhouette[i].y, silhouette[(i + 1) % n].x, silhouette[(i + 1) % n].y, cornerR);
-  }
-  ctx.closePath();
-  // Clip to everything OUTSIDE the silhouette
-  ctx.clip('evenodd');
-
-  ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.30 : 0.50) * pulse);
-  ctx.shadowBlur = light ? (selected ? 20 : 12) : (selected ? 30 : 18);
-  
-  drawRoundedPolygon(ctx, silhouette, cornerR);
-  ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.95 : (light ? 0.80 : 0.65));
-  ctx.lineWidth = ((selected ? 2.8 : 2) * bScale) * 2; // double width because inside half is clipped
-  ctx.stroke();
-  
-  drawRoundedPolygon(ctx, silhouette, cornerR);
-  ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.20 : 0.10);
-  ctx.lineWidth = ((selected ? 5 : 3.5) * bScale) * 2; // double width
-  ctx.stroke();
-
-  ctx.restore();
-
-  // ── 1. Right depth strip (painted over the backplate) ──
+  // ── 1. Right depth strip (painted first — behind front face) ──
   drawRoundedPolygon(ctx, [fTR, bTR, bBR, fBR], cornerR);
   const gRight = ctx.createLinearGradient(fTR.x, fTR.y, fBR.x, fBR.y);
   gRight.addColorStop(0, hexToRgba(lightenHex(node.glowColor, light ? 0.15 : 0.30), 0.82));
@@ -87,7 +55,7 @@ export function renderChartPanel(
   ctx.strokeStyle = 'rgba(255,255,255,0.12)';
   ctx.lineWidth = 0.5 * bScale; ctx.stroke();
 
-  // ── 2. Top depth strip (painted over the backplate) ──
+  // ── 2. Top depth strip (painted second — behind front face) ──
   drawRoundedPolygon(ctx, [bTL, bTR, fTR, fTL], cornerR);
   const gTop = ctx.createLinearGradient(bTL.x, bTL.y, fTL.x, fTL.y);
   gTop.addColorStop(0, hexToRgba(lightenHex(node.glowColor, light ? 0.25 : 0.45), 0.92));
@@ -113,7 +81,9 @@ export function renderChartPanel(
   gFront.addColorStop(0, hexToRgba(light ? darkenHex(deepTone, 0.15) : darkenHex(node.glowColor, 0.15), 0.82));
   gFront.addColorStop(1, hexToRgba(light ? darkenHex(deepTone, 0.35) : darkenHex(node.glowColor, 0.35), 0.60));
   ctx.fillStyle = gFront;
-  ctx.fill();
+  ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.30 : 0.50) * pulse);
+  ctx.shadowBlur = light ? (selected ? 20 : 12) : (selected ? 30 : 18);
+  ctx.fill(); ctx.shadowBlur = 0;
 
   // Highlight band on top ~23% of front face
   const si = 0.05;
@@ -138,6 +108,14 @@ export function renderChartPanel(
   ctx.lineTo(fp(0.28, 0.70).x, fp(0.28, 0.70).y);
   ctx.strokeStyle = 'rgba(255,255,255,0.07)';
   ctx.lineWidth = 2.5 * bScale; ctx.stroke();
+
+  // Front face border
+  drawRoundedPolygon(ctx, [fTL, fTR, fBR, fBL], cornerR);
+  ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.95 : (light ? 0.80 : 0.65));
+  ctx.lineWidth = (selected ? 2.8 : 2) * bScale; ctx.stroke();
+  drawRoundedPolygon(ctx, [fTL, fTR, fBR, fBL], cornerR);
+  ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.20 : 0.10);
+  ctx.lineWidth = (selected ? 5 : 3.5) * bScale; ctx.stroke();
 
   // ── Chart content ──
   const showDetail = camera.zoom >= DETAIL_ZOOM_THRESHOLD;
