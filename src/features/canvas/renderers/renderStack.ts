@@ -48,13 +48,13 @@ export function renderStack(
     const shLB = { x: lb.x, y: lb.y + totalDepth };
     const shRB = { x: rb.x, y: rb.y + totalDepth };
     drawPolygon(ctx, [lb, rb, shRB, shLB]);
-    ctx.shadowColor = 'rgba(0,0,0,0.30)';
-    ctx.shadowBlur = 24;
+    
+    
     ctx.shadowOffsetY = 8;
     ctx.fillStyle = 'rgba(0,0,0,0)';
     ctx.fill();
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
+    
+    
     ctx.shadowOffsetY = 0;
   }
 
@@ -131,11 +131,11 @@ export function renderStack(
     }
     ctx.fillStyle = gTop;
     if (layer === 0) {
-      ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.40 : 0.55) * pulse);
-      ctx.shadowBlur = light ? (selected ? 24 : 16) : (selected ? 32 : 22);
+      
+      
     }
     ctx.fill();
-    ctx.shadowBlur = 0;
+    
 
     // Glass specular highlight on top face
     ctx.beginPath();
@@ -169,10 +169,10 @@ export function renderStack(
       ctx.lineTo(glR.x, glR.y);
       ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.5 : 0.7);
       ctx.lineWidth = 1.5 * bScale;
-      ctx.shadowColor = hexToRgba(node.glowColor, light ? 0.3 : 0.6);
-      ctx.shadowBlur = 6 * bScale;
+      
+      
       ctx.stroke();
-      ctx.shadowBlur = 0;
+      
 
       // Left-side glow line
       const glLt = { x: llt.x, y: llt.y + layerDepth + gapH * 0.3 };
@@ -182,10 +182,10 @@ export function renderStack(
       ctx.lineTo(glLb.x, glLb.y);
       ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.35 : 0.5);
       ctx.lineWidth = 1 * bScale;
-      ctx.shadowColor = hexToRgba(node.glowColor, light ? 0.2 : 0.4);
-      ctx.shadowBlur = 4 * bScale;
+      
+      
       ctx.stroke();
-      ctx.shadowBlur = 0;
+      
     }
   }
 
@@ -201,10 +201,10 @@ export function renderStack(
   ctx.lineTo(lb.x, lb.y);
   ctx.strokeStyle = hexToRgba(node.glowColor, 0.96);
   ctx.lineWidth = 2.5 * bScale;
-  ctx.shadowColor = hexToRgba(node.glowColor, light ? 0.15 : 0.45);
-  ctx.shadowBlur = (light ? 3 : 10) * bScale;
+  
+  
   ctx.stroke();
-  ctx.shadowBlur = 0;
+  
 
   // ── Icon + text on top layer ──
   const showDetail = camera.zoom >= DETAIL_ZOOM_THRESHOLD;

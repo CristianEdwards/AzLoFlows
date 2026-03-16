@@ -77,13 +77,13 @@ export function renderShield(
   // ── Drop shadow ──
   if (light) {
     shieldPath();
-    ctx.shadowColor = 'rgba(0,0,0,0.28)';
-    ctx.shadowBlur = 22;
+    
+    
     ctx.shadowOffsetY = 8;
     ctx.fillStyle = 'rgba(0,0,0,0)';
     ctx.fill();
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
+    
+    
     ctx.shadowOffsetY = 0;
   }
 
@@ -164,10 +164,10 @@ export function renderShield(
     grad.addColorStop(1, hexToRgba(faceFill, 0.22));
   }
   ctx.fillStyle = grad;
-  ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.35 : 0.4) * pulse);
-  ctx.shadowBlur = light ? (selected ? 22 : 16) : (selected ? 28 : 20);
+  
+  
   ctx.fill();
-  ctx.shadowBlur = 0;
+  
 
   // ── Top face border ──
   shieldPath();
@@ -206,10 +206,10 @@ export function renderShield(
   ctx.lineTo(sMidL.x, sMidL.y);
   ctx.strokeStyle = hexToRgba(node.glowColor, 0.96);
   ctx.lineWidth = 2.5 * bScale;
-  ctx.shadowColor = hexToRgba(node.glowColor, light ? 0.15 : 0.4);
-  ctx.shadowBlur = (light ? 3 : 8) * bScale;
+  
+  
   ctx.stroke();
-  ctx.shadowBlur = 0;
+  
 
   // ── Icon + text ──
   const showDetail = camera.zoom >= DETAIL_ZOOM_THRESHOLD;

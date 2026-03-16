@@ -68,13 +68,13 @@ export function renderGauge(
       else ctx.lineTo(p.x, p.y);
     }
     ctx.closePath();
-    ctx.shadowColor = 'rgba(0,0,0,0.25)';
-    ctx.shadowBlur = 22;
+    
+    
     ctx.shadowOffsetY = 8;
     ctx.fillStyle = 'rgba(0,0,0,0)';
     ctx.fill();
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
+    
+    
     ctx.shadowOffsetY = 0;
   }
 
@@ -178,10 +178,10 @@ export function renderGauge(
     arcGrad.addColorStop(1, hexToRgba(node.glowColor, 0.55));
   }
   ctx.fillStyle = arcGrad;
-  ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.30 : 0.50) * pulse);
-  ctx.shadowBlur = light ? 8 : 14;
+  
+  
   ctx.fill();
-  ctx.shadowBlur = 0;
+  
 
   // Arc border
   ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.95 : (light ? 0.70 : 0.55));

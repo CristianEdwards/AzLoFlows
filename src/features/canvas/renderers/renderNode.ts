@@ -96,13 +96,13 @@ export function renderNode(
   if (light) {
     // Drop-shadow behind the entire node for depth
     drawPolygon(ctx, [leftBottom, rightBottom, frontRightBottom, frontLeftBottom]);
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
-    ctx.shadowBlur = 20;
+    
+    
     ctx.shadowOffsetY = 6;
     ctx.fillStyle = 'rgba(0,0,0,0)';
     ctx.fill();
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
+    
+    
     ctx.shadowOffsetY = 0;
   }
 
@@ -197,10 +197,10 @@ export function renderNode(
     gradient.addColorStop(1, darkenHex(node.glowColor, 0.50));
   }
   ctx.fillStyle = gradient;
-  ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.35 : 0.5) * pulse);
-  ctx.shadowBlur = light ? (selected ? 22 : 16) : (selected ? 32 : 22);
+  
+  
   ctx.fill();
-  ctx.shadowBlur = 0;
+  
 
   // Glass specular highlight diagonal on top face
   ctx.beginPath();
@@ -311,10 +311,10 @@ export function renderNode(
   ctx.lineTo(leftBottom.x, leftBottom.y);
   ctx.strokeStyle = hexToRgba(node.glowColor, 0.96);
   ctx.lineWidth = 2.8 * bScale;
-  ctx.shadowColor = hexToRgba(node.glowColor, light ? 0.15 : 0.45);
-  ctx.shadowBlur = (light ? 3 : 10) * bScale;
+  
+  
   ctx.stroke();
-  ctx.shadowBlur = 0;
+  
 
   ctx.beginPath();
   ctx.moveTo(leftTop.x, leftTop.y);

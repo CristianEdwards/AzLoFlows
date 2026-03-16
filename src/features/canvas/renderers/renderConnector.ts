@@ -109,10 +109,10 @@ export function renderConnector(
     drawPolyline(ctx, smoothPath);
     ctx.strokeStyle = hexToRgba(color, 0.04);
     ctx.lineWidth = 14;
-    ctx.shadowColor = hexToRgba(color, 0.3);
-    ctx.shadowBlur = 16;
+    
+    
     ctx.stroke();
-    ctx.shadowBlur = 0;
+    
   }
 
   drawPolyline(ctx, smoothPath);

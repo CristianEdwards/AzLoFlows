@@ -44,8 +44,8 @@ export function renderText(
     ctx.save();
     ctx.translate(origin.x, origin.y);
     ctx.transform(basisX.x, basisX.y, basisY.x, basisY.y, 0, 0);
-    ctx.shadowColor = light ? 'rgba(0,120,200,0.4)' : 'rgba(0,200,255,0.5)';
-    ctx.shadowBlur = 12;
+    
+    
     ctx.fillStyle = effectiveColor;
     ctx.font = font;
     ctx.textAlign = 'center';
@@ -53,7 +53,7 @@ export function renderText(
     for (let i = 0; i < lines.length; i++) {
       ctx.fillText(lines[i], 0, startY + i * lineHeight);
     }
-    ctx.shadowBlur = 0;
+    
     ctx.restore();
   }
 

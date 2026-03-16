@@ -63,13 +63,13 @@ export function renderDiamond(
   // ── Drop shadow (light mode) ──
   if (light) {
     drawPolygon(ctx, [dLeft, dBottom, dBottomD, dLeftD]);
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
-    ctx.shadowBlur = 20;
+    
+    
     ctx.shadowOffsetY = 6;
     ctx.fillStyle = 'rgba(0,0,0,0)';
     ctx.fill();
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
+    
+    
     ctx.shadowOffsetY = 0;
   }
 
@@ -146,10 +146,10 @@ export function renderDiamond(
     gradient.addColorStop(1, hexToRgba(faceFill, 0.24));
   }
   ctx.fillStyle = gradient;
-  ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.35 : 0.4) * pulse);
-  ctx.shadowBlur = light ? (selected ? 22 : 16) : (selected ? 28 : 20);
+  
+  
   ctx.fill();
-  ctx.shadowBlur = 0;
+  
 
   // ── Top face border ──
   drawPolygon(ctx, [dTop, dRight, dBottom, dLeft]);
@@ -179,10 +179,10 @@ export function renderDiamond(
   ctx.lineTo(dLeft.x, dLeft.y);
   ctx.strokeStyle = hexToRgba(node.glowColor, 0.96);
   ctx.lineWidth = 2.8 * bScale;
-  ctx.shadowColor = hexToRgba(node.glowColor, light ? 0.15 : 0.45);
-  ctx.shadowBlur = (light ? 3 : 10) * bScale;
+  
+  
   ctx.stroke();
-  ctx.shadowBlur = 0;
+  
 
   // ── Icon + text ──
   const showDetail = camera.zoom >= DETAIL_ZOOM_THRESHOLD;

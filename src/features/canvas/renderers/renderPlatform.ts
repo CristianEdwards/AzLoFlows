@@ -45,13 +45,13 @@ export function renderPlatform(
   // ── Drop shadow ──
   if (light) {
     drawPolygon(ctx, [lb, rb, rbD, lbD]);
-    ctx.shadowColor = 'rgba(0,0,0,0.30)';
-    ctx.shadowBlur = 22;
+    
+    
     ctx.shadowOffsetY = 8;
     ctx.fillStyle = 'rgba(0,0,0,0)';
     ctx.fill();
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
+    
+    
     ctx.shadowOffsetY = 0;
   }
 
@@ -161,19 +161,19 @@ export function renderPlatform(
   drawPolygon(ctx, [iLTu, iRTu, iRBu, iLBu]);
   ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.90 : (light ? 0.65 : 0.50));
   ctx.lineWidth = (selected ? 2.5 : 1.8) * bScale;
-  ctx.shadowColor = hexToRgba(node.glowColor, light ? 0.25 : 0.45);
-  ctx.shadowBlur = (light ? 5 : 10) * bScale;
+  
+  
   ctx.stroke();
-  ctx.shadowBlur = 0;
+  
 
   // ── Glow ring between tiers ──
   drawPolygon(ctx, [innerLT, innerRT, innerRB, innerLB]);
   ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.35 : 0.50);
   ctx.lineWidth = 1.5 * bScale;
-  ctx.shadowColor = hexToRgba(node.glowColor, light ? 0.20 : 0.40);
-  ctx.shadowBlur = (light ? 4 : 8) * bScale;
+  
+  
   ctx.stroke();
-  ctx.shadowBlur = 0;
+  
 
   // ── Glowing rim on the top edge ──
   // Left edge (leading)
@@ -182,10 +182,10 @@ export function renderPlatform(
   ctx.lineTo(lb.x, lb.y);
   ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.98 : 0.85);
   ctx.lineWidth = (selected ? 3 : 2.2) * bScale;
-  ctx.shadowColor = hexToRgba(node.glowColor, light ? 0.3 : 0.6);
-  ctx.shadowBlur = (light ? 6 : 14) * bScale;
+  
+  
   ctx.stroke();
-  ctx.shadowBlur = 0;
+  
 
   // Top-left edge
   ctx.beginPath();
@@ -193,10 +193,10 @@ export function renderPlatform(
   ctx.lineTo(rt.x, rt.y);
   ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.88 : 0.5);
   ctx.lineWidth = (selected ? 2.5 : 1.5) * bScale;
-  ctx.shadowColor = hexToRgba(node.glowColor, light ? 0.2 : 0.4);
-  ctx.shadowBlur = (light ? 4 : 8) * bScale;
+  
+  
   ctx.stroke();
-  ctx.shadowBlur = 0;
+  
 
   // Bottom-left (front) edge with glow
   ctx.beginPath();
@@ -204,10 +204,10 @@ export function renderPlatform(
   ctx.lineTo(rb.x, rb.y);
   ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.75 : 0.35);
   ctx.lineWidth = (selected ? 2.2 : 1.2) * bScale;
-  ctx.shadowColor = hexToRgba(node.glowColor, light ? 0.15 : 0.25);
-  ctx.shadowBlur = (light ? 3 : 6) * bScale;
+  
+  
   ctx.stroke();
-  ctx.shadowBlur = 0;
+  
 
   // ── Outer glow border ──
   drawPolygon(ctx, points);

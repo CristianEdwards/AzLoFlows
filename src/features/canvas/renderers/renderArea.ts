@@ -58,10 +58,10 @@ export function renderArea(
   gradient.addColorStop(0.5, hexToRgba(area.fill, light ? 0.60 : 0.34));
   gradient.addColorStop(1, hexToRgba(area.fill, light ? 0.42 : 0.2));
   ctx.fillStyle = gradient;
-  ctx.shadowColor = hexToRgba(area.glowColor, (light ? 0.04 : 0.12) * glow);
-  ctx.shadowBlur = light ? 0 : (selected ? 10 : 6);
+  
+  
   ctx.fill();
-  ctx.shadowBlur = 0;
+  
 
   // Border
   drawPolygon(ctx, points);

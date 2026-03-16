@@ -102,13 +102,13 @@ export function renderCloud(
   // ── Drop shadow ──
   if (light) {
     cloudOffsetPath(ctx, cx, cy, hx, hy, depth + 4);
-    ctx.shadowColor = 'rgba(0,0,0,0.25)';
-    ctx.shadowBlur = 20;
+    
+    
     ctx.shadowOffsetY = 6;
     ctx.fillStyle = 'rgba(0,0,0,0)';
     ctx.fill();
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
+    
+    
     ctx.shadowOffsetY = 0;
   }
 
@@ -190,10 +190,10 @@ export function renderCloud(
     gTop.addColorStop(1, darkenHex(node.glowColor, 0.50));
   }
   ctx.fillStyle = gTop;
-  ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.40 : 0.55) * pulse);
-  ctx.shadowBlur = light ? (selected ? 24 : 16) : (selected ? 34 : 24);
+  
+  
   ctx.fill();
-  ctx.shadowBlur = 0;
+  
 
   // ── Top border ──
   cloudTopPath(ctx, cx, cy, hx, hy);

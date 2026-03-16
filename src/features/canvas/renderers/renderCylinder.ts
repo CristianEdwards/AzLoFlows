@@ -104,13 +104,13 @@ export function renderCylinder(
   // ── Drop shadow (light mode) ──
   if (light) {
     isoEllipsePath(ctx, botCenter, halfX, halfY);
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
-    ctx.shadowBlur = 20;
+    
+    
     ctx.shadowOffsetY = 6;
     ctx.fillStyle = 'rgba(0,0,0,0)';
     ctx.fill();
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
+    
+    
     ctx.shadowOffsetY = 0;
   }
 
@@ -169,10 +169,10 @@ export function renderCylinder(
     gTop.addColorStop(1, hexToRgba(faceFill, 0.22));
   }
   ctx.fillStyle = gTop;
-  ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.35 : 0.4) * pulse);
-  ctx.shadowBlur = light ? (selected ? 20 : 14) : (selected ? 26 : 18);
+  
+  
   ctx.fill();
-  ctx.shadowBlur = 0;
+  
 
   // ── Top ellipse stroke ──
   isoEllipsePath(ctx, center, halfX, halfY);

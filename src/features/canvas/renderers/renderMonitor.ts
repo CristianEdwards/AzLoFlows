@@ -69,13 +69,13 @@ export function renderMonitor(
   // 0. Drop shadow
   if (light) {
     drawPolygon(ctx, [sbl, sbr, sbrf, sblf]);
-    ctx.shadowColor = 'rgba(0,0,0,0.30)';
-    ctx.shadowBlur = 28;
+    
+    
     ctx.shadowOffsetY = 10;
     ctx.fillStyle = 'rgba(0,0,0,0)';
     ctx.fill();
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
+    
+    
     ctx.shadowOffsetY = 0;
   }
 
@@ -131,10 +131,10 @@ export function renderMonitor(
     screenGrad.addColorStop(1, hexToRgba(faceFill, 0.18));
   }
   ctx.fillStyle = screenGrad;
-  ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.35 : 0.5) * pulse);
-  ctx.shadowBlur = light ? (selected ? 22 : 16) : (selected ? 30 : 20);
+  
+  
   ctx.fill();
-  ctx.shadowBlur = 0;
+  
 
   // Screen border
   drawPolygon(ctx, screenFace);
@@ -174,10 +174,10 @@ export function renderMonitor(
   ctx.beginPath();
   ctx.arc(ledPos.x, ledPos.y, 2 * bScale, 0, Math.PI * 2);
   ctx.fillStyle = hexToRgba(node.glowColor, 0.9);
-  ctx.shadowColor = hexToRgba(node.glowColor, 0.6);
-  ctx.shadowBlur = 6;
+  
+  
   ctx.fill();
-  ctx.shadowBlur = 0;
+  
 
   // 5. Top face (thin strip on top of the monitor body)
   drawPolygon(ctx, points);
@@ -197,10 +197,10 @@ export function renderMonitor(
   ctx.lineTo(lbD.x, lbD.y);
   ctx.strokeStyle = hexToRgba(node.glowColor, 0.96);
   ctx.lineWidth = 2.5 * bScale;
-  ctx.shadowColor = hexToRgba(node.glowColor, light ? 0.15 : 0.4);
-  ctx.shadowBlur = (light ? 3 : 8) * bScale;
+  
+  
   ctx.stroke();
-  ctx.shadowBlur = 0;
+  
 
   /* ── Icon + text on the screen face ── */
   const showDetail = camera.zoom >= DETAIL_ZOOM_THRESHOLD;

@@ -48,13 +48,13 @@ export function renderCard(
   // ── Drop shadow ──
   if (light) {
     drawPolygon(ctx, [lb, rb, rbD, lbD]);
-    ctx.shadowColor = 'rgba(0,0,0,0.22)';
-    ctx.shadowBlur = 18;
+    
+    
     ctx.shadowOffsetY = 6;
     ctx.fillStyle = 'rgba(0,0,0,0)';
     ctx.fill();
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
+    
+    
     ctx.shadowOffsetY = 0;
   }
 
@@ -120,10 +120,10 @@ export function renderCard(
     grad.addColorStop(1, darkenHex(node.glowColor, 0.50));
   }
   ctx.fillStyle = grad;
-  ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.35 : 0.50) * pulse);
-  ctx.shadowBlur = light ? (selected ? 20 : 14) : (selected ? 30 : 20);
+  
+  
   ctx.fill();
-  ctx.shadowBlur = 0;
+  
 
   // Specular on top face
   ctx.beginPath();
@@ -184,10 +184,10 @@ export function renderCard(
   ctx.lineTo(lb.x, lb.y);
   ctx.strokeStyle = hexToRgba(node.glowColor, 0.92);
   ctx.lineWidth = 2.4 * bScale;
-  ctx.shadowColor = hexToRgba(node.glowColor, light ? 0.12 : 0.35);
-  ctx.shadowBlur = (light ? 2 : 8) * bScale;
+  
+  
   ctx.stroke();
-  ctx.shadowBlur = 0;
+  
 
   // ── Decorative dots in header (simulate small icons) ──
   const dotCount = 3;

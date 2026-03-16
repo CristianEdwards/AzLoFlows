@@ -101,13 +101,13 @@ export function renderLaptop(
   // ── Drop shadow ──
   if (light) {
     drawPolygon(ctx, [lb, rb, rbD, lbD]);
-    ctx.shadowColor = 'rgba(0,0,0,0.25)';
-    ctx.shadowBlur = 18;
+    
+    
     ctx.shadowOffsetY = 6;
     ctx.fillStyle = 'rgba(0,0,0,0)';
     ctx.fill();
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
+    
+    
     ctx.shadowOffsetY = 0;
   }
 
@@ -267,10 +267,10 @@ export function renderLaptop(
   drawPolygon(ctx, screenFace);
   // Dark glass base
   ctx.fillStyle = 'rgba(8, 14, 28, 0.88)';
-  ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.40 : 0.55) * pulse);
-  ctx.shadowBlur = light ? (selected ? 24 : 16) : (selected ? 34 : 22);
+  
+  
   ctx.fill();
-  ctx.shadowBlur = 0;
+  
   // Subtle color overlay
   drawPolygon(ctx, screenFace);
   const scrGrad = ctx.createLinearGradient(wbl.x, wbl.y, wtl.x, wtl.y);
@@ -300,10 +300,10 @@ export function renderLaptop(
   drawPolygon(ctx, screenFace);
   ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.98 : (light ? 0.88 : 0.78));
   ctx.lineWidth = (selected ? 3 : 2.4) * bScale;
-  ctx.shadowColor = hexToRgba(node.glowColor, light ? 0.15 : 0.40);
-  ctx.shadowBlur = (light ? 4 : 10) * bScale;
+  
+  
   ctx.stroke();
-  ctx.shadowBlur = 0;
+  
 
   // Outer glow
   drawPolygon(ctx, screenFace);

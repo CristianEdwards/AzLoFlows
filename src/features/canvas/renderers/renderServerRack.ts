@@ -55,13 +55,13 @@ export function renderServerRack(
     const shLB = { x: leftBottom.x, y: leftBottom.y + totalHeight };
     const shRB = { x: rightBottom.x, y: rightBottom.y + totalHeight };
     drawPolygon(ctx, [leftBottom, rightBottom, shRB, shLB]);
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.30)';
-    ctx.shadowBlur = 26;
+    
+    
     ctx.shadowOffsetY = 8;
     ctx.fillStyle = 'rgba(0,0,0,0)';
     ctx.fill();
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
+    
+    
     ctx.shadowOffsetY = 0;
   }
 
@@ -141,11 +141,11 @@ export function renderServerRack(
     ctx.arc(ledCx, ledCy, 2.2 * bScale, 0, Math.PI * 2);
     ctx.fillStyle = ledOn ? hexToRgba(ledColors[blade % ledColors.length], 0.9) : 'rgba(60,60,60,0.4)';
     if (ledOn) {
-      ctx.shadowColor = ledColors[blade % ledColors.length];
-      ctx.shadowBlur = 6;
+      
+      
     }
     ctx.fill();
-    ctx.shadowBlur = 0;
+    
 
     // ── Right face ──
     drawPolygon(ctx, [brt, brb, brbD, brtD]);
@@ -171,11 +171,11 @@ export function renderServerRack(
     }
     ctx.fillStyle = gTop;
     if (blade === 0) {
-      ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.35 : 0.5) * pulse);
-      ctx.shadowBlur = light ? (selected ? 22 : 16) : (selected ? 30 : 20);
+      
+      
     }
     ctx.fill();
-    ctx.shadowBlur = 0;
+    
 
     // Glass specular on top face
     ctx.beginPath();
@@ -206,10 +206,10 @@ export function renderServerRack(
     ctx.lineTo(blb.x, blb.y);
     ctx.strokeStyle = hexToRgba(node.glowColor, blade === 0 ? 0.96 : 0.55);
     ctx.lineWidth = (blade === 0 ? 2.5 : 1.5) * bScale;
-    ctx.shadowColor = hexToRgba(node.glowColor, light ? 0.15 : 0.40);
-    ctx.shadowBlur = (light ? 3 : 8) * bScale;
+    
+    
     ctx.stroke();
-    ctx.shadowBlur = 0;
+    
 
     // ── Glow line between blades (visible in gap) ──
     if (blade < bladeCount - 1) {
@@ -219,10 +219,10 @@ export function renderServerRack(
       ctx.lineTo(brb.x, brb.y + bladeDepth + gapH * 0.3);
       ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.40 : 0.55);
       ctx.lineWidth = 1.5 * bScale;
-      ctx.shadowColor = hexToRgba(node.glowColor, light ? 0.25 : 0.50);
-      ctx.shadowBlur = 6 * bScale;
+      
+      
       ctx.stroke();
-      ctx.shadowBlur = 0;
+      
 
       // Left-side gap glow
       ctx.beginPath();
@@ -230,10 +230,10 @@ export function renderServerRack(
       ctx.lineTo(blb.x, blb.y + bladeDepth + gapH * 0.3);
       ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.30 : 0.40);
       ctx.lineWidth = 1 * bScale;
-      ctx.shadowColor = hexToRgba(node.glowColor, light ? 0.15 : 0.35);
-      ctx.shadowBlur = 4 * bScale;
+      
+      
       ctx.stroke();
-      ctx.shadowBlur = 0;
+      
     }
 
     // Ventilation slot on top face (subtle line)

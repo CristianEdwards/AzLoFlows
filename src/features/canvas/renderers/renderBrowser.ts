@@ -6,7 +6,7 @@ import { hexToRgba, lightenHex, darkenHex, deepToneForGlow } from '@/lib/renderi
 import type { CameraState, NodeEntity } from '@/types/document';
 
 const SCREEN_H_FACTOR = 0.85;
-const PANEL_THICK = 14;
+const PANEL_THICK = 0;
 
 /**
  * Renders a standing isometric monitor/panel with browser chrome content
@@ -72,9 +72,9 @@ export function renderBrowser(
   gFront.addColorStop(0, light ? darkenHex(deepTone, 0.15) : darkenHex(node.glowColor, 0.10));
   gFront.addColorStop(1, light ? darkenHex(deepTone, 0.30) : darkenHex(node.glowColor, 0.25));
   ctx.fillStyle = gFront;
-  ctx.shadowColor = hexToRgba(node.glowColor, (light ? 0.30 : 0.50) * pulse);
-  ctx.shadowBlur = light ? (selected ? 20 : 12) : (selected ? 30 : 18);
-  ctx.fill(); ctx.shadowBlur = 0;
+  
+  
+  ctx.fill(); 
 
   // ── Glass screen inset ──
   const si = 0.05;
@@ -108,8 +108,8 @@ export function renderBrowser(
   ctx.strokeStyle = hexToRgba(node.glowColor, 0.75); ctx.lineWidth = 2 * bScale; ctx.stroke();
   ctx.beginPath(); ctx.moveTo(fTL.x, fTL.y); ctx.lineTo(fBL.x, fBL.y);
   ctx.strokeStyle = hexToRgba(node.glowColor, 0.90); ctx.lineWidth = 2.5 * bScale;
-  ctx.shadowColor = hexToRgba(node.glowColor, light ? 0.12 : 0.40);
-  ctx.shadowBlur = (light ? 3 : 8) * bScale; ctx.stroke(); ctx.shadowBlur = 0;
+  
+   ctx.stroke(); 
 
   // ── Browser content ──
   const showDetail = camera.zoom >= DETAIL_ZOOM_THRESHOLD;
