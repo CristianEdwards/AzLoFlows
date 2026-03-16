@@ -189,6 +189,13 @@ select:focus-visible {
   box-shadow: 0 0 18px rgba(139, 92, 246, 0.8);
 }
 
+.brand-block__icon {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 6px rgba(139, 92, 246, 0.5));
+}
+
 .brand-block__kicker {
   font-family: Rajdhani, sans-serif;
   letter-spacing: 1.4px;

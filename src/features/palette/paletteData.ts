@@ -116,14 +116,19 @@ const laptopIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" 
 </svg>`;
 
 const browserIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <rect x="10" y="10" width="44" height="34" rx="2" fill="rgba(0,229,255,0.18)" stroke="rgba(0,229,255,0.6)" stroke-width="1.2"/>
-  <line x1="10" y1="18" x2="54" y2="18" stroke="rgba(0,229,255,0.4)" stroke-width="0.8"/>
-  <circle cx="15" cy="14" r="1.5" fill="rgba(255,95,87,0.6)"/>
-  <circle cx="21" cy="14" r="1.5" fill="rgba(255,189,46,0.6)"/>
-  <circle cx="27" cy="14" r="1.5" fill="rgba(40,200,64,0.6)"/>
-  <rect x="16" y="22" width="32" height="3" rx="1" fill="rgba(0,229,255,0.08)" stroke="rgba(0,229,255,0.15)" stroke-width="0.5"/>
-  <rect x="14" y="28" width="16" height="10" rx="1" fill="rgba(0,229,255,0.06)" stroke="rgba(0,229,255,0.1)" stroke-width="0.4"/>
-  <rect x="34" y="28" width="16" height="10" rx="1" fill="rgba(0,229,255,0.06)" stroke="rgba(0,229,255,0.1)" stroke-width="0.4"/>
+  <polygon points="36,17 44,13 44,51 36,55" fill="rgba(0,229,255,0.08)" stroke="rgba(0,229,255,0.3)" stroke-width="0.6"/>
+  <polygon points="8,6 36,17 44,13 16,2" fill="rgba(0,229,255,0.12)" stroke="rgba(0,229,255,0.5)" stroke-width="0.6"/>
+  <polygon points="8,6 36,17 36,55 8,44" fill="rgba(0,229,255,0.18)" stroke="rgba(0,229,255,0.6)" stroke-width="1.2"/>
+  <line x1="8" y1="12" x2="36" y2="23" stroke="rgba(0,229,255,0.4)" stroke-width="0.8"/>
+  <circle cx="11" cy="9" r="1.3" fill="rgba(255,95,87,0.6)"/>
+  <circle cx="14" cy="10" r="1.3" fill="rgba(255,189,46,0.6)"/>
+  <circle cx="17" cy="11.5" r="1.3" fill="rgba(40,200,64,0.6)"/>
+  <polygon points="11,15 33,24 33,27 11,18" fill="rgba(0,229,255,0.08)" stroke="rgba(0,229,255,0.15)" stroke-width="0.5"/>
+  <polygon points="10,20 21,25 21,35 10,30" fill="rgba(0,229,255,0.06)" stroke="rgba(0,229,255,0.1)" stroke-width="0.4"/>
+  <polygon points="23,26 34,31 34,41 23,36" fill="rgba(0,229,255,0.06)" stroke="rgba(0,229,255,0.1)" stroke-width="0.4"/>
+  <polygon points="10,32 21,37 21,43 10,38" fill="rgba(0,229,255,0.06)" stroke="rgba(0,229,255,0.1)" stroke-width="0.4"/>
+  <polygon points="23,38 34,43 34,49 23,44" fill="rgba(0,229,255,0.06)" stroke="rgba(0,229,255,0.1)" stroke-width="0.4"/>
+  <line x1="8" y1="6" x2="8" y2="44" stroke="rgba(0,229,255,0.9)" stroke-width="1.5"/>
 </svg>`;
 
 const shieldIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
@@ -151,48 +156,59 @@ const stackIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" f
 </svg>`;
 
 const dashboardIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <polygon points="12,36 52,36 48,10 8,10" fill="rgba(0,229,255,0.16)" stroke="rgba(0,229,255,0.55)" stroke-width="1.2"/>
-  <line x1="8" y1="10" x2="48" y2="10" stroke="rgba(0,229,255,0.8)" stroke-width="1.5"/>
-  <line x1="8" y1="10" x2="12" y2="36" stroke="rgba(0,229,255,0.9)" stroke-width="1.8"/>
-  <line x1="20" y1="14" x2="22" y2="34" stroke="rgba(0,229,255,0.12)" stroke-width="0.5"/>
-  <line x1="10" y1="16" x2="50" y2="16" stroke="rgba(0,229,255,0.15)" stroke-width="0.5"/>
-  <rect x="24" y="18" width="10" height="6" rx="0.5" fill="rgba(0,229,255,0.06)" stroke="rgba(0,229,255,0.08)" stroke-width="0.4"/>
-  <rect x="36" y="18" width="10" height="6" rx="0.5" fill="rgba(0,229,255,0.06)" stroke="rgba(0,229,255,0.08)" stroke-width="0.4"/>
-  <rect x="24" y="26" width="10" height="6" rx="0.5" fill="rgba(0,229,255,0.06)" stroke="rgba(0,229,255,0.08)" stroke-width="0.4"/>
-  <rect x="36" y="26" width="10" height="6" rx="0.5" fill="rgba(0,229,255,0.06)" stroke="rgba(0,229,255,0.08)" stroke-width="0.4"/>
-  <circle cx="14" cy="14" r="1.2" fill="rgba(255,95,87,0.5)"/>
-  <circle cx="18" cy="14" r="1.2" fill="rgba(255,189,46,0.5)"/>
-  <circle cx="22" cy="14" r="1.2" fill="rgba(40,200,64,0.5)"/>
+  <polygon points="36,17 44,13 44,51 36,55" fill="rgba(0,229,255,0.08)" stroke="rgba(0,229,255,0.3)" stroke-width="0.6"/>
+  <polygon points="8,6 36,17 44,13 16,2" fill="rgba(0,229,255,0.12)" stroke="rgba(0,229,255,0.5)" stroke-width="0.6"/>
+  <polygon points="8,6 36,17 36,55 8,44" fill="rgba(0,229,255,0.16)" stroke="rgba(0,229,255,0.55)" stroke-width="1.2"/>
+  <line x1="8" y1="12" x2="36" y2="23" stroke="rgba(0,229,255,0.4)" stroke-width="0.8"/>
+  <line x1="8" y1="6" x2="8" y2="44" stroke="rgba(0,229,255,0.9)" stroke-width="1.5"/>
+  <circle cx="11" cy="9" r="1.2" fill="rgba(255,95,87,0.5)"/>
+  <circle cx="14" cy="10" r="1.2" fill="rgba(255,189,46,0.5)"/>
+  <circle cx="17" cy="11.5" r="1.2" fill="rgba(40,200,64,0.5)"/>
+  <line x1="16" y1="15" x2="16" y2="47" stroke="rgba(0,229,255,0.2)" stroke-width="0.6"/>
+  <polygon points="18,17 26,20 26,28 18,25" fill="rgba(0,229,255,0.06)" stroke="rgba(0,229,255,0.08)" stroke-width="0.4"/>
+  <polygon points="28,22 35,25 35,33 28,30" fill="rgba(0,229,255,0.06)" stroke="rgba(0,229,255,0.08)" stroke-width="0.4"/>
+  <polygon points="18,30 26,33 26,41 18,38" fill="rgba(0,229,255,0.06)" stroke="rgba(0,229,255,0.08)" stroke-width="0.4"/>
+  <polygon points="28,35 35,38 35,46 28,43" fill="rgba(0,229,255,0.06)" stroke="rgba(0,229,255,0.08)" stroke-width="0.4"/>
+  <polygon points="9,15 14,17 14,26 9,24" fill="rgba(0,229,255,0.04)" stroke="rgba(0,229,255,0.06)" stroke-width="0.3"/>
+  <polygon points="9,27 14,29 14,34 9,32" fill="rgba(0,229,255,0.04)" stroke="rgba(0,229,255,0.06)" stroke-width="0.3"/>
 </svg>`;
 
 const gaugeIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <ellipse cx="32" cy="32" rx="22" ry="14" fill="rgba(0,229,255,0.10)" stroke="rgba(0,229,255,0.18)" stroke-width="0.8"/>
-  <ellipse cx="32" cy="32" rx="22" ry="14" fill="none" stroke="rgba(0,229,255,0.12)" stroke-width="5"/>
-  <path d="M10,32 A22,14 0 0,1 50,24" fill="none" stroke="rgba(0,229,255,0.7)" stroke-width="5" stroke-linecap="round"/>
-  <ellipse cx="32" cy="36" rx="22" ry="14" fill="rgba(0,229,255,0.04)" stroke="rgba(0,229,255,0.08)" stroke-width="0.5"/>
-  <text x="32" y="34" fill="rgba(0,229,255,0.6)" font-family="Inter,sans-serif" font-weight="700" font-size="8" text-anchor="middle">72%</text>
+  <polygon points="32,10 56,24 32,38 8,24" fill="rgba(0,229,255,0.06)" stroke="rgba(0,229,255,0.15)" stroke-width="0.6"/>
+  <polygon points="8,24 32,38 32,44 8,30" fill="rgba(0,229,255,0.04)" stroke="rgba(0,229,255,0.1)" stroke-width="0.4"/>
+  <polygon points="56,24 32,38 32,44 56,30" fill="rgba(0,229,255,0.03)" stroke="rgba(0,229,255,0.08)" stroke-width="0.4"/>
+  <ellipse cx="32" cy="24" rx="20" ry="11" fill="none" stroke="rgba(0,229,255,0.12)" stroke-width="5"/>
+  <path d="M12,24 A20,11 0 0,1 48,17" fill="none" stroke="rgba(0,229,255,0.7)" stroke-width="5" stroke-linecap="round"/>
+  <ellipse cx="32" cy="24" rx="12" ry="7" fill="rgba(0,229,255,0.04)" stroke="none"/>
+  <text x="32" y="26" fill="rgba(0,229,255,0.6)" font-family="Inter,sans-serif" font-weight="700" font-size="7" text-anchor="middle">72%</text>
+  <line x1="8" y1="24" x2="32" y2="10" stroke="rgba(0,229,255,0.9)" stroke-width="1.2"/>
 </svg>`;
 
 const chartPanelIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <polygon points="14,12 54,22 50,50 10,40" fill="rgba(0,229,255,0.14)" stroke="rgba(0,229,255,0.50)" stroke-width="1"/>
-  <line x1="10" y1="40" x2="14" y2="12" stroke="rgba(0,229,255,0.85)" stroke-width="1.5"/>
-  <line x1="14" y1="16" x2="54" y2="26" stroke="rgba(0,229,255,0.12)" stroke-width="0.5"/>
-  <polyline points="18,34 24,28 30,32 36,24 42,30 48,26" fill="none" stroke="rgba(0,229,255,0.6)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
-  <circle cx="24" cy="28" r="1.5" fill="rgba(0,229,255,0.5)"/>
-  <circle cx="36" cy="24" r="1.5" fill="rgba(0,229,255,0.5)"/>
-  <circle cx="48" cy="26" r="1.5" fill="rgba(0,229,255,0.5)"/>
+  <polygon points="36,17 44,13 44,51 36,55" fill="rgba(0,229,255,0.08)" stroke="rgba(0,229,255,0.3)" stroke-width="0.6"/>
+  <polygon points="8,6 36,17 44,13 16,2" fill="rgba(0,229,255,0.12)" stroke="rgba(0,229,255,0.5)" stroke-width="0.6"/>
+  <polygon points="8,6 36,17 36,55 8,44" fill="rgba(0,229,255,0.14)" stroke="rgba(0,229,255,0.50)" stroke-width="1"/>
+  <line x1="8" y1="6" x2="8" y2="44" stroke="rgba(0,229,255,0.85)" stroke-width="1.5"/>
+  <line x1="8" y1="12" x2="36" y2="23" stroke="rgba(0,229,255,0.12)" stroke-width="0.5"/>
+  <polyline points="12,38 17,32 22,35 27,26 32,30 35,27" fill="none" stroke="rgba(0,229,255,0.6)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="22" cy="35" r="1.5" fill="rgba(0,229,255,0.5)"/>
+  <circle cx="27" cy="26" r="1.5" fill="rgba(0,229,255,0.5)"/>
+  <circle cx="35" cy="27" r="1.5" fill="rgba(0,229,255,0.5)"/>
 </svg>`;
 
 const analyticsPanelIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <rect x="10" y="10" width="44" height="34" rx="2" fill="rgba(77,141,255,0.18)" stroke="rgba(77,141,255,0.6)" stroke-width="1.2"/>
-  <line x1="10" y1="18" x2="54" y2="18" stroke="rgba(77,141,255,0.4)" stroke-width="0.8"/>
-  <circle cx="15" cy="14" r="1.5" fill="rgba(255,95,87,0.6)"/>
-  <circle cx="21" cy="14" r="1.5" fill="rgba(255,189,46,0.6)"/>
-  <circle cx="27" cy="14" r="1.5" fill="rgba(40,200,64,0.6)"/>
-  <polyline points="16,38 22,32 27,35 33,26 39,30 44,24" fill="none" stroke="rgba(77,141,255,0.7)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
-  <circle cx="27" cy="35" r="1.2" fill="rgba(77,141,255,0.5)"/>
-  <circle cx="39" cy="30" r="1.2" fill="rgba(77,141,255,0.5)"/>
-  <circle cx="44" cy="24" r="1.2" fill="rgba(77,141,255,0.5)"/>
+  <polygon points="36,17 44,13 44,51 36,55" fill="rgba(77,141,255,0.08)" stroke="rgba(77,141,255,0.3)" stroke-width="0.6"/>
+  <polygon points="8,6 36,17 44,13 16,2" fill="rgba(77,141,255,0.12)" stroke="rgba(77,141,255,0.5)" stroke-width="0.6"/>
+  <polygon points="8,6 36,17 36,55 8,44" fill="rgba(77,141,255,0.18)" stroke="rgba(77,141,255,0.6)" stroke-width="1.2"/>
+  <line x1="8" y1="12" x2="36" y2="23" stroke="rgba(77,141,255,0.4)" stroke-width="0.8"/>
+  <circle cx="11" cy="9" r="1.3" fill="rgba(255,95,87,0.6)"/>
+  <circle cx="14" cy="10" r="1.3" fill="rgba(255,189,46,0.6)"/>
+  <circle cx="17" cy="11.5" r="1.3" fill="rgba(40,200,64,0.6)"/>
+  <polyline points="12,40 17,34 22,37 27,28 32,32 35,26" fill="none" stroke="rgba(77,141,255,0.7)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="22" cy="37" r="1.2" fill="rgba(77,141,255,0.5)"/>
+  <circle cx="32" cy="32" r="1.2" fill="rgba(77,141,255,0.5)"/>
+  <circle cx="35" cy="26" r="1.2" fill="rgba(77,141,255,0.5)"/>
+  <line x1="8" y1="6" x2="8" y2="44" stroke="rgba(77,141,255,0.9)" stroke-width="1.5"/>
 </svg>`;
 
 export const paletteShapes: PaletteShape[] = [
