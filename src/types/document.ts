@@ -6,9 +6,8 @@ export type NodeShape =
   | 'platform'
   | 'browser'
   | 'browser2'
-  | 'stack'
   | 'dashboard'
-  | 'gauge'
+  | 'cylinder'
   | 'chartPanel'
   | 'analyticsPanel'
   | 'standingNode';

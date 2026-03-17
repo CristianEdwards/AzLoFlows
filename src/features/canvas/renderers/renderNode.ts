@@ -8,11 +8,10 @@ import { renderServerRack } from './renderServerRack';
 import { renderCard } from './renderCard';
 import { renderPlatform } from './renderPlatform';
 import { renderBrowser } from './renderBrowser';
-import { renderStack } from './renderStack';
 import { renderDashboard } from './renderDashboard';
-import { renderGauge } from './renderGauge';
 import { renderChartPanel } from './renderChartPanel';
 import { renderAnalyticsPanel } from './renderAnalyticsPanel';
+import { renderCylinderShape } from './renderCylinderShape';
 import { renderBrowser2 } from './renderBrowser2';
 import { renderStandingNode } from './renderStandingNode';
 import type { CameraState, NodeEntity } from '@/types/document';
@@ -40,12 +39,10 @@ export function renderNode(
       return renderBrowser(ctx, node, selected, camera, viewport, time, theme);
     case 'browser2':
       return renderBrowser2(ctx, node, selected, camera, viewport, time, theme);
-    case 'stack':
-      return renderStack(ctx, node, selected, camera, viewport, time, theme);
     case 'dashboard':
       return renderDashboard(ctx, node, selected, camera, viewport, time, theme);
-    case 'gauge':
-      return renderGauge(ctx, node, selected, camera, viewport, time, theme);
+    case 'cylinder':
+      return renderCylinderShape(ctx, node, selected, camera, viewport, time, theme);
     case 'chartPanel':
       return renderChartPanel(ctx, node, selected, camera, viewport, time, theme);
     case 'analyticsPanel':
