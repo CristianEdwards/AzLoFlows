@@ -147,7 +147,7 @@ export function renderDatabase(
     ctx.stroke();
 
     /* ── Indicator dot on front-left side ──────────────────────── */
-    const dotPt = ePt(Math.PI * 0.92, midDy);
+    const dotPt = ePt(Math.PI * 0.42, midDy);
     const dr = 2.5 * camera.zoom;
     ctx.beginPath();
     ctx.arc(dotPt.x, dotPt.y, dr, 0, Math.PI * 2);
