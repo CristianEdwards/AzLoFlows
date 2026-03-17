@@ -158,7 +158,7 @@
       "subtitle": "",
       "fill": "#0a4152",
       "glowColor": "#00e5ff",
-      "zIndex": 41,
+      "zIndex": 82,
       "tags": [
         "no-proxy-arc",
         "proxy-arc"
@@ -190,7 +190,7 @@
       "fill": "#4f2b6b",
       "glowColor": "#bf5af2",
       "icon": "svgExpressRoute",
-      "zIndex": 15
+      "zIndex": 83
     },
     {
       "id": "d24ec785-cef5-4989-81ea-a858810e590b",
