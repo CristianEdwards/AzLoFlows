@@ -146,8 +146,8 @@ export function renderDatabase(
     ctx.lineWidth = (selected ? 2.5 : 1) * bScale;
     ctx.stroke();
 
-    /* ── Indicator dot (like SVG's #abafb6 diamond) ─────────── */
-    const dotPt = ePt(Math.PI * 0.08, midDy);
+    /* ── Indicator dot on front-left side ──────────────────────── */
+    const dotPt = ePt(Math.PI * 0.92, midDy);
     const dr = 2.5 * camera.zoom;
     ctx.beginPath();
     ctx.arc(dotPt.x, dotPt.y, dr, 0, Math.PI * 2);
