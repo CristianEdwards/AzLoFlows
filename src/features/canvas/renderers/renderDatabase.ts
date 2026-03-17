@@ -31,8 +31,8 @@ export function renderDatabase(
   // Ellipse centre & half-axes (iso-projected)
   const cx = (lt.x + rt.x + rb.x + lb.x) / 4;
   const cy = (lt.y + rt.y + rb.y + lb.y) / 4;
-  const hx: Point = { x: (rt.x - lt.x) / 2, y: (rt.y - lt.y) / 2 };
-  const hy: Point = { x: (lb.x - lt.x) / 2, y: (lb.y - lt.y) / 2 };
+  const hx: Point = { x: -(rt.x - lt.x) / 2, y: -(rt.y - lt.y) / 2 };
+  const hy: Point = { x: -(lb.x - lt.x) / 2, y: -(lb.y - lt.y) / 2 };
 
   const topLen = Math.hypot(rt.x - lt.x, rt.y - lt.y) || 1;
   const leftLen = Math.hypot(lb.x - lt.x, lb.y - lt.y) || 1;
