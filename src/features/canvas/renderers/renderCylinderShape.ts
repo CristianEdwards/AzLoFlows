@@ -94,6 +94,11 @@ export function renderCylinderShape(
   const base = node.fill;
   const glow = node.glowColor;
 
+  /* ── 0. Bottom ellipse fill (solid base layer — prevents gaps) ── */
+  ellipse(ctx, bot, hx, hy);
+  ctx.fillStyle = darkenHex(base, 0.25);
+  ctx.fill();
+
   /* ── 1. Cylinder body fill (solid gradient, gentle L→R shading) ── */
   body(ctx, center, bot, hx, hy);
   const gBody = ctx.createLinearGradient(
