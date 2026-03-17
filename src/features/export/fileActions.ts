@@ -711,6 +711,137 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
       break;
     }
 
+    /* ── Server rack: stacked blades with gaps and LED indicators ── */
+    if (node.shape === 'serverRack') {
+      const quad = isoQuad(node.x, node.y, node.width, node.height, camera, viewport);
+      const [leftTop, rightTop, rightBottom, leftBottom] = quad;
+
+      const topEdgeLen = Math.hypot(rightTop.x - leftTop.x, rightTop.y - leftTop.y) || 1;
+      const leftEdgeLen = Math.hypot(leftBottom.x - leftTop.x, leftBottom.y - leftTop.y) || 1;
+      const bScale = Math.min(1, Math.max(0.35, (topEdgeLen + leftEdgeLen) * 0.5 / 120));
+      const topFaceBasisX = { x: (rightTop.x - leftTop.x) / topEdgeLen, y: (rightTop.y - leftTop.y) / topEdgeLen };
+      const topFaceBasisY = { x: (leftBottom.x - leftTop.x) / leftEdgeLen, y: (leftBottom.y - leftTop.y) / leftEdgeLen };
+      const rackTextDir = node.textRotated ? topFaceBasisX : topFaceBasisY;
+      const rackTextStack = node.textRotated
+        ? { x: topFaceBasisY.x, y: topFaceBasisY.y }
+        : { x: -topFaceBasisX.x, y: -topFaceBasisX.y };
+
+      const bladeCount = 4;
+      const bladeDepth = NODE_DEPTH * 0.26 * camera.zoom;
+      const gapH = 5 * camera.zoom;
+
+      svg.push('<g>');
+
+      // Draw each blade from bottom to top
+      const ledColors = ['#00ff88', '#00e5ff', node.glowColor, '#ffab00'];
+      for (let blade = bladeCount - 1; blade >= 0; blade--) {
+        const yOff = blade * (bladeDepth + gapH);
+        const bladeAlpha = 0.75 + blade * 0.08;
+
+        const blt = { x: leftTop.x, y: leftTop.y + yOff };
+        const brt = { x: rightTop.x, y: rightTop.y + yOff };
+        const brb = { x: rightBottom.x, y: rightBottom.y + yOff };
+        const blb = { x: leftBottom.x, y: leftBottom.y + yOff };
+        const bltD = { x: blt.x, y: blt.y + bladeDepth };
+        const brtD = { x: brt.x, y: brt.y + bladeDepth };
+        const brbD = { x: brb.x, y: brb.y + bladeDepth };
+        const blbD = { x: blb.x, y: blb.y + bladeDepth };
+
+        // Left face
+        svg.push(`<polygon points="${pts([blt, blb, blbD, bltD])}" fill="${hexToRgba(node.fill, light ? 0.92 : 0.45 * bladeAlpha)}" stroke="${hexToRgba(node.glowColor, 0.18)}" stroke-width="0.8" />`);
+
+        // Front face
+        svg.push(`<polygon points="${pts([blb, brb, brbD, blbD])}" fill="${hexToRgba(node.fill, light ? 0.98 : 0.40)}" stroke="${hexToRgba(node.glowColor, 0.18)}" stroke-width="0.8" />`);
+
+        // LED on front face
+        const ledCx = blb.x + (blbD.x - blb.x) * 0.5 + (brb.x - blb.x) * 0.06;
+        const ledCy = blb.y + (blbD.y - blb.y) * 0.5 + (brb.y - blb.y) * 0.06;
+        const ledColor = ledColors[blade % ledColors.length];
+        svg.push(`<circle cx="${ledCx}" cy="${ledCy}" r="${2.2 * bScale}" fill="${ledColor}" opacity="0.9" />`);
+
+        // Right face
+        svg.push(`<polygon points="${pts([brt, brb, brbD, brtD])}" fill="${hexToRgba(node.fill, light ? 0.85 : 0.28)}" />`);
+
+        // Top face with gradient
+        const bgId = uid();
+        svg.push(`<defs><linearGradient id="br${bgId}" x1="${blt.x}" y1="${blt.y}" x2="${brb.x}" y2="${brb.y}" gradientUnits="userSpaceOnUse">`);
+        svg.push(`<stop offset="0" stop-color="${node.fill}" stop-opacity="${light ? 0.98 : (0.90 * bladeAlpha)}"/>`);
+        svg.push(`<stop offset="0.3" stop-color="${node.fill}" stop-opacity="${light ? 0.88 : (0.60 * bladeAlpha)}"/>`);
+        svg.push(`<stop offset="0.7" stop-color="${node.fill}" stop-opacity="${light ? 0.78 : 0.30}"/>`);
+        svg.push(`<stop offset="1" stop-color="${node.fill}" stop-opacity="${light ? 0.65 : 0.18}"/>`);
+        svg.push('</linearGradient></defs>');
+        svg.push(`<polygon points="${pts([blt, brt, brb, blb])}" fill="url(#br${bgId})" />`);
+
+        // Top face border
+        const borderAlpha = blade === 0 ? (light ? 0.88 : 0.75) : (light ? 0.50 : 0.35);
+        svg.push(`<polygon points="${pts([blt, brt, brb, blb])}" fill="none" stroke="${hexToRgba(node.glowColor, borderAlpha)}" stroke-width="${(blade === 0 ? 2.2 : 1.2) * bScale}" />`);
+
+        // Leading edge glow
+        svg.push(`<line x1="${blt.x}" y1="${blt.y}" x2="${blb.x}" y2="${blb.y}" stroke="${hexToRgba(node.glowColor, blade === 0 ? 0.96 : 0.55)}" stroke-width="${(blade === 0 ? 2.5 : 1.5) * bScale}" />`);
+
+        // Glow line between blades
+        if (blade < bladeCount - 1) {
+          const gy = bladeDepth + gapH * 0.3;
+          svg.push(`<line x1="${blb.x}" y1="${blb.y + gy}" x2="${brb.x}" y2="${brb.y + gy}" stroke="${hexToRgba(node.glowColor, light ? 0.40 : 0.55)}" stroke-width="${1.5 * bScale}" />`);
+        }
+
+        // Ventilation slots on top blade
+        if (blade === 0) {
+          for (let i = 1; i <= 2; i++) {
+            const t = i / 3;
+            const sx = blt.x + (brt.x - blt.x) * 0.25 + (blb.x - blt.x) * t;
+            const sy = blt.y + (brt.y - blt.y) * 0.25 + (blb.y - blt.y) * t;
+            const ex = blt.x + (brt.x - blt.x) * 0.75 + (blb.x - blt.x) * t;
+            const ey = blt.y + (brt.y - blt.y) * 0.75 + (blb.y - blt.y) * t;
+            svg.push(`<line x1="${sx}" y1="${sy}" x2="${ex}" y2="${ey}" stroke="${light ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)'}" stroke-width="${0.8 * bScale}" />`);
+          }
+        }
+      }
+
+      // Outer glow on top blade
+      svg.push(`<polygon points="${pts(quad)}" fill="none" stroke="${hexToRgba(node.glowColor, light ? 0.12 : 0.18)}" stroke-width="${5 * bScale}" />`);
+
+      // Icon
+      if (node.icon && nodeIconCatalog[node.icon]) {
+        const iconDef = nodeIconCatalog[node.icon];
+        const iconSize = Math.min(node.width, node.height) * NODE_ICON_SCALE * camera.zoom;
+        const iconCenter = worldToScreen({ x: node.x + node.width * 0.75, y: node.y + node.height * 0.5 }, camera, viewport);
+        const scale = iconSize / 32;
+        const m00 = topFaceBasisY.x * scale;
+        const m01 = topFaceBasisY.y * scale;
+        const m10 = -topFaceBasisX.x * scale;
+        const m11 = -topFaceBasisX.y * scale;
+        const tx = iconCenter.x - m00 * 16 - m10 * 16;
+        const ty = iconCenter.y - m01 * 16 - m11 * 16;
+        svg.push(`<g transform="matrix(${m00},${m01},${m10},${m11},${tx},${ty})" fill="${hexToRgba(node.glowColor, light ? 0.5 : 1.0)}" opacity="${light ? 1.0 : 0.7}">`);
+        for (const d of iconDef.paths) {
+          svg.push(`<path d="${d}" />`);
+        }
+        svg.push('</g>');
+      }
+
+      // Title text
+      const rackTextRatios = getTextRatios(node, 0.46);
+      const rackTitlePt = worldToScreen({ x: node.x + node.width * rackTextRatios.x, y: node.y + node.height * rackTextRatios.y }, camera, viewport);
+      const rackTitleSize = node.fontSize ?? 16;
+      const rackScaledTitle = Math.round(rackTitleSize * camera.zoom);
+      const rackTextEdge = (node.textRotated ? topEdgeLen : leftEdgeLen) * 0.85;
+      const rackApproxW = node.title.length * rackScaledTitle * 0.6 * 0.87;
+      const rackClampedSize = rackApproxW > rackTextEdge
+        ? Math.max(8, Math.floor(rackScaledTitle * (rackTextEdge / rackApproxW)))
+        : rackScaledTitle;
+      svg.push(`<text transform="matrix(${rackTextDir.x},${rackTextDir.y},${rackTextStack.x},${rackTextStack.y},${rackTitlePt.x},${rackTitlePt.y})" fill="#ffffff" font-family="Inter, sans-serif" font-weight="600" font-size="${rackClampedSize}" text-anchor="middle" dominant-baseline="central">${escapeXml(node.title)}</text>`);
+
+      if (node.subtitle) {
+        const rackSubSize = Math.round(rackClampedSize * 0.8125);
+        const rackSubPt = { x: rackTitlePt.x + rackTextStack.x * 18, y: rackTitlePt.y + rackTextStack.y * 18 };
+        svg.push(`<text transform="matrix(${rackTextDir.x},${rackTextDir.y},${rackTextStack.x},${rackTextStack.y},${rackSubPt.x},${rackSubPt.y})" fill="${light ? 'rgba(255,255,255,0.75)' : hexToRgba(node.glowColor, 0.95)}" font-family="Inter, sans-serif" font-weight="${light ? 600 : 500}" font-size="${rackSubSize}" text-anchor="middle" dominant-baseline="central">${escapeXml(node.subtitle)}</text>`);
+      }
+
+      svg.push('</g>');
+      break;
+    }
+
     const quad = isoQuad(node.x, node.y, node.width, node.height, camera, viewport);
     const leftTop = quad[0];
     const rightTop = quad[1];
