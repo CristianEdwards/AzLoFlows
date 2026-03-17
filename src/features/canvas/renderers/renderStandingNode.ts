@@ -37,10 +37,11 @@ export function renderStandingNode(
   const t3 = { x: p3.x, y: p3.y - screenH };
 
   const deepTone = light ? deepToneForGlow(node.glowColor) : '';
+  const baseFill = light ? node.fill : '';  // companion palette – rich mid-tone
 
   // Right Face (Thickness side) 
   drawPolygon(ctx, [t1, t2, p2, p1]);
-  ctx.fillStyle = light ? darkenHex(deepTone, 0.4) : darkenHex(node.glowColor, 0.45);
+  ctx.fillStyle = light ? darkenHex(baseFill, 0.65) : darkenHex(node.glowColor, 0.45);
   ctx.fill();
   ctx.strokeStyle = hexToRgba(node.glowColor, 0.3);
   ctx.lineWidth = 1;
@@ -48,7 +49,7 @@ export function renderStandingNode(
 
   // Top Face (Thickness top) 
   drawPolygon(ctx, [t0, t3, t2, t1]);
-  ctx.fillStyle = light ? darkenHex(deepTone, 0.3) : darkenHex(node.glowColor, 0.20);
+  ctx.fillStyle = light ? darkenHex(baseFill, 0.75) : darkenHex(node.glowColor, 0.20);
   ctx.fill();
   ctx.strokeStyle = hexToRgba(node.glowColor, 0.4);
   ctx.lineWidth = 1;
@@ -74,8 +75,8 @@ export function renderStandingNode(
   // ── Front face (screen) ──
   drawPolygon(ctx, [fTL, fTR, fBR, fBL]);
   const gFront = ctx.createLinearGradient(fTL.x, fTL.y, fBR.x, fBR.y);
-  gFront.addColorStop(0, light ? darkenHex(deepTone, 0.15) : darkenHex(node.glowColor, 0.10));
-  gFront.addColorStop(1, light ? darkenHex(deepTone, 0.30) : darkenHex(node.glowColor, 0.25));
+  gFront.addColorStop(0, light ? lightenHex(baseFill, 0.10) : darkenHex(node.glowColor, 0.10));
+  gFront.addColorStop(1, light ? darkenHex(baseFill, 0.40) : darkenHex(node.glowColor, 0.25));
   ctx.fillStyle = gFront;
   ctx.fill();
 
