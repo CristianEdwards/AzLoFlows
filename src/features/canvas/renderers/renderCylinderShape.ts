@@ -99,9 +99,9 @@ export function renderCylinderShape(
     x: (lt.x + rt.x + pts[2].x + lb.x) / 4,
     y: (lt.y + rt.y + pts[2].y + lb.y) / 4,
   };
-  // Swap hx/hy to rotate the cylinder ellipse 90° right
-  const hx: Point = { x: (lb.x - lt.x) / 2, y: (lb.y - lt.y) / 2 };
-  const hy: Point = { x: (rt.x - lt.x) / 2, y: (rt.y - lt.y) / 2 };
+  // Rotate the cylinder ellipse 180° left by negating both axes
+  const hx: Point = { x: -(lb.x - lt.x) / 2, y: -(lb.y - lt.y) / 2 };
+  const hy: Point = { x: -(rt.x - lt.x) / 2, y: -(rt.y - lt.y) / 2 };
   const bot: Point = { x: center.x, y: center.y + depth };
 
   const base = node.fill;
