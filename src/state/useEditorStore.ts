@@ -343,7 +343,6 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
                : templateOverrides?.shape === 'storage' ? 120
                : templateOverrides?.shape === 'chartPanel' ? 120
                : templateOverrides?.shape === 'analyticsPanel' ? 160
-               : templateOverrides?.shape === 'nic' ? 150
                : 140,
           height: templateOverrides?.shape === 'card' ? 110
                 : templateOverrides?.shape === 'browser' ? 120
@@ -352,7 +351,6 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
                 : templateOverrides?.shape === 'storage' ? 120
                 : templateOverrides?.shape === 'chartPanel' ? 100
                 : templateOverrides?.shape === 'analyticsPanel' ? 140
-                : templateOverrides?.shape === 'nic' ? 110
                 : 96,
           title: templateOverrides?.title ?? 'New Node',
           subtitle: templateOverrides?.subtitle ?? 'Editable',

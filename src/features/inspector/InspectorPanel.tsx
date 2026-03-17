@@ -248,7 +248,6 @@ export default function InspectorPanel() {
                 <option value="storage">Storage</option>
                 <option value="chartPanel">Chart Panel</option>
                 <option value="analyticsPanel">Analytics Panel</option>
-                <option value="nic">Network Adapter</option>
               </select>
             </label>
             <label className="field">

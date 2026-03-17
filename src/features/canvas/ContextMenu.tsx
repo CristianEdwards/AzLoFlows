@@ -201,7 +201,6 @@ export default function ContextMenu({ x, y, onClose }: ContextMenuProps) {
               <option value="dashboard">Dashboard</option>
               <option value="chartPanel">Chart Panel</option>
               <option value="analyticsPanel">Analytics Panel</option>
-              <option value="nic">Network Adapter</option>
             </select>
           </div>
           <div className="context-menu__section">
