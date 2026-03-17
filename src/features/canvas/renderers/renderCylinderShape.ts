@@ -94,94 +94,84 @@ export function renderCylinderShape(
   const base = node.fill;
   const glow = node.glowColor;
 
-  /* ── 1. Cylinder body fill (solid gradient, no transparency) ── */
+  /* ── 1. Cylinder body fill (solid gradient, gentle L→R shading) ── */
   body(ctx, center, bot, hx, hy);
   const gBody = ctx.createLinearGradient(
     center.x - hx.x * 1.1, center.y - hx.y * 1.1,
     center.x + hx.x * 1.1, center.y + hx.y * 1.1,
   );
   if (light) {
-    gBody.addColorStop(0, lightenHex(base, 0.25));
-    gBody.addColorStop(0.35, base);
-    gBody.addColorStop(0.7, darkenHex(base, 0.40));
-    gBody.addColorStop(1, darkenHex(base, 0.65));
-  } else {
     gBody.addColorStop(0, lightenHex(base, 0.20));
-    gBody.addColorStop(0.35, base);
-    gBody.addColorStop(0.65, darkenHex(base, 0.35));
-    gBody.addColorStop(1, darkenHex(base, 0.55));
+    gBody.addColorStop(0.4, base);
+    gBody.addColorStop(0.75, darkenHex(base, 0.20));
+    gBody.addColorStop(1, darkenHex(base, 0.30));
+  } else {
+    gBody.addColorStop(0, lightenHex(base, 0.22));
+    gBody.addColorStop(0.4, base);
+    gBody.addColorStop(0.75, darkenHex(base, 0.18));
+    gBody.addColorStop(1, darkenHex(base, 0.28));
   }
   ctx.fillStyle = gBody;
   ctx.fill();
 
-  /* ── 2. Bottom ellipse stroke ─────────────────────────────── */
-  halfEllipse(ctx, bot, hx, hy);
-  ctx.strokeStyle = darkenHex(glow, 0.30);
-  ctx.lineWidth = 1.6 * bScale;
+  /* ── 2. Body outline (single stroke around the filled body path) ── */
+  body(ctx, center, bot, hx, hy);
+  ctx.strokeStyle = darkenHex(glow, 0.25);
+  ctx.lineWidth = 1 * bScale;
   ctx.stroke();
 
-  /* ── 3. Side edge outlines ────────────────────────────────── */
+  /* ── 3. Subtle glossy highlight on left side of body ──────── */
   ctx.beginPath();
-  ctx.moveTo(center.x + hx.x, center.y + hx.y);
-  ctx.lineTo(bot.x + hx.x, bot.y + hx.y);
-  ctx.moveTo(center.x - hx.x, center.y - hx.y);
-  ctx.lineTo(bot.x - hx.x, bot.y - hx.y);
-  ctx.strokeStyle = selected ? lightenHex(glow, 0.05) : darkenHex(glow, 0.20);
-  ctx.lineWidth = (selected ? 2 : 1.2) * bScale;
-  ctx.stroke();
-
-  /* ── 4. Glossy highlight on left side of body ─────────────── */
-  ctx.beginPath();
-  const hlAngle = Math.PI * 0.78;
+  const hlAngle = Math.PI * 0.72;
   const spTop: Point = {
-    x: center.x + Math.cos(hlAngle) * hx.x * 0.88 + Math.sin(hlAngle) * hy.x * 0.88,
-    y: center.y + Math.cos(hlAngle) * hx.y * 0.88 + Math.sin(hlAngle) * hy.y * 0.88,
+    x: center.x + Math.cos(hlAngle) * hx.x * 0.85 + Math.sin(hlAngle) * hy.x * 0.85,
+    y: center.y + Math.cos(hlAngle) * hx.y * 0.85 + Math.sin(hlAngle) * hy.y * 0.85,
   };
   const spBot: Point = {
-    x: bot.x + Math.cos(hlAngle) * hx.x * 0.88 + Math.sin(hlAngle) * hy.x * 0.88,
-    y: bot.y + Math.cos(hlAngle) * hx.y * 0.88 + Math.sin(hlAngle) * hy.y * 0.88,
+    x: bot.x + Math.cos(hlAngle) * hx.x * 0.85 + Math.sin(hlAngle) * hy.x * 0.85,
+    y: bot.y + Math.cos(hlAngle) * hx.y * 0.85 + Math.sin(hlAngle) * hy.y * 0.85,
   };
   ctx.moveTo(spTop.x, spTop.y);
   ctx.lineTo(spBot.x, spBot.y);
-  ctx.strokeStyle = lightenHex(base, 0.25);
-  ctx.lineWidth = 2.5 * bScale;
+  ctx.strokeStyle = lightenHex(base, 0.15);
+  ctx.lineWidth = 2 * bScale;
   ctx.stroke();
 
-  /* ── 5. Top ellipse fill (solid gradient) ─────────────────── */
+  /* ── 4. Top ellipse fill (solid gradient) ─────────────────── */
   ellipse(ctx, center, hx, hy);
   const gTop = ctx.createLinearGradient(
     center.x + hy.x, center.y + hy.y,
     center.x - hy.x, center.y - hy.y,
   );
   if (light) {
-    gTop.addColorStop(0, lightenHex(base, 0.30));
-    gTop.addColorStop(0.5, lightenHex(base, 0.10));
-    gTop.addColorStop(1, darkenHex(base, 0.15));
-  } else {
     gTop.addColorStop(0, lightenHex(base, 0.25));
+    gTop.addColorStop(0.5, lightenHex(base, 0.08));
+    gTop.addColorStop(1, darkenHex(base, 0.12));
+  } else {
+    gTop.addColorStop(0, lightenHex(base, 0.22));
     gTop.addColorStop(0.5, base);
-    gTop.addColorStop(1, darkenHex(base, 0.25));
+    gTop.addColorStop(1, darkenHex(base, 0.15));
   }
   ctx.fillStyle = gTop;
   ctx.fill();
 
-  /* ── 6. Top ellipse stroke ────────────────────────────────── */
+  /* ── 5. Top ellipse stroke ────────────────────────────────── */
   ellipse(ctx, center, hx, hy);
-  ctx.strokeStyle = selected ? lightenHex(glow, 0.15) : darkenHex(glow, 0.10);
-  ctx.lineWidth = (selected ? 3 : 2) * bScale;
+  ctx.strokeStyle = selected ? lightenHex(glow, 0.10) : darkenHex(glow, 0.10);
+  ctx.lineWidth = (selected ? 2.5 : 1.5) * bScale;
   ctx.stroke();
 
-  /* ── 7. Glossy arc on top face ────────────────────────────── */
+  /* ── 6. Subtle glossy arc on top face ─────────────────────── */
   ctx.beginPath();
-  for (let i = 3; i <= 18; i++) {
+  for (let i = 4; i <= 16; i++) {
     const t = (i / SEGS) * Math.PI * 2;
-    const f = 0.78;
+    const f = 0.75;
     const px = center.x + Math.cos(t) * hx.x * f + Math.sin(t) * hy.x * f;
     const py = center.y + Math.cos(t) * hx.y * f + Math.sin(t) * hy.y * f;
-    if (i === 3) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    if (i === 4) ctx.moveTo(px, py); else ctx.lineTo(px, py);
   }
-  ctx.strokeStyle = lightenHex(base, 0.35);
-  ctx.lineWidth = 1.6 * bScale;
+  ctx.strokeStyle = lightenHex(base, 0.20);
+  ctx.lineWidth = 1.2 * bScale;
   ctx.stroke();
 
   /* ── 8. Title text below ──────────────────────────────────── */
