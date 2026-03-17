@@ -425,6 +425,129 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
       }
       case 'node': {
     const node = item.entity;
+    const STANDING_SHAPES = new Set(['standingNode', 'browser', 'browser2', 'dashboard', 'chartPanel', 'analyticsPanel']);
+    const isStanding = STANDING_SHAPES.has(node.shape ?? '');
+
+    if (isStanding) {
+      // Standing panels: thin vertical panel extending upward from the footprint
+      const SCREEN_H_FACTOR = 0.85;
+      const panelThick = node.shape === 'standingNode' ? node.width * 0.03 : 0;
+      const screenH = node.width * SCREEN_H_FACTOR * camera.zoom;
+
+      // Bottom footprint points
+      const bBL = worldToScreen({ x: node.x, y: node.y }, camera, viewport);
+      const bBR = worldToScreen({ x: node.x, y: node.y + node.height }, camera, viewport);
+      const fBL = worldToScreen({ x: node.x + panelThick, y: node.y }, camera, viewport);
+      const fBR = worldToScreen({ x: node.x + panelThick, y: node.y + node.height }, camera, viewport);
+
+      // Top points: same x, shifted up by screenH
+      const fTL = { x: fBL.x, y: fBL.y - screenH };
+      const fTR = { x: fBR.x, y: fBR.y - screenH };
+      const bTL = { x: bBL.x, y: bBL.y - screenH };
+      const bTR = { x: bBR.x, y: bBR.y - screenH };
+
+      // Front face basis vectors (for text/icon transforms)
+      const frontW = Math.hypot(fTR.x - fTL.x, fTR.y - fTL.y) || 1;
+      const frontH = Math.hypot(fBL.x - fTL.x, fBL.y - fTL.y) || 1;
+      const basisX = { x: (fTR.x - fTL.x) / frontW, y: (fTR.y - fTL.y) / frontW };
+      const basisY = { x: (fBL.x - fTL.x) / frontH, y: (fBL.y - fTL.y) / frontH };
+
+      // Parametric helper for front face
+      const fp = (u: number, v: number) => ({
+        x: fTL.x + (fTR.x - fTL.x) * u + (fBL.x - fTL.x) * v,
+        y: fTL.y + (fTR.y - fTL.y) * u + (fBL.y - fTL.y) * v,
+      });
+
+      svg.push('<g>');
+
+      // White base in light mode
+      if (light) {
+        for (const face of [
+          pts([bTL, bTR, fTR, fTL]),               // top thin strip
+          pts([bTR, bBR, fBR, fTR]),                // right side
+          pts([fTL, fTR, fBR, fBL]),                // front face
+        ]) {
+          svg.push(`<polygon points="${face}" fill="rgba(255,255,255,0.88)" />`);
+        }
+      }
+
+      // Top thin strip (between back-top and front-top)
+      if (panelThick > 0) {
+        svg.push(`<polygon points="${pts([bTL, bTR, fTR, fTL])}" fill="${hexToRgba(node.fill, light ? 0.88 : 0.20)}" stroke="${hexToRgba(node.glowColor, 0.4)}" stroke-width="1" />`);
+      }
+
+      // Right side face
+      svg.push(`<polygon points="${pts([bTR, bBR, fBR, fTR])}" fill="${hexToRgba(node.fill, light ? 0.92 : 0.30)}" stroke="${hexToRgba(node.glowColor, 0.3)}" stroke-width="1" />`);
+
+      // Front face with gradient
+      const gId = uid();
+      svg.push(`<defs><linearGradient id="sg${gId}" x1="${fTL.x}" y1="${fTL.y}" x2="${fBR.x}" y2="${fBR.y}" gradientUnits="userSpaceOnUse">`);
+      svg.push(`<stop offset="0" stop-color="${node.fill}" stop-opacity="${light ? 0.98 : 0.84}"/>`);
+      svg.push(`<stop offset="0.5" stop-color="${node.fill}" stop-opacity="${light ? 0.88 : 0.46}"/>`);
+      svg.push(`<stop offset="1" stop-color="${node.fill}" stop-opacity="${light ? 0.72 : 0.24}"/>`);
+      svg.push('</linearGradient></defs>');
+      svg.push(`<polygon points="${pts([fTL, fTR, fBR, fBL])}" fill="url(#sg${gId})" filter="url(#softGlow)" />`);
+
+      // Diagonal reflection lines
+      const bScale = Math.min(1, Math.max(0.35, frontW / 120));
+      const r1a = fp(0.58, 0.08);
+      const r1b = fp(0.22, 0.72);
+      svg.push(`<line x1="${r1a.x}" y1="${r1a.y}" x2="${r1b.x}" y2="${r1b.y}" stroke="rgba(255,255,255,0.18)" stroke-width="${5 * bScale}" />`);
+      const r2a = fp(0.64, 0.06);
+      const r2b = fp(0.28, 0.70);
+      svg.push(`<line x1="${r2a.x}" y1="${r2a.y}" x2="${r2b.x}" y2="${r2b.y}" stroke="rgba(255,255,255,0.07)" stroke-width="${2.5 * bScale}" />`);
+
+      // Front face border (glow)
+      svg.push(`<polygon points="${pts([fTL, fTR, fBR, fBL])}" fill="none" stroke="${hexToRgba(node.glowColor, light ? 0.88 : 0.65)}" stroke-width="2" />`);
+      svg.push(`<polygon points="${pts([fTL, fTR, fBR, fBL])}" fill="none" stroke="${hexToRgba(node.glowColor, light ? 0.12 : 0.10)}" stroke-width="4" />`);
+
+      // Edge highlights
+      svg.push(`<line x1="${fTL.x}" y1="${fTL.y}" x2="${fTR.x}" y2="${fTR.y}" stroke="${hexToRgba(node.glowColor, 0.75)}" stroke-width="2" />`);
+      svg.push(`<line x1="${fTL.x}" y1="${fTL.y}" x2="${fBL.x}" y2="${fBL.y}" stroke="${hexToRgba(node.glowColor, 0.90)}" stroke-width="2.5" filter="url(#edgeGlow)" />`);
+
+      // Icon
+      if (node.icon && nodeIconCatalog[node.icon]) {
+        const iconDef = nodeIconCatalog[node.icon];
+        const iconSize = Math.min(frontW, screenH) * 0.28;
+        const ic = fp(0.5, 0.35);
+        const scale = iconSize / 32;
+        const m00 = basisX.x * scale;
+        const m01 = basisX.y * scale;
+        const m10 = 0 * scale;
+        const m11 = 1 * scale;
+        const tx = ic.x - m00 * 16 - m10 * 16;
+        const ty = ic.y - m01 * 16 - m11 * 16;
+        svg.push(`<g transform="matrix(${m00},${m01},${m10},${m11},${tx},${ty})" fill="${hexToRgba(node.glowColor, light ? 0.5 : 1.0)}" opacity="${light ? 1.0 : 0.7}">`);
+        for (const d of iconDef.paths) {
+          svg.push(`<path d="${d}" />`);
+        }
+        svg.push('</g>');
+      }
+
+      // Title text
+      const nodeTitleSize = node.fontSize ?? 16;
+      const scaledTitleSize = Math.round(nodeTitleSize * camera.zoom);
+      const titleFitW = frontW * 0.85;
+      const approxTitleW = node.title.length * scaledTitleSize * 0.6 * 0.87;
+      const clampedTitleSize = approxTitleW > titleFitW
+        ? Math.max(8, Math.floor(scaledTitleSize * (titleFitW / approxTitleW)))
+        : scaledTitleSize;
+      const clampedSubSize = Math.round(clampedTitleSize * 0.8125);
+
+      const titlePt = node.icon && nodeIconCatalog[node.icon] ? fp(0.5, 0.65) : fp(0.5, 0.48);
+      const textDir = basisX;
+      const textStack = { x: 0, y: 1 };
+      svg.push(`<text transform="matrix(${textDir.x},${textDir.y},${textStack.x},${textStack.y},${titlePt.x},${titlePt.y})" fill="#ffffff" font-family="Inter, sans-serif" font-weight="600" font-size="${clampedTitleSize}" text-anchor="middle" dominant-baseline="central">${escapeXml(node.title)}</text>`);
+
+      if (node.subtitle) {
+        const subtitlePt = { x: titlePt.x + textStack.x * 18, y: titlePt.y + textStack.y * 18 };
+        svg.push(`<text transform="matrix(${textDir.x},${textDir.y},${textStack.x},${textStack.y},${subtitlePt.x},${subtitlePt.y})" fill="${light ? 'rgba(255,255,255,0.9)' : hexToRgba(node.glowColor, 0.95)}" font-family="Inter, sans-serif" font-weight="${light ? 600 : 500}" font-size="${clampedSubSize}" text-anchor="middle" dominant-baseline="central">${escapeXml(node.subtitle)}</text>`);
+      }
+
+      svg.push('</g>');
+      break;
+    }
+
     const quad = isoQuad(node.x, node.y, node.width, node.height, camera, viewport);
     const leftTop = quad[0];
     const rightTop = quad[1];
