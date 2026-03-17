@@ -6,10 +6,32 @@ import { drawPolygon, drawTransformedText } from '@/lib/rendering/canvasPrimitiv
 import { hexToRgba, lightenHex, darkenHex, deepToneForGlow } from '@/lib/rendering/tokens';
 import type { CameraState, NodeEntity } from '@/types/document';
 
+/*
+ * SVG reference coordinate system:
+ *   PCB top-face diamond:
+ *     T = (2.60, 2.00)   ← lt  (top vertex)
+ *     R = (9.53, 6.00)   ← rt  (right vertex)
+ *     B = (-2.60, 13.00) ← rb  (bottom vertex)
+ *     L = (-9.53, 9.00)  ← lb  (left vertex)
+ *
+ *   u-axis (T→R): dx=6.93, dy=4.00
+ *   v-axis (T→L): dx=-12.13, dy=7.00
+ *
+ *   Any SVG point P is: T + u*(R−T) + v*(L−T)
+ *   Solving: given (px,py) relative to T,
+ *     u = (px*vy − py*vx) / (ux*vy − uy*vx)
+ *     v = (px*uy − py*ux) / (vx*uy − vy*ux)
+ *
+ * Pre-computed (u,v) fractions are used below to place every element.
+ *
+ * PCB depth: left side depth = 4 units, right side depth = 7 units
+ * (from SVG: left-face goes from y=9 to y=13 → Δ4; right-face from y=6 to y=13 → Δ7)
+ * In our renderer we use NODE_DEPTH * 0.35 (≈12px) as the screen-space depth.
+ */
+
 /**
- * Renders an isometric NIC (Network Interface Card) shape.
- * Green PCB board with gold connector pins along one edge,
- * two 3-D RJ-45 port blocks, a backplate strip, and LED indicators.
+ * Renders an isometric NIC (Network Interface Card) shape,
+ * matching the reference SVG exactly.
  */
 export function renderNic(
   ctx: CanvasRenderingContext2D,
@@ -23,8 +45,7 @@ export function renderNic(
   const light = theme === 'light';
   const points = isoQuad(node.x, node.y, node.width, node.height, camera, viewport);
   const [lt, rt, rb, lb] = points;
-  const depth = NODE_DEPTH * 0.20 * camera.zoom; // thin PCB slab
-  const pulse = 0.7 + Math.sin(time * 0.0015 + node.zIndex) * 0.18;
+  const depth = NODE_DEPTH * 0.35 * camera.zoom;
 
   const topEdgeLen = Math.hypot(rt.x - lt.x, rt.y - lt.y) || 1;
   const leftEdgeLen = Math.hypot(lb.x - lt.x, lb.y - lt.y) || 1;
@@ -33,273 +54,409 @@ export function renderNic(
   const bxDir = { x: (rt.x - lt.x) / topEdgeLen, y: (rt.y - lt.y) / topEdgeLen };
   const byDir = { x: (lb.x - lt.x) / leftEdgeLen, y: (lb.y - lt.y) / leftEdgeLen };
 
+  // Helper: map (u,v) parametric coords on the top face to screen-space point
+  const uv = (u: number, v: number) => ({
+    x: lt.x + (rt.x - lt.x) * u + (lb.x - lt.x) * v,
+    y: lt.y + (rt.y - lt.y) * u + (lb.y - lt.y) * v,
+  });
+
+  // Helper: same as uv but shifted down by `d` pixels (for extruded faces)
+  const uvD = (u: number, v: number, d: number) => {
+    const p = uv(u, v);
+    return { x: p.x, y: p.y + d };
+  };
+
   // Depth-extruded corners
   const ltD = { x: lt.x, y: lt.y + depth };
   const lbD = { x: lb.x, y: lb.y + depth };
   const rbD = { x: rb.x, y: rb.y + depth };
   const rtD = { x: rt.x, y: rt.y + depth };
 
-  // PCB base colour: green from glowColor, gold from amber/yellow
-  const pcbGreen = light ? deepToneForGlow(node.glowColor) : node.glowColor;
-  const pcbFill = node.fill;
-  const goldColor = '#D4A017';
-  const portGray = light ? '#8A8A8A' : '#6B7280';
-  const darkPort = light ? '#3A3A3A' : '#1F2937';
+  // ────────────────────────────────────────────────────────────
+  // 1. Ground shadow ellipse (approximated as a larger diamond)
+  // ────────────────────────────────────────────────────────────
+  const shadowPad = 0.12;
+  const sLT = uv(-shadowPad, -shadowPad);
+  const sRT = uv(1 + shadowPad, -shadowPad);
+  const sRB = uv(1 + shadowPad, 1 + shadowPad);
+  const sLB = uv(-shadowPad, 1 + shadowPad);
+  drawPolygon(ctx, [
+    { x: sLT.x, y: sLT.y + depth * 1.2 },
+    { x: sRT.x, y: sRT.y + depth * 1.2 },
+    { x: sRB.x, y: sRB.y + depth * 1.2 },
+    { x: sLB.x, y: sLB.y + depth * 1.2 },
+  ]);
+  ctx.fillStyle = 'rgba(5, 10, 30, 0.15)';
+  ctx.fill();
 
-  // ── Drop shadow (light mode) ──
-  if (light) {
-    drawPolygon(ctx, [lb, rb, rbD, lbD]);
-    ctx.shadowColor = 'rgba(0,0,0,0.18)';
-    ctx.shadowBlur = 12;
-    ctx.shadowOffsetY = 6;
-    ctx.fillStyle = 'rgba(0,0,0,0)';
-    ctx.fill();
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
-    ctx.shadowOffsetY = 0;
-  }
-
-  // ── Left face (medium PCB green) ──
+  // ────────────────────────────────────────────────────────────
+  // 2. PCB left face  (#368c5a → darker green)
+  // ────────────────────────────────────────────────────────────
   drawPolygon(ctx, [lt, lb, lbD, ltD]);
-  if (light) {
-    const g = ctx.createLinearGradient(lt.x, lt.y, lbD.x, lbD.y);
-    g.addColorStop(0, darkenHex(pcbGreen, 0.55));
-    g.addColorStop(1, darkenHex(pcbGreen, 0.70));
-    ctx.fillStyle = g;
-  } else {
-    const g = ctx.createLinearGradient(lt.x, lt.y, lbD.x, lbD.y);
-    g.addColorStop(0, hexToRgba(node.glowColor, 0.45));
-    g.addColorStop(1, darkenHex(node.glowColor, 0.55));
-    ctx.fillStyle = g;
-  }
+  ctx.fillStyle = light ? darkenHex(deepToneForGlow(node.glowColor), 0.35) : '#368c5a';
   ctx.fill();
-  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.25 : 0.18);
-  ctx.lineWidth = 0.6 * bScale;
-  ctx.stroke();
 
-  // ── Front face (darker PCB green) ──
+  // ────────────────────────────────────────────────────────────
+  // 3. PCB right/front face (#48BB78 → medium green)
+  // ────────────────────────────────────────────────────────────
   drawPolygon(ctx, [lb, rb, rbD, lbD]);
-  if (light) {
-    const g = ctx.createLinearGradient(lb.x, lb.y, rbD.x, rbD.y);
-    g.addColorStop(0, darkenHex(pcbGreen, 0.50));
-    g.addColorStop(1, darkenHex(pcbGreen, 0.65));
-    ctx.fillStyle = g;
-  } else {
-    const g = ctx.createLinearGradient(lb.x, lb.y, rbD.x, rbD.y);
-    g.addColorStop(0, darkenHex(node.glowColor, 0.45));
-    g.addColorStop(1, darkenHex(node.glowColor, 0.65));
-    ctx.fillStyle = g;
-  }
-  ctx.fill();
-  ctx.strokeStyle = hexToRgba(node.glowColor, light ? 0.25 : 0.18);
-  ctx.lineWidth = 0.6 * bScale;
-  ctx.stroke();
-
-  // ── Top face (PCB surface — brightest green) ──
-  drawPolygon(ctx, points);
-  const grad = ctx.createLinearGradient(lt.x, lt.y, rb.x, rb.y);
-  if (light) {
-    grad.addColorStop(0, lightenHex(pcbGreen, 0.35));
-    grad.addColorStop(0.5, lightenHex(pcbGreen, 0.25));
-    grad.addColorStop(1, lightenHex(pcbGreen, 0.15));
-  } else {
-    grad.addColorStop(0, hexToRgba(node.glowColor, 0.80));
-    grad.addColorStop(0.4, hexToRgba(node.glowColor, 0.55));
-    grad.addColorStop(1, darkenHex(node.glowColor, 0.30));
-  }
-  ctx.fillStyle = grad;
+  ctx.fillStyle = light ? darkenHex(deepToneForGlow(node.glowColor), 0.20) : '#48BB78';
   ctx.fill();
 
-  // ── PCB circuit-trace lines (subtle detail on top face) ──
-  ctx.save();
-  ctx.globalAlpha = light ? 0.10 : 0.08;
-  ctx.strokeStyle = light ? darkenHex(pcbGreen, 0.3) : lightenHex(node.glowColor, 0.5);
-  ctx.lineWidth = 0.7 * bScale;
-  for (let i = 1; i <= 4; i++) {
-    const t = i * 0.2;
-    const p1 = { x: lt.x + (lb.x - lt.x) * t, y: lt.y + (lb.y - lt.y) * t };
-    const p2 = { x: rt.x + (rb.x - rt.x) * t, y: rt.y + (rb.y - rt.y) * t };
-    ctx.beginPath();
-    ctx.moveTo(p1.x, p1.y);
-    ctx.lineTo(p2.x, p2.y);
-    ctx.stroke();
-  }
-  for (let i = 1; i <= 3; i++) {
-    const t = i * 0.25;
-    const p1 = { x: lt.x + (rt.x - lt.x) * t, y: lt.y + (rt.y - lt.y) * t };
-    const p2 = { x: lb.x + (rb.x - lb.x) * t, y: lb.y + (rb.y - lb.y) * t };
-    ctx.beginPath();
-    ctx.moveTo(p1.x, p1.y);
-    ctx.lineTo(p2.x, p2.y);
-    ctx.stroke();
-  }
-  ctx.restore();
-
-  // ── Gold connector pins along the left edge (like PCB edge connector) ──
-  const pinCount = 8;
-  for (let i = 0; i < pinCount; i++) {
-    const t = 0.12 + (i / (pinCount - 1)) * 0.76;
-    const pinBase = {
-      x: lt.x + (lb.x - lt.x) * t,
-      y: lt.y + (lb.y - lt.y) * t,
-    };
-    const pinOut = {
-      x: pinBase.x - bxDir.x * 3 * bScale,
-      y: pinBase.y - bxDir.y * 3 * bScale,
-    };
-    const pinW = 2 * bScale;
-    ctx.beginPath();
-    ctx.moveTo(pinBase.x - byDir.x * pinW, pinBase.y - byDir.y * pinW);
-    ctx.lineTo(pinBase.x + byDir.x * pinW, pinBase.y + byDir.y * pinW);
-    ctx.lineTo(pinOut.x + byDir.x * pinW, pinOut.y + byDir.y * pinW);
-    ctx.lineTo(pinOut.x - byDir.x * pinW, pinOut.y - byDir.y * pinW);
-    ctx.closePath();
-    ctx.fillStyle = light ? '#C8962E' : goldColor;
-    ctx.globalAlpha = 0.85;
-    ctx.fill();
-    ctx.globalAlpha = 1;
-  }
-
-  // ── Two RJ-45 port blocks (3-D extruded rectangles on top face) ──
-  const portDepth = depth * 1.4;
-  for (let pi = 0; pi < 2; pi++) {
-    const portXStart = 0.55 + pi * 0.22;
-    const portXEnd = portXStart + 0.16;
-    const portYStart = 0.20;
-    const portYEnd = 0.55;
-
-    // four corners of port on top face
-    const pLT = {
-      x: lt.x + (rt.x - lt.x) * portXStart + (lb.x - lt.x) * portYStart,
-      y: lt.y + (rt.y - lt.y) * portXStart + (lb.y - lt.y) * portYStart,
-    };
-    const pRT = {
-      x: lt.x + (rt.x - lt.x) * portXEnd + (lb.x - lt.x) * portYStart,
-      y: lt.y + (rt.y - lt.y) * portXEnd + (lb.y - lt.y) * portYStart,
-    };
-    const pRB = {
-      x: lt.x + (rt.x - lt.x) * portXEnd + (lb.x - lt.x) * portYEnd,
-      y: lt.y + (rt.y - lt.y) * portXEnd + (lb.y - lt.y) * portYEnd,
-    };
-    const pLB = {
-      x: lt.x + (rt.x - lt.x) * portXStart + (lb.x - lt.x) * portYEnd,
-      y: lt.y + (rt.y - lt.y) * portXStart + (lb.y - lt.y) * portYEnd,
-    };
-
-    // extruded top of port block
-    const pLTu = { x: pLT.x, y: pLT.y - portDepth };
-    const pRTu = { x: pRT.x, y: pRT.y - portDepth };
-    const pRBu = { x: pRB.x, y: pRB.y - portDepth };
-    const pLBu = { x: pLB.x, y: pLB.y - portDepth };
-
-    // Front face of port block
-    drawPolygon(ctx, [pLB, pRB, pRBu, pLBu]);
-    ctx.fillStyle = light ? '#9CA3AF' : '#4B5563';
-    ctx.fill();
-    ctx.strokeStyle = hexToRgba('#000000', 0.2);
-    ctx.lineWidth = 0.5 * bScale;
-    ctx.stroke();
-
-    // Right face of port block
-    drawPolygon(ctx, [pRB, pRT, pRTu, pRBu]);
-    ctx.fillStyle = light ? '#8A8F96' : '#3E4451';
-    ctx.fill();
-    ctx.strokeStyle = hexToRgba('#000000', 0.2);
-    ctx.lineWidth = 0.5 * bScale;
-    ctx.stroke();
-
-    // Top face of port block
-    drawPolygon(ctx, [pLTu, pRTu, pRBu, pLBu]);
-    ctx.fillStyle = light ? '#B0B5BC' : '#6B7280';
-    ctx.fill();
-    ctx.strokeStyle = hexToRgba('#000000', 0.15);
-    ctx.lineWidth = 0.5 * bScale;
-    ctx.stroke();
-
-    // Dark port opening inset on top face of port block
-    const inset = 0.15;
-    const iLT = {
-      x: pLTu.x + (pRTu.x - pLTu.x) * inset + (pLBu.x - pLTu.x) * inset,
-      y: pLTu.y + (pRTu.y - pLTu.y) * inset + (pLBu.y - pLTu.y) * inset,
-    };
-    const iRT = {
-      x: pLTu.x + (pRTu.x - pLTu.x) * (1 - inset) + (pLBu.x - pLTu.x) * inset,
-      y: pLTu.y + (pRTu.y - pLTu.y) * (1 - inset) + (pLBu.y - pLTu.y) * inset,
-    };
-    const iRB = {
-      x: pLTu.x + (pRTu.x - pLTu.x) * (1 - inset) + (pLBu.x - pLTu.x) * (1 - inset),
-      y: pLTu.y + (pRTu.y - pLTu.y) * (1 - inset) + (pLBu.y - pLTu.y) * (1 - inset),
-    };
-    const iLB = {
-      x: pLTu.x + (pRTu.x - pLTu.x) * inset + (pLBu.x - pLTu.x) * (1 - inset),
-      y: pLTu.y + (pRTu.y - pLTu.y) * inset + (pLBu.y - pLTu.y) * (1 - inset),
-    };
-    drawPolygon(ctx, [iLT, iRT, iRB, iLB]);
-    ctx.fillStyle = darkPort;
-    ctx.fill();
-  }
-
-  // ── Backplate strip along the right edge ──
-  const bpStart = 0.88;
-  const bpLT = {
-    x: lt.x + (rt.x - lt.x) * bpStart,
-    y: lt.y + (rt.y - lt.y) * bpStart,
-  };
-  const bpRT = { x: rt.x, y: rt.y };
-  const bpRB = { x: rb.x, y: rb.y };
-  const bpLB = {
-    x: lb.x + (rb.x - lb.x) * bpStart,
-    y: lb.y + (rb.y - lb.y) * bpStart,
-  };
-  drawPolygon(ctx, [bpLT, bpRT, bpRB, bpLB]);
-  ctx.fillStyle = light ? '#A0A4AA' : hexToRgba('#9CA3AF', 0.45);
+  // ────────────────────────────────────────────────────────────
+  // 4. PCB top face (#76cc9a → bright green)
+  // ────────────────────────────────────────────────────────────
+  drawPolygon(ctx, points);
+  ctx.fillStyle = light ? lightenHex(deepToneForGlow(node.glowColor), 0.30) : '#76cc9a';
   ctx.fill();
-  ctx.strokeStyle = hexToRgba('#000000', 0.15);
-  ctx.lineWidth = 0.5 * bScale;
-  ctx.stroke();
 
-  // ── LED indicators (top-left corner of PCB) ──
-  const leds = [
-    { t: 0.12, color: '#22C55E' }, // green — link
-    { t: 0.22, color: '#F59E0B' }, // amber — activity
-  ];
-  for (const led of leds) {
-    const ledPos = {
-      x: lt.x + (rt.x - lt.x) * 0.08 + (lb.x - lt.x) * led.t,
-      y: lt.y + (rt.y - lt.y) * 0.08 + (lb.y - lt.y) * led.t,
-    };
-    ctx.beginPath();
-    ctx.arc(ledPos.x, ledPos.y, 2.2 * bScale, 0, Math.PI * 2);
-    ctx.fillStyle = hexToRgba(led.color, 0.5 + pulse * 0.35);
-    ctx.fill();
-    // glow ring
-    ctx.beginPath();
-    ctx.arc(ledPos.x, ledPos.y, 3.5 * bScale, 0, Math.PI * 2);
-    ctx.strokeStyle = hexToRgba(led.color, 0.25 * pulse);
-    ctx.lineWidth = 1 * bScale;
-    ctx.stroke();
-  }
-
-  // ── Top face border ──
-  drawPolygon(ctx, points);
-  ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.98 : (light ? 0.82 : 0.68));
-  ctx.lineWidth = (selected ? 2.8 : 2) * bScale;
-  ctx.stroke();
-  // Outer glow
-  drawPolygon(ctx, points);
-  ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.25 : (light ? 0.10 : 0.14));
-  ctx.lineWidth = (selected ? 6 : 4) * bScale;
-  ctx.stroke();
-
-  // ── Leading edge highlight ──
+  // ────────────────────────────────────────────────────────────
+  // 5. Two triangular PCB notches (top-right area)
+  //    SVG: stroke="#328354" on triangles near (1.73,3.49)→(0,4.49)→(0,5.49)
+  //    Parametric: notch 1 at roughly u≈0.87,v≈0.14 ; notch 2 at u≈0.93,v≈0.18
+  // ────────────────────────────────────────────────────────────
+  // Notch 1: (1.73,3.49)→(0,4.49)→(0,5.49) → u/v computed:
+  const n1a = uv(0.869, 0.135);
+  const n1b = uv(0.624, 0.227);
+  const n1c = uv(0.538, 0.318);
   ctx.beginPath();
-  ctx.moveTo(lt.x, lt.y);
-  ctx.lineTo(lb.x, lb.y);
-  ctx.strokeStyle = hexToRgba(node.glowColor, 0.92);
-  ctx.lineWidth = 2.4 * bScale;
+  ctx.moveTo(n1a.x, n1a.y); ctx.lineTo(n1b.x, n1b.y); ctx.lineTo(n1c.x, n1c.y);
+  ctx.strokeStyle = light ? darkenHex(deepToneForGlow(node.glowColor), 0.40) : '#328354';
+  ctx.lineWidth = 1.5 * bScale;
   ctx.stroke();
 
-  // ── Icon + text ──
+  // Notch 2: (2.60,3.99)→(1.73,4.49)→(1.73,5.49)
+  const n2a = uv(0.993, 0.181);
+  const n2b = uv(0.869, 0.227);
+  const n2c = uv(0.783, 0.318);
+  ctx.beginPath();
+  ctx.moveTo(n2a.x, n2a.y); ctx.lineTo(n2b.x, n2b.y); ctx.lineTo(n2c.x, n2c.y);
+  ctx.stroke();
+
+  // ────────────────────────────────────────────────────────────
+  // 6. Small RJ-45 port block (center of PCB)
+  //    SVG 3-face box: top (#5b6270), left (#1b2330), right (#242E40)
+  //    Top face: (1.73,4.30)→(4.33,5.80)→(1.73,7.30)→(-0.87,5.80)
+  //    Left face: (-0.87,5.80)→(1.73,7.30)→(1.73,8.50)→(-0.87,7.00)
+  //    Right face: (4.33,5.80)→(1.73,7.30)→(1.73,8.50)→(4.33,7.00)
+  // ────────────────────────────────────────────────────────────
+  const spt = uv(0.783, 0.209);   // 1.73,4.30
+  const spr = uv(1.152, 0.345);   // 4.33,5.80
+  const spb = uv(0.783, 0.482);   // 1.73,7.30
+  const spl = uv(0.414, 0.345);   // -0.87,5.80
+  const splD = uvD(0.414, 0.455, 0);  // -0.87,7.00
+  const spbD = uvD(0.783, 0.591, 0);  // 1.73,8.50
+  const sprD = uvD(1.152, 0.455, 0);  // 4.33,7.00
+  // Recompute bottom points as same u,v but shifted down
+  const smallPortDepth = depth * 0.35;
+  const splB = { x: spl.x, y: spl.y + smallPortDepth };
+  const spbB = { x: spb.x, y: spb.y + smallPortDepth };
+  const sprB = { x: spr.x, y: spr.y + smallPortDepth };
+
+  // Left face of small port
+  drawPolygon(ctx, [spl, spb, spbB, splB]);
+  ctx.fillStyle = light ? '#2A3040' : '#1b2330';
+  ctx.fill();
+
+  // Right face of small port
+  drawPolygon(ctx, [spr, spb, spbB, sprB]);
+  ctx.fillStyle = light ? '#354055' : '#242E40';
+  ctx.fill();
+
+  // Top face of small port
+  drawPolygon(ctx, [spt, spr, spb, spl]);
+  ctx.fillStyle = light ? '#7A8190' : '#5b6270';
+  ctx.fill();
+
+  // Port opening dark lines (6 horizontal stripes inside small port)
+  ctx.strokeStyle = light ? '#1A2030' : '#0F172A';
+  ctx.lineWidth = 1 * bScale;
+  for (let i = 0; i < 6; i++) {
+    const t1 = 0.10 + i * 0.15;
+    const t2 = t1;
+    const lineStart = {
+      x: spt.x + (spl.x - spt.x) * 0.5 + (spb.x - spt.x) * t1,
+      y: spt.y + (spl.y - spt.y) * 0.5 + (spb.y - spt.y) * t1,
+    };
+    const lineEnd = {
+      x: spt.x + (spr.x - spt.x) * 0.5 + (spb.x - spt.x) * t2,
+      y: spt.y + (spr.y - spt.y) * 0.5 + (spb.y - spt.y) * t2,
+    };
+    ctx.beginPath();
+    ctx.moveTo(lineStart.x, lineStart.y);
+    ctx.lineTo(lineEnd.x, lineEnd.y);
+    ctx.stroke();
+  }
+
+  // ────────────────────────────────────────────────────────────
+  // 7. Two small connector cubes (bottom-left of small port)
+  //    Cube A: top at (-0.87,7.20)→(0,7.70)→(-0.87,8.20)→(-1.73,7.70)
+  //    Cube B: top at (0.87,8.20)→(1.73,8.70)→(0.87,9.20)→(0,8.70)
+  // ────────────────────────────────────────────────────────────
+  const cubeDepth = depth * 0.23;
+
+  // Cube A
+  const caT = uv(0.414, 0.473);
+  const caR = uv(0.538, 0.518);
+  const caB = uv(0.414, 0.564);
+  const caL = uv(0.290, 0.518);
+  const caLd = { x: caL.x, y: caL.y + cubeDepth };
+  const caBd = { x: caB.x, y: caB.y + cubeDepth };
+  const caRd = { x: caR.x, y: caR.y + cubeDepth };
+  drawPolygon(ctx, [caL, caB, caBd, caLd]);
+  ctx.fillStyle = light ? '#2A3040' : '#1b2330';
+  ctx.fill();
+  drawPolygon(ctx, [caR, caB, caBd, caRd]);
+  ctx.fillStyle = light ? '#354055' : '#242E40';
+  ctx.fill();
+  drawPolygon(ctx, [caT, caR, caB, caL]);
+  ctx.fillStyle = light ? '#7A8190' : '#5b6270';
+  ctx.fill();
+
+  // Cube B
+  const cbT = uv(0.662, 0.564);
+  const cbR = uv(0.786, 0.609);
+  const cbB = uv(0.662, 0.655);
+  const cbL = uv(0.538, 0.609);
+  const cbLd = { x: cbL.x, y: cbL.y + cubeDepth };
+  const cbBd = { x: cbB.x, y: cbB.y + cubeDepth };
+  const cbRd = { x: cbR.x, y: cbR.y + cubeDepth };
+  drawPolygon(ctx, [cbL, cbB, cbBd, cbLd]);
+  ctx.fillStyle = light ? '#2A3040' : '#1b2330';
+  ctx.fill();
+  drawPolygon(ctx, [cbR, cbB, cbBd, cbRd]);
+  ctx.fillStyle = light ? '#354055' : '#242E40';
+  ctx.fill();
+  drawPolygon(ctx, [cbT, cbR, cbB, cbL]);
+  ctx.fillStyle = light ? '#7A8190' : '#5b6270';
+  ctx.fill();
+
+  // ────────────────────────────────────────────────────────────
+  // 8. Small backplate bracket (left edge, near connector cubes)
+  //    SVG: top at (-5.20,7.00)→(-3.90,7.75)→(-5.20,8.50)→(-6.50,7.75)
+  // ────────────────────────────────────────────────────────────
+  const bkT = uv(-0.145, 0.455);
+  const bkR = uv(0.041, 0.523);
+  const bkB = uv(-0.145, 0.591);
+  const bkL = uv(-0.331, 0.523);
+  const bkBracketDepth = cubeDepth * 0.8;
+  const bkLd = { x: bkL.x, y: bkL.y + bkBracketDepth };
+  const bkBd = { x: bkB.x, y: bkB.y + bkBracketDepth };
+  const bkRd = { x: bkR.x, y: bkR.y + bkBracketDepth };
+  drawPolygon(ctx, [bkL, bkB, bkBd, bkLd]);
+  ctx.fillStyle = light ? '#8590A0' : '#6f7a8a';
+  ctx.fill();
+  drawPolygon(ctx, [bkR, bkB, bkBd, bkRd]);
+  ctx.fillStyle = light ? '#A8B5C8' : '#94A3B8';
+  ctx.fill();
+  drawPolygon(ctx, [bkT, bkR, bkB, bkL]);
+  ctx.fillStyle = light ? '#C0CAD8' : '#afbaca';
+  ctx.fill();
+
+  // ────────────────────────────────────────────────────────────
+  // 9. Gold connector pins along left edge (15 pins)
+  //    SVG: amber (#F59E0B) small 2-face parallelogram pairs
+  //    Running from roughly v=0.136 to v=0.773 along the left edge (u≈0)
+  //    Each pin has a left-face and a top-face
+  // ────────────────────────────────────────────────────────────
+  const pinCount = 15;
+  const pinVStart = 0.136;
+  const pinVEnd = 0.773;
+  const pinW = 0.037;   // width along v-axis
+  const pinOutU = -0.035; // how far pins protrude past the left edge
+
+  for (let i = 0; i < pinCount; i++) {
+    const v = pinVStart + (i / (pinCount - 1)) * (pinVEnd - pinVStart);
+    // Pin top face (small parallelogram)
+    const ptA = uv(pinOutU, v);
+    const ptB = uv(pinOutU, v + pinW);
+    const ptC = uv(0.065, v + pinW);
+    const ptD = uv(0.065, v);
+    drawPolygon(ctx, [ptA, ptB, ptC, ptD]);
+    ctx.fillStyle = light ? '#D4A017' : '#F59E0B';
+    ctx.fill();
+
+    // Pin left face (small vertical strip)
+    const pinH = depth * 0.15;
+    const ptAd = { x: ptA.x, y: ptA.y + pinH };
+    const ptBd = { x: ptB.x, y: ptB.y + pinH };
+    drawPolygon(ctx, [ptA, ptB, ptBd, ptAd]);
+    ctx.fillStyle = light ? '#B8860B' : '#D4A017';
+    ctx.fill();
+  }
+
+  // ────────────────────────────────────────────────────────────
+  // 10. Two large RJ-45 port housings (big 3-face iso boxes, left side)
+  //     Housing A: top at (-7.79,5.50)→(-5.20,7.00)→(-7.79,8.50)→(-10.39,7.00)
+  //               depth = 5.0 units → tall block
+  //     Housing B: top at (-4.33,7.50)→(-1.73,9.00)→(-4.33,10.50)→(-6.93,9.00)
+  // ────────────────────────────────────────────────────────────
+  // Housing A
+  const haT = uv(-0.516, 0.318);
+  const haR = uv(-0.145, 0.455);
+  const haB = uv(-0.516, 0.591);
+  const haL = uv(-0.887, 0.455);
+  const housingDepth = depth * 1.5;
+  const haLd = { x: haL.x, y: haL.y + housingDepth };
+  const haBd = { x: haB.x, y: haB.y + housingDepth };
+  const haRd = { x: haR.x, y: haR.y + housingDepth };
+  // Left face
+  drawPolygon(ctx, [haL, haB, haBd, haLd]);
+  ctx.fillStyle = light ? '#A8AEB5' : '#98a0a9';
+  ctx.fill();
+  // Right face
+  drawPolygon(ctx, [haR, haB, haBd, haRd]);
+  ctx.fillStyle = light ? '#D5DFE8' : '#CBD5E1';
+  ctx.fill();
+  // Top face
+  drawPolygon(ctx, [haT, haR, haB, haL]);
+  ctx.fillStyle = light ? '#E5ECF2' : '#d8e0e9';
+  ctx.fill();
+
+  // Housing B
+  const hbT = uv(-0.145, 0.500);
+  const hbR = uv(0.228, 0.636);
+  const hbB = uv(-0.145, 0.773);
+  const hbL = uv(-0.516, 0.636);
+  const hbLd = { x: hbL.x, y: hbL.y + housingDepth };
+  const hbBd = { x: hbB.x, y: hbB.y + housingDepth };
+  const hbRd = { x: hbR.x, y: hbR.y + housingDepth };
+  drawPolygon(ctx, [hbL, hbB, hbBd, hbLd]);
+  ctx.fillStyle = light ? '#A8AEB5' : '#98a0a9';
+  ctx.fill();
+  drawPolygon(ctx, [hbR, hbB, hbBd, hbRd]);
+  ctx.fillStyle = light ? '#D5DFE8' : '#CBD5E1';
+  ctx.fill();
+  drawPolygon(ctx, [hbT, hbR, hbB, hbL]);
+  ctx.fillStyle = light ? '#E5ECF2' : '#d8e0e9';
+  ctx.fill();
+
+  // ────────────────────────────────────────────────────────────
+  // 11. Metal backplate strip (long vertical plate behind the housings)
+  //     SVG: left face (-13.34,4.70)→(-2.94,10.70) to (-13.34,9.70)→(-2.94,15.70)
+  //     top strip: (-12.90,4.45)→(-2.51,10.45)→(-2.94,10.70)→(-13.34,4.70)
+  //     right strip: (-2.51,10.45)→(-2.94,10.70)→(-2.94,15.70)→(-2.51,15.45)
+  // ────────────────────────────────────────────────────────────
+  // Left face of backplate (big rectangle)
+  const bpTL = uv(-1.312, 0.245);   // -13.34, 4.70
+  const bpBL = uv(-1.312, 0.700);   // -13.34, 9.70
+  const bpBR = uv(0.027, 1.245);    // -2.94, 15.70
+  const bpTR = uv(0.027, 0.791);    // -2.94, 10.70
+  const bpDepth = depth * 0.15;
+
+  drawPolygon(ctx, [bpTL, bpTR, bpBR, bpBL]);
+  ctx.fillStyle = light ? '#8590A0' : '#6f7a8a';
+  ctx.fill();
+
+  // Right face (thin edge)
+  const bpTRe = { x: bpTR.x + bxDir.x * bpDepth * 0.6, y: bpTR.y + bxDir.y * bpDepth * 0.6 };
+  const bpBRe = { x: bpBR.x + bxDir.x * bpDepth * 0.6, y: bpBR.y + bxDir.y * bpDepth * 0.6 };
+  drawPolygon(ctx, [bpTR, bpTRe, bpBRe, bpBR]);
+  ctx.fillStyle = light ? '#A8B5C8' : '#94A3B8';
+  ctx.fill();
+
+  // Top face (thin strip)
+  const bpTLe = { x: bpTL.x + bxDir.x * bpDepth * 0.6, y: bpTL.y + bxDir.y * bpDepth * 0.6 };
+  drawPolygon(ctx, [bpTL, bpTLe, bpTRe, bpTR]);
+  ctx.fillStyle = light ? '#C0CAD8' : '#afbaca';
+  ctx.fill();
+
+  // ────────────────────────────────────────────────────────────
+  // 12. Port openings (dark rectangles on housing faces)
+  //     Housing A port: (-10.31,8.46)→(-8.58,9.46)→(-8.58,11.46)→(-10.31,10.46)
+  //     Housing B port: (-6.85,10.45)→(-5.12,11.45)→(-5.12,13.45)→(-6.85,12.45)
+  // ────────────────────────────────────────────────────────────
+  // Port A — on left face of housing A (shifted down by housing depth)
+  const paA = { x: haL.x + (haB.x - haL.x) * 0.05, y: haL.y + housingDepth * 0.28 };
+  const paB = { x: haB.x + (haL.x - haB.x) * 0.05, y: haB.y + housingDepth * 0.28 };
+  const paC = { x: haB.x + (haL.x - haB.x) * 0.05, y: haB.y + housingDepth * 0.88 };
+  const paD = { x: haL.x + (haB.x - haL.x) * 0.05, y: haL.y + housingDepth * 0.88 };
+  drawPolygon(ctx, [paA, paB, paC, paD]);
+  ctx.fillStyle = light ? '#151E30' : '#0B1120';
+  ctx.fill();
+
+  // Port B — on left face of housing B
+  const pbA = { x: hbL.x + (hbB.x - hbL.x) * 0.05, y: hbL.y + housingDepth * 0.28 };
+  const pbB = { x: hbB.x + (hbL.x - hbB.x) * 0.05, y: hbB.y + housingDepth * 0.28 };
+  const pbC = { x: hbB.x + (hbL.x - hbB.x) * 0.05, y: hbB.y + housingDepth * 0.88 };
+  const pbD = { x: hbL.x + (hbB.x - hbL.x) * 0.05, y: hbL.y + housingDepth * 0.88 };
+  drawPolygon(ctx, [pbA, pbB, pbC, pbD]);
+  ctx.fillStyle = light ? '#151E30' : '#0B1120';
+  ctx.fill();
+
+  // Small activity LEDs above each housing port
+  // Housing A LED  (at approx -9.71,8.80  → just above port)
+  const ledAx = (haL.x + haB.x) * 0.5 + (haB.x - haL.x) * 0.15;
+  const ledAy = haL.y + housingDepth * 0.12 + (haB.y - haL.y) * 0.15;
+  drawPolygon(ctx, [
+    { x: ledAx - bScale * 1.5, y: ledAy - bScale * 1 },
+    { x: ledAx + bScale * 1.5, y: ledAy + bScale * 1 },
+    { x: ledAx + bScale * 1.5, y: ledAy + bScale * 2.5 },
+    { x: ledAx - bScale * 1.5, y: ledAy + bScale * 0.5 },
+  ]);
+  ctx.fillStyle = light ? '#151E30' : '#0B1120';
+  ctx.fill();
+
+  // Housing B LED
+  const ledBx = (hbL.x + hbB.x) * 0.5 + (hbB.x - hbL.x) * 0.15;
+  const ledBy = hbL.y + housingDepth * 0.12 + (hbB.y - hbL.y) * 0.15;
+  drawPolygon(ctx, [
+    { x: ledBx - bScale * 1.5, y: ledBy - bScale * 1 },
+    { x: ledBx + bScale * 1.5, y: ledBy + bScale * 1 },
+    { x: ledBx + bScale * 1.5, y: ledBy + bScale * 2.5 },
+    { x: ledBx - bScale * 1.5, y: ledBy + bScale * 0.5 },
+  ]);
+  ctx.fillStyle = light ? '#151E30' : '#0B1120';
+  ctx.fill();
+
+  // ────────────────────────────────────────────────────────────
+  // 13. Green LED indicators on backplate (tiny green rectangles)
+  //     SVG: #b6e4c9 at (-10.05,7.91) and (-6.59,9.91)
+  // ────────────────────────────────────────────────────────────
+  const pulse = 0.7 + Math.sin(time * 0.002 + node.zIndex) * 0.2;
+  const ledPositions = [
+    { u: -0.870, v: 0.455 },  // near housing A top
+    { u: -0.498, v: 0.636 },  // near housing B top
+  ];
+  for (const lp of ledPositions) {
+    const lPos = uv(lp.u, lp.v);
+    // Shift onto the backplate surface
+    const lx = lPos.x - bxDir.x * 4 * bScale;
+    const ly = lPos.y - bxDir.y * 4 * bScale;
+    const sz = 1.8 * bScale;
+    ctx.beginPath();
+    ctx.moveTo(lx - sz, ly);
+    ctx.lineTo(lx, ly + sz * 0.6);
+    ctx.lineTo(lx + sz, ly);
+    ctx.lineTo(lx, ly - sz * 0.6);
+    ctx.closePath();
+    ctx.fillStyle = hexToRgba('#b6e4c9', 0.6 + pulse * 0.3);
+    ctx.fill();
+  }
+
+  // ────────────────────────────────────────────────────────────
+  // 14. Selection border + leading edge highlight
+  // ────────────────────────────────────────────────────────────
+  drawPolygon(ctx, points);
+  ctx.strokeStyle = hexToRgba(node.glowColor, selected ? 0.98 : (light ? 0.55 : 0.45));
+  ctx.lineWidth = (selected ? 2.8 : 1.5) * bScale;
+  ctx.stroke();
+  if (selected) {
+    drawPolygon(ctx, points);
+    ctx.strokeStyle = hexToRgba(node.glowColor, 0.20);
+    ctx.lineWidth = 5 * bScale;
+    ctx.stroke();
+  }
+  // Leading edge
+  ctx.beginPath();
+  ctx.moveTo(lt.x, lt.y); ctx.lineTo(lb.x, lb.y);
+  ctx.strokeStyle = hexToRgba(node.glowColor, 0.85);
+  ctx.lineWidth = 2 * bScale;
+  ctx.stroke();
+
+  // ────────────────────────────────────────────────────────────
+  // 15. Icon + text (same card-style stack layout)
+  // ────────────────────────────────────────────────────────────
   const showDetail = camera.zoom >= DETAIL_ZOOM_THRESHOLD;
   const textDirection = node.textRotated ? bxDir : byDir;
   const textStackDirection = node.textRotated
