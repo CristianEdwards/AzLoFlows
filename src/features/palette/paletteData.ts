@@ -2,7 +2,7 @@ import { palette, companionPalette } from '@/lib/rendering/tokens';
 import type { NodeShape } from '@/types/document';
 
 export interface PaletteShape {
-  id: 'area' | 'node' | 'standingNode' | 'text' | 'pipe' | 'serverRack' | 'card' | 'platform' | 'browser' | 'browser2' | 'dashboard' | 'storage' | 'chartPanel' | 'analyticsPanel';
+  id: 'area' | 'node' | 'standingNode' | 'text' | 'pipe' | 'serverRack' | 'card' | 'platform' | 'browser' | 'browser2' | 'dashboard' | 'storage' | 'chartPanel' | 'analyticsPanel' | 'nic';
   title: string;
   /** Inline SVG markup (64×64 viewBox) showing an isometric preview */
   icon: string;
@@ -230,6 +230,23 @@ const analyticsPanelIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0
   </g>
 </svg>`;
 
+const nicIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <polygon points="10,26 32,38 32,42 10,30" fill="rgba(34,197,94,0.20)" stroke="rgba(34,197,94,0.45)" stroke-width="0.8"/>
+  <polygon points="54,26 32,38 32,42 54,30" fill="rgba(34,197,94,0.14)" stroke="rgba(34,197,94,0.35)" stroke-width="0.8"/>
+  <polygon points="32,14 54,26 32,38 10,26" fill="rgba(34,197,94,0.30)" stroke="rgba(34,197,94,0.7)" stroke-width="1.2"/>
+  <line x1="10" y1="26" x2="32" y2="14" stroke="rgba(34,197,94,0.9)" stroke-width="1.5"/>
+  <line x1="21" y1="20" x2="43" y2="32" stroke="rgba(34,197,94,0.08)" stroke-width="0.5"/>
+  <line x1="26" y1="17.5" x2="48" y2="29.5" stroke="rgba(34,197,94,0.08)" stroke-width="0.5"/>
+  <rect x="38" y="23" width="6" height="5" rx="0.5" fill="rgba(156,163,175,0.5)" stroke="rgba(156,163,175,0.7)" stroke-width="0.6" transform="skewY(27) translate(-2,-18)"/>
+  <rect x="46" y="23" width="6" height="5" rx="0.5" fill="rgba(156,163,175,0.5)" stroke="rgba(156,163,175,0.7)" stroke-width="0.6" transform="skewY(27) translate(-2,-18)"/>
+  <circle cx="14" cy="24.5" r="1.3" fill="rgba(34,197,94,0.8)"/>
+  <circle cx="17" cy="23" r="1.3" fill="rgba(245,158,11,0.8)"/>
+  <line x1="11" y1="28" x2="11" y2="33" stroke="rgba(212,160,23,0.6)" stroke-width="1"/>
+  <line x1="14" y1="26.5" x2="14" y2="31.5" stroke="rgba(212,160,23,0.6)" stroke-width="1"/>
+  <line x1="17" y1="25" x2="17" y2="30" stroke="rgba(212,160,23,0.6)" stroke-width="1"/>
+  <line x1="20" y1="23.5" x2="20" y2="28.5" stroke="rgba(212,160,23,0.6)" stroke-width="1"/>
+</svg>`;
+
 export const paletteShapes: PaletteShape[] = [
   { id: 'area', title: 'Flat Area', icon: areaIcon },
   { id: 'node', title: 'Lay-flat Node',      icon: nodeIcon },
@@ -243,6 +260,7 @@ export const paletteShapes: PaletteShape[] = [
   { id: 'storage', title: 'Storage', icon: storageIcon, nodeShape: 'storage' },
   { id: 'chartPanel', title: 'Chart Panel', icon: chartPanelIcon, nodeShape: 'chartPanel' },
   { id: 'analyticsPanel', title: 'Analytics Panel', icon: analyticsPanelIcon, nodeShape: 'analyticsPanel' },
+  { id: 'nic', title: 'Network Adapter', icon: nicIcon, nodeShape: 'nic' },
   { id: 'text', title: 'Text Label', icon: textIcon },
   { id: 'pipe', title: 'Pipe',       icon: pipeIcon },
 ];

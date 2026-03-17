@@ -10,7 +10,8 @@ export type NodeShape =
   | 'storage'
   | 'chartPanel'
   | 'analyticsPanel'
-  | 'standingNode';
+  | 'standingNode'
+  | 'nic';
 export type ConnectorStyle = 'solid' | 'dashed' | 'animated';
 export type ToolMode = 'select' | 'pan';
 export type AnchorSide = 'top' | 'right' | 'bottom' | 'left';

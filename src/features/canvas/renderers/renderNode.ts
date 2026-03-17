@@ -14,6 +14,7 @@ import { renderAnalyticsPanel } from './renderAnalyticsPanel';
 import { renderStorage } from './renderStorage';
 import { renderBrowser2 } from './renderBrowser2';
 import { renderStandingNode } from './renderStandingNode';
+import { renderNic } from './renderNic';
 import type { CameraState, NodeEntity } from '@/types/document';
 
 export function renderNode(
@@ -47,6 +48,8 @@ export function renderNode(
       return renderChartPanel(ctx, node, selected, camera, viewport, time, theme);
     case 'analyticsPanel':
         return renderAnalyticsPanel(ctx, node, selected, camera, viewport, time, theme);
+    case 'nic':
+      return renderNic(ctx, node, selected, camera, viewport, time, theme);
     default:
       break; // fall through to box rendering
   }
