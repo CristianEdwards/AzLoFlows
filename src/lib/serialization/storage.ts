@@ -99,9 +99,12 @@ function normalizeNode(node: unknown): NodeEntity {
         ? { xRatio: value.parentLayout.xRatio, yRatio: value.parentLayout.yRatio }
         : undefined,
     textRotated: value.textRotated === true ? true : undefined,
+    textPosition: typeof value.textPosition === 'string' ? value.textPosition : undefined,
+    fontSize: typeof value.fontSize === 'number' ? value.fontSize : undefined,
     icon: typeof value.icon === 'string' ? value.icon : undefined,
     zIndex: Number(value.zIndex ?? 1),
     tags: Array.isArray(value.tags) ? value.tags.filter((t): t is string => typeof t === 'string') : undefined,
+    notes: typeof value.notes === 'string' ? value.notes : undefined,
   };
 }
 

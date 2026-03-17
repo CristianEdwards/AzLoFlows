@@ -233,8 +233,8 @@ export function renderCard(
     // Icon positioned just below the title, following text position
     if (node.icon && nodeIconCatalog[node.icon]) {
       const iconDef = nodeIconCatalog[node.icon];
-      const iconSize = Math.min(node.width, node.height) * NODE_ICON_SCALE * camera.zoom * 0.55;
-      const iconOffset = clampedSize * 1.2;
+      const iconSize = Math.min(node.width, node.height) * NODE_ICON_SCALE * camera.zoom * 0.35;
+      const iconOffset = clampedSize + iconSize * 0.6 + 4 * camera.zoom;
       const iconPt = {
         x: titlePoint.x + textStackDirection.x * iconOffset,
         y: titlePoint.y + textStackDirection.y * iconOffset,
@@ -252,8 +252,9 @@ export function renderCard(
     }
 
     if (node.subtitle) {
+      const iconSizeSub = Math.min(node.width, node.height) * NODE_ICON_SCALE * camera.zoom * 0.35;
       const subtitleOffset = (node.icon && nodeIconCatalog[node.icon])
-        ? clampedSize * 1.2 + Math.min(node.width, node.height) * NODE_ICON_SCALE * camera.zoom * 0.55 + 4 * camera.zoom
+        ? clampedSize + iconSizeSub * 1.2 + 8 * camera.zoom
         : 18;
       const subtitlePoint = {
         x: titlePoint.x + textStackDirection.x * subtitleOffset,
