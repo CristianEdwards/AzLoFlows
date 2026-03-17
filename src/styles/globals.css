@@ -204,6 +204,12 @@ select:focus-visible {
   text-transform: uppercase;
 }
 
+.brand-block__version {
+  font-size: 10px;
+  opacity: 0.6;
+  letter-spacing: 0.5px;
+}
+
 .brand-block__title {
   font-family: Rajdhani, sans-serif;
   font-size: 20px;

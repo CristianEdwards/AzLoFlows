@@ -180,7 +180,7 @@ export default function TopToolbar({ canvasRef, viewport }: TopToolbarProps) {
       <div className="brand-block">
         <img className="brand-block__icon" src={`${import.meta.env.BASE_URL}favicon.svg`} alt="AzLoFlows" />
         <div>
-          <div className="brand-block__kicker">AzLoFlows</div>
+          <div className="brand-block__kicker">AzLoFlows <span className="brand-block__version">v{__APP_VERSION__}</span></div>
           <div className="brand-block__title">Isometric Diagram Builder</div>
         </div>
       </div>
