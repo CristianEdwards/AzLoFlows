@@ -69,8 +69,15 @@ export default function ContextMenu({ x, y, onClose }: ContextMenuProps) {
     const el = menuRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
-    if (rect.right > window.innerWidth) el.style.left = `${x - rect.width}px`;
-    if (rect.bottom > window.innerHeight) el.style.top = `${y - rect.height}px`;
+    const pad = 8;
+    let left = x;
+    let top = y;
+    if (rect.right > window.innerWidth - pad) left = Math.max(pad, x - rect.width);
+    if (rect.bottom > window.innerHeight - pad) top = Math.max(pad, window.innerHeight - pad - rect.height);
+    if (top < pad) top = pad;
+    if (left < pad) left = pad;
+    el.style.left = `${left}px`;
+    el.style.top = `${top}px`;
   }, [x, y]);
 
   if (!selection.type || selection.ids.length === 0) return null;
