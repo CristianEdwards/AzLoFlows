@@ -1,4 +1,4 @@
-﻿import { ISO_ANGLE_DEG, ISO_Y_SCALE, ISO_SCALE, CONNECTOR_STUB, NODE_DEPTH, PIPE_DEPTH, GRID_SIZE, NODE_ICON_SCALE } from '@/lib/config';
+import { ISO_ANGLE_DEG, ISO_Y_SCALE, ISO_SCALE, CONNECTOR_STUB, NODE_DEPTH, PIPE_DEPTH, GRID_SIZE, NODE_ICON_SCALE } from '@/lib/config';
 import { getTextRatios } from '@/lib/geometry/textPosition';
 import { getScreenAnchorPoint, parseAnchorId } from '@/lib/geometry/anchors';
 import { buildIsoPath, isoQuad, worldToScreen, type ViewportSize } from '@/lib/geometry/iso';
@@ -54,7 +54,7 @@ export async function exportCanvasAsPngSaveAs(canvas: HTMLCanvasElement | null, 
   await saveBlobAs(blob, fileName, [{ description: 'PNG Images', accept: { 'image/png': ['.png'] } }]);
 }
 
-/* â”€â”€ SVG helper utilities â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── SVG helper utilities ───────────────────────────────────────────── */
 
 function pts(points: Point[]): string {
   return points.map((p) => `${p.x},${p.y}`).join(' ');
@@ -97,7 +97,7 @@ function svgSmoothPath(points: Point[], radius: number, skipFirst: boolean, skip
   return d;
 }
 
-/* â”€â”€ Connector screen-space routing (mirrors canvas renderConnector) â”€ */
+/* ── Connector screen-space routing (mirrors canvas renderConnector) ─ */
 
 function buildConnectorScreenPath(connector: ConnectorEntity, source: NodeEntity, target: NodeEntity, camera: CameraState, viewport: ViewportSize): Point[] {
   const start = getScreenAnchorPoint(source, connector.sourceAnchor, camera, viewport);
@@ -150,7 +150,7 @@ function buildConnectorScreenPath(connector: ConnectorEntity, source: NodeEntity
   return screenPath;
 }
 
-/* â”€â”€ Main SVG export â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Main SVG export ────────────────────────────────────────────────── */
 
 export function exportDocumentAsSvg(document: DiagramDocument, camera: CameraState, viewport: ViewportSize, tagFilter: TagFilter, theme: 'dark' | 'light' = 'dark'): void {
   const svgString = buildSvgString(document, camera, viewport, tagFilter, theme);
@@ -165,7 +165,7 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
 
   svg.push(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${viewport.width} ${viewport.height}" width="${viewport.width}" height="${viewport.height}">`);
 
-  // â”€â”€ Defs: filters, gradients added inline â”€â”€
+  // ── Defs: filters, gradients added inline ──
   svg.push('<defs>');
   if (light) {
     svg.push('<filter id="softGlow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>');
@@ -313,7 +313,7 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
     const gOpen = tunnelClipId ? `<g clip-path="url(#${tunnelClipId})">` : '<g>';
     svg.push(gOpen);
 
-    // Outer glow (dark mode only â€” match canvas)
+    // Outer glow (dark mode only — match canvas)
     if (!light) {
       svg.push(`<path d="${smoothD}" fill="none" stroke="${hexToRgba(color, 0.04)}" stroke-width="14" filter="url(#softGlow)" />`);
     }
@@ -324,7 +324,7 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
     } else {
       svg.push(`<path d="${smoothD}" fill="none" stroke="${hexToRgba(color, light ? 0.72 : 0.35)}" stroke-width="${light ? 3 : 2.5}" />`);
     }
-    // Inner bright stroke â€” give it an id when animated so dots can follow it
+    // Inner bright stroke — give it an id when animated so dots can follow it
     const pathId = connector.style === 'animated' ? `cp${uid()}` : '';
     if (pathId) {
       svg.push(`<path id="${pathId}" d="${smoothD}" fill="none" stroke="${hexToRgba(color, light ? 0.98 : 0.82)}" stroke-width="${light ? 1.6 : 1.2}" />`);
@@ -342,7 +342,7 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
         const bright = 0.6 + rand() * 0.4;
         const speed = 0.7 * (0.6 + rand() * 0.7);
         const size = 2 + rand() * 2.5;
-        // Canvas: t increments by 0.00024*speed per ms â†’ full cycle = 1/(0.00024*speed) ms
+        // Canvas: t increments by 0.00024*speed per ms → full cycle = 1/(0.00024*speed) ms
         const dur = 1 / (0.00024 * speed);
         const durS = (dur / 1000).toFixed(2);
         const beginS = ((-phase * dur) / 1000).toFixed(2);
@@ -426,6 +426,7 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
       }
       case 'node': {
     const node = item.entity;
+    const faceFill = light ? node.fill : node.glowColor;
     const STANDING_SHAPES = new Set(['standingNode', 'browser', 'browser2', 'dashboard', 'chartPanel', 'analyticsPanel']);
     const isStanding = STANDING_SHAPES.has(node.shape ?? '');
 
@@ -474,18 +475,18 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
 
       // Top thin strip (between back-top and front-top)
       if (panelThick > 0) {
-        svg.push(`<polygon points="${pts([bTL, bTR, fTR, fTL])}" fill="${hexToRgba(node.fill, light ? 0.88 : 0.20)}" stroke="${hexToRgba(node.glowColor, 0.4)}" stroke-width="1" />`);
+        svg.push(`<polygon points="${pts([bTL, bTR, fTR, fTL])}" fill="${hexToRgba(faceFill, light ? 0.88 : 0.20)}" stroke="${hexToRgba(node.glowColor, 0.4)}" stroke-width="1" />`);
       }
 
       // Right side face
-      svg.push(`<polygon points="${pts([bTR, bBR, fBR, fTR])}" fill="${hexToRgba(node.fill, light ? 0.92 : 0.30)}" stroke="${hexToRgba(node.glowColor, 0.3)}" stroke-width="1" />`);
+      svg.push(`<polygon points="${pts([bTR, bBR, fBR, fTR])}" fill="${hexToRgba(faceFill, light ? 0.92 : 0.30)}" stroke="${hexToRgba(node.glowColor, 0.3)}" stroke-width="1" />`);
 
       // Front face with gradient
       const gId = uid();
       svg.push(`<defs><linearGradient id="sg${gId}" x1="${fTL.x}" y1="${fTL.y}" x2="${fBR.x}" y2="${fBR.y}" gradientUnits="userSpaceOnUse">`);
-      svg.push(`<stop offset="0" stop-color="${node.fill}" stop-opacity="${light ? 0.98 : 0.84}"/>`);
-      svg.push(`<stop offset="0.5" stop-color="${node.fill}" stop-opacity="${light ? 0.88 : 0.46}"/>`);
-      svg.push(`<stop offset="1" stop-color="${node.fill}" stop-opacity="${light ? 0.72 : 0.24}"/>`);
+      svg.push(`<stop offset="0" stop-color="${faceFill}" stop-opacity="${light ? 0.98 : 0.84}"/>`);
+      svg.push(`<stop offset="0.5" stop-color="${faceFill}" stop-opacity="${light ? 0.88 : 0.46}"/>`);
+      svg.push(`<stop offset="1" stop-color="${faceFill}" stop-opacity="${light ? 0.72 : 0.24}"/>`);
       svg.push('</linearGradient></defs>');
       svg.push(`<polygon points="${pts([fTL, fTR, fBR, fBL])}" fill="url(#sg${gId})" filter="url(#softGlow)" />`);
 
@@ -552,7 +553,7 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
       break;
     }
 
-    /* ── Card shape: thin slab with header stripe, stacked title/icon/subtitle ── */
+    /* -- Card shape: thin slab with header stripe, stacked title/icon/subtitle -- */
     if (node.shape === 'card') {
       const quad = isoQuad(node.x, node.y, node.width, node.height, camera, viewport);
       const [lt, rt, rb, lb] = quad;
@@ -586,17 +587,17 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
       }
 
       // Left depth face
-      svg.push(`<polygon points="${pts([lt, lb, lbD, ltD])}" fill="${hexToRgba(node.fill, light ? 0.92 : 0.45)}" stroke="${hexToRgba(node.glowColor, 0.18)}" stroke-width="0.6" />`);
+      svg.push(`<polygon points="${pts([lt, lb, lbD, ltD])}" fill="${hexToRgba(faceFill, light ? 0.92 : 0.45)}" stroke="${hexToRgba(node.glowColor, 0.18)}" stroke-width="0.6" />`);
       // Front depth face
-      svg.push(`<polygon points="${pts([lb, rb, rbD, lbD])}" fill="${hexToRgba(node.fill, light ? 0.98 : 0.45)}" stroke="${hexToRgba(node.glowColor, 0.18)}" stroke-width="0.6" />`);
+      svg.push(`<polygon points="${pts([lb, rb, rbD, lbD])}" fill="${hexToRgba(faceFill, light ? 0.98 : 0.45)}" stroke="${hexToRgba(node.glowColor, 0.18)}" stroke-width="0.6" />`);
 
       // Top face with gradient
       const cgId = uid();
       svg.push(`<defs><linearGradient id="cg${cgId}" x1="${lt.x}" y1="${lt.y}" x2="${rb.x}" y2="${rb.y}" gradientUnits="userSpaceOnUse">`);
-      svg.push(`<stop offset="0" stop-color="${node.fill}" stop-opacity="${light ? 0.98 : 0.85}"/>`);
-      svg.push(`<stop offset="0.3" stop-color="${node.fill}" stop-opacity="${light ? 0.88 : 0.58}"/>`);
-      svg.push(`<stop offset="0.7" stop-color="${node.fill}" stop-opacity="${light ? 0.78 : 0.30}"/>`);
-      svg.push(`<stop offset="1" stop-color="${node.fill}" stop-opacity="${light ? 0.65 : 0.18}"/>`);
+      svg.push(`<stop offset="0" stop-color="${faceFill}" stop-opacity="${light ? 0.98 : 0.85}"/>`);
+      svg.push(`<stop offset="0.3" stop-color="${faceFill}" stop-opacity="${light ? 0.88 : 0.58}"/>`);
+      svg.push(`<stop offset="0.7" stop-color="${faceFill}" stop-opacity="${light ? 0.78 : 0.30}"/>`);
+      svg.push(`<stop offset="1" stop-color="${faceFill}" stop-opacity="${light ? 0.65 : 0.18}"/>`);
       svg.push('</linearGradient></defs>');
       svg.push(`<polygon points="${pts(quad)}" fill="url(#cg${cgId})" filter="url(#softGlow)" />`);
 
@@ -614,7 +615,7 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
       // Leading edge highlight
       svg.push(`<line x1="${lt.x}" y1="${lt.y}" x2="${lb.x}" y2="${lb.y}" stroke="${hexToRgba(node.glowColor, 0.92)}" stroke-width="2.4" filter="url(#edgeGlow)" />`);
 
-      // ── Card text + icon stack (matching canvas renderCard layout) ──
+      // -- Card text + icon stack (matching canvas renderCard layout) --
       const cardHasIcon = !!(node.icon && nodeIconCatalog[node.icon]);
       const cardHasSub = !!node.subtitle;
 
@@ -711,7 +712,7 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
       break;
     }
 
-    /* ── Server rack: stacked blades with gaps and LED indicators ── */
+    /* -- Server rack: stacked blades with gaps and LED indicators -- */
     if (node.shape === 'serverRack') {
       const quad = isoQuad(node.x, node.y, node.width, node.height, camera, viewport);
       const [leftTop, rightTop, rightBottom, leftBottom] = quad;
@@ -748,10 +749,10 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
         const blbD = { x: blb.x, y: blb.y + bladeDepth };
 
         // Left face
-        svg.push(`<polygon points="${pts([blt, blb, blbD, bltD])}" fill="${hexToRgba(node.fill, light ? 0.92 : 0.45 * bladeAlpha)}" stroke="${hexToRgba(node.glowColor, 0.18)}" stroke-width="0.8" />`);
+        svg.push(`<polygon points="${pts([blt, blb, blbD, bltD])}" fill="${hexToRgba(faceFill, light ? 0.92 : 0.45 * bladeAlpha)}" stroke="${hexToRgba(node.glowColor, 0.18)}" stroke-width="0.8" />`);
 
         // Front face
-        svg.push(`<polygon points="${pts([blb, brb, brbD, blbD])}" fill="${hexToRgba(node.fill, light ? 0.98 : 0.40)}" stroke="${hexToRgba(node.glowColor, 0.18)}" stroke-width="0.8" />`);
+        svg.push(`<polygon points="${pts([blb, brb, brbD, blbD])}" fill="${hexToRgba(faceFill, light ? 0.98 : 0.40)}" stroke="${hexToRgba(node.glowColor, 0.18)}" stroke-width="0.8" />`);
 
         // LED on front face
         const ledCx = blb.x + (blbD.x - blb.x) * 0.5 + (brb.x - blb.x) * 0.06;
@@ -760,15 +761,15 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
         svg.push(`<circle cx="${ledCx}" cy="${ledCy}" r="${2.2 * bScale}" fill="${ledColor}" opacity="0.9" />`);
 
         // Right face
-        svg.push(`<polygon points="${pts([brt, brb, brbD, brtD])}" fill="${hexToRgba(node.fill, light ? 0.85 : 0.28)}" />`);
+        svg.push(`<polygon points="${pts([brt, brb, brbD, brtD])}" fill="${hexToRgba(faceFill, light ? 0.85 : 0.28)}" />`);
 
         // Top face with gradient
         const bgId = uid();
         svg.push(`<defs><linearGradient id="br${bgId}" x1="${blt.x}" y1="${blt.y}" x2="${brb.x}" y2="${brb.y}" gradientUnits="userSpaceOnUse">`);
-        svg.push(`<stop offset="0" stop-color="${node.fill}" stop-opacity="${light ? 0.98 : (0.90 * bladeAlpha)}"/>`);
-        svg.push(`<stop offset="0.3" stop-color="${node.fill}" stop-opacity="${light ? 0.88 : (0.60 * bladeAlpha)}"/>`);
-        svg.push(`<stop offset="0.7" stop-color="${node.fill}" stop-opacity="${light ? 0.78 : 0.30}"/>`);
-        svg.push(`<stop offset="1" stop-color="${node.fill}" stop-opacity="${light ? 0.65 : 0.18}"/>`);
+        svg.push(`<stop offset="0" stop-color="${faceFill}" stop-opacity="${light ? 0.98 : (0.90 * bladeAlpha)}"/>`);
+        svg.push(`<stop offset="0.3" stop-color="${faceFill}" stop-opacity="${light ? 0.88 : (0.60 * bladeAlpha)}"/>`);
+        svg.push(`<stop offset="0.7" stop-color="${faceFill}" stop-opacity="${light ? 0.78 : 0.30}"/>`);
+        svg.push(`<stop offset="1" stop-color="${faceFill}" stop-opacity="${light ? 0.65 : 0.18}"/>`);
         svg.push('</linearGradient></defs>');
         svg.push(`<polygon points="${pts([blt, brt, brb, blb])}" fill="url(#br${bgId})" />`);
 
@@ -877,18 +878,18 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
     }
 
     // Left depth face
-    svg.push(`<polygon points="${pts([leftTop, leftBottom, frontLeftBottom, leftTopDepth])}" fill="${hexToRgba(node.fill, light ? 0.92 : 0.22)}" stroke="${hexToRgba(node.glowColor, light ? 0.48 : 0.34)}" stroke-width="1.6" />`);
+    svg.push(`<polygon points="${pts([leftTop, leftBottom, frontLeftBottom, leftTopDepth])}" fill="${hexToRgba(faceFill, light ? 0.92 : 0.22)}" stroke="${hexToRgba(node.glowColor, light ? 0.48 : 0.34)}" stroke-width="1.6" />`);
     // Front depth face
-    svg.push(`<polygon points="${pts([leftBottom, rightBottom, frontRightBottom, frontLeftBottom])}" fill="${hexToRgba(node.fill, light ? 0.98 : 0.42)}" stroke="${hexToRgba(node.glowColor, light ? 0.48 : 0.34)}" stroke-width="1.6" />`);
+    svg.push(`<polygon points="${pts([leftBottom, rightBottom, frontRightBottom, frontLeftBottom])}" fill="${hexToRgba(faceFill, light ? 0.98 : 0.42)}" stroke="${hexToRgba(node.glowColor, light ? 0.48 : 0.34)}" stroke-width="1.6" />`);
     // Right depth face
-    svg.push(`<polygon points="${pts([rightTop, rightBottom, frontRightBottom, rightTopDepth])}" fill="${hexToRgba(node.fill, light ? 0.95 : 0.28)}" stroke="${hexToRgba(node.glowColor, light ? 0.42 : 0.3)}" stroke-width="1.4" />`);
+    svg.push(`<polygon points="${pts([rightTop, rightBottom, frontRightBottom, rightTopDepth])}" fill="${hexToRgba(faceFill, light ? 0.95 : 0.28)}" stroke="${hexToRgba(node.glowColor, light ? 0.42 : 0.3)}" stroke-width="1.4" />`);
 
     // Top face with gradient
     const tgId = uid();
     svg.push(`<defs><linearGradient id="ng${tgId}" x1="${quad[0].x}" y1="${quad[0].y}" x2="${quad[2].x}" y2="${quad[2].y}" gradientUnits="userSpaceOnUse">`);
-    svg.push(`<stop offset="0" stop-color="${node.fill}" stop-opacity="${light ? 0.98 : 0.84}"/>`);
-    svg.push(`<stop offset="0.5" stop-color="${node.fill}" stop-opacity="${light ? 0.88 : 0.46}"/>`);
-    svg.push(`<stop offset="1" stop-color="${node.fill}" stop-opacity="${light ? 0.72 : 0.24}"/>`);
+    svg.push(`<stop offset="0" stop-color="${faceFill}" stop-opacity="${light ? 0.98 : 0.84}"/>`);
+    svg.push(`<stop offset="0.5" stop-color="${faceFill}" stop-opacity="${light ? 0.88 : 0.46}"/>`);
+    svg.push(`<stop offset="1" stop-color="${faceFill}" stop-opacity="${light ? 0.72 : 0.24}"/>`);
     svg.push('</linearGradient></defs>');
     svg.push(`<polygon points="${pts(quad)}" fill="url(#ng${tgId})" filter="url(#softGlow)" />`);
 
@@ -929,7 +930,7 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
       const m01 = topFaceBasisY.y * scale;
       const m10 = -topFaceBasisX.x * scale;
       const m11 = -topFaceBasisX.y * scale;
-      // Translate to center the 32Ã—32 viewBox
+      // Translate to center the 32×32 viewBox
       const tx = iconCenter.x - m00 * 16 - m10 * 16;
       const ty = iconCenter.y - m01 * 16 - m11 * 16;
       svg.push(`<g transform="matrix(${m00},${m01},${m10},${m11},${tx},${ty})" fill="${hexToRgba(node.glowColor, light ? 0.5 : 1.0)}" opacity="${light ? 1.0 : 0.7}">`);
@@ -939,12 +940,12 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
       svg.push('</g>');
     }
 
-    // Title text â€” honour node.fontSize, scale by zoom, and clamp to fit
+    // Title text — honour node.fontSize, scale by zoom, and clamp to fit
     const nodeTitleSize = node.fontSize ?? 16;
     const scaledTitleSize = Math.round(nodeTitleSize * camera.zoom);
     const textEdgeLen = node.textRotated ? topEdgeLen : leftEdgeLen;
     const nodeTopEdge = textEdgeLen * 0.85;
-    // Approximate text width: charCount Ã— fontSize Ã— 0.6 (Inter avg) Ã— 0.87 (iso compression)
+    // Approximate text width: charCount × fontSize × 0.6 (Inter avg) × 0.87 (iso compression)
     const approxTitleW = node.title.length * scaledTitleSize * 0.6 * 0.87;
     const clampedTitleSize = approxTitleW > nodeTopEdge
       ? Math.max(8, Math.floor(scaledTitleSize * (nodeTopEdge / approxTitleW)))
@@ -997,8 +998,8 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
     }
   }
 
-  // â”€â”€ Picker bars â€” same positions as canvas UI â”€â”€
-  // CSS positions: scenario â†’ top:8 left:8, source â†’ top:52 left:8, type â†’ bottom:8 right:8
+  // ── Picker bars — same positions as canvas UI ──
+  // CSS positions: scenario → top:8 left:8, source → top:52 left:8, type → bottom:8 right:8
   const pillH = 26;
   const pillR = 12;
   const pillGap = 8;
@@ -1062,7 +1063,7 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
     `<linearGradient id="pickerRing" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#6d28d9"/><stop offset="50%" stop-color="#c4b5fd"/><stop offset="100%" stop-color="#6d28d9"/></linearGradient>`,
   );
 
-  // Scenario picker â€” top: 8, left: 8
+  // Scenario picker — top: 8, left: 8
   if (tagFilter.scenario) {
     const docScenarios = getDocScenarios(document);
     const docFlowSources = getDocFlowSources(document);
@@ -1070,13 +1071,13 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
     const bar = buildPickerBar('Scenario', docScenarios, (id) => tagFilter.scenario === id);
     svg.push(`<g transform="translate(8, 8)">${bar.svg}</g>`);
 
-    // Source picker â€” top: 52, left: 8
+    // Source picker — top: 52, left: 8
     if (tagFilter.sources.size > 0) {
       const srcBar = buildPickerBar('Traffic source', docFlowSources as { id: string; label: string }[], (id) => tagFilter.sources.has(id as FlowSource));
       svg.push(`<g transform="translate(8, 52)">${srcBar.svg}</g>`);
     }
 
-    // Type picker â€” bottom: 8, right: 8
+    // Type picker — bottom: 8, right: 8
     if (tagFilter.sources.size > 0) {
       const scenarioTypes = docFlowTypes.map((ft) => ({ id: ft.id, label: flowTypeLabel(ft.id, tagFilter.scenario, docFlowTypes) }));
       const typeBar = buildPickerBar('Traffic type', scenarioTypes as { id: string; label: string }[], (id) => tagFilter.types.has(id as FlowType));
@@ -1133,7 +1134,7 @@ function escapeXml(value: string): string {
   return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&apos;');
 }
 
-/* ── PDF Export ─────────────────────────────────────────── */
+/* -- PDF Export ------------------------------------------- */
 
 export async function exportDocumentAsPdf(canvas: HTMLCanvasElement | null, fileName: string): Promise<void> {
   if (!canvas) return;
@@ -1199,7 +1200,7 @@ export async function exportDocumentAsPdf(canvas: HTMLCanvasElement | null, file
   obj(3); write(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageW} ${pageH}] /Contents 4 0 R /Resources << /XObject << /Img 5 0 R >> >> >>`); write('endobj');
   obj(4); write(`<< /Length ${stream.length} >>`); write('stream'); write(stream); write('endstream'); write('endobj');
 
-  // For the image stream, we need binary handling — use Blob composition instead
+  // For the image stream, we need binary handling � use Blob composition instead
   const pdfParts: (string | Uint8Array)[] = [];
   const offsets2: number[] = [];
   let pos2 = 0;
@@ -1235,7 +1236,7 @@ export async function exportDocumentAsPdf(canvas: HTMLCanvasElement | null, file
   downloadBlob(pdfBlob, fileName);
 }
 
-/* ── Interactive HTML Export ────────────────────────────── */
+/* -- Interactive HTML Export ------------------------------ */
 
 export function exportDocumentAsHtml(document: DiagramDocument, camera: CameraState, viewport: ViewportSize, tagFilter: TagFilter, theme: 'dark' | 'light' = 'dark'): void {
   const svgContent = buildSvgString(document, camera, viewport, tagFilter, theme);
@@ -1251,7 +1252,7 @@ function buildInteractiveHtml(svgContent: string, docJson: string, title: string
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${title} — AzLoFlows Diagram</title>
+<title>${title} � AzLoFlows Diagram</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { height: 100%; overflow: hidden; font-family: Inter, -apple-system, sans-serif; }
