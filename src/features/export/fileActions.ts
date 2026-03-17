@@ -1,4 +1,5 @@
-﻿import { ISO_ANGLE_DEG, ISO_Y_SCALE, ISO_SCALE, CONNECTOR_STUB, NODE_DEPTH, PIPE_DEPTH, GRID_SIZE } from '@/lib/config';
+﻿import { ISO_ANGLE_DEG, ISO_Y_SCALE, ISO_SCALE, CONNECTOR_STUB, NODE_DEPTH, PIPE_DEPTH, GRID_SIZE, NODE_ICON_SCALE } from '@/lib/config';
+import { getTextRatios } from '@/lib/geometry/textPosition';
 import { getScreenAnchorPoint, parseAnchorId } from '@/lib/geometry/anchors';
 import { buildIsoPath, isoQuad, worldToScreen, type ViewportSize } from '@/lib/geometry/iso';
 import { seededRandom, hashString } from '@/lib/hash';
@@ -505,10 +506,15 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
       svg.push(`<line x1="${fTL.x}" y1="${fTL.y}" x2="${fTR.x}" y2="${fTR.y}" stroke="${hexToRgba(node.glowColor, 0.75)}" stroke-width="2" />`);
       svg.push(`<line x1="${fTL.x}" y1="${fTL.y}" x2="${fBL.x}" y2="${fBL.y}" stroke="${hexToRgba(node.glowColor, 0.90)}" stroke-width="2.5" filter="url(#edgeGlow)" />`);
 
-      // Icon
-      if (node.icon && nodeIconCatalog[node.icon]) {
-        const iconDef = nodeIconCatalog[node.icon];
-        const iconSize = Math.min(frontW, screenH) * 0.28;
+      // Icon + text (matching canvas renderStandingNode layout)
+      const hasIcon = !!(node.icon && nodeIconCatalog[node.icon]);
+      const textRatios = getTextRatios(node, 0.48);
+      const iconSize = Math.min(frontW, screenH) * NODE_ICON_SCALE;
+      const textDir = basisX;
+      const textStack = { x: 0, y: 1 };
+
+      if (hasIcon) {
+        const iconDef = nodeIconCatalog[node.icon!];
         const ic = fp(0.5, 0.35);
         const scale = iconSize / 32;
         const m00 = basisX.x * scale;
@@ -534,14 +540,171 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
         : scaledTitleSize;
       const clampedSubSize = Math.round(clampedTitleSize * 0.8125);
 
-      const titlePt = node.icon && nodeIconCatalog[node.icon] ? fp(0.5, 0.65) : fp(0.5, 0.48);
-      const textDir = basisX;
-      const textStack = { x: 0, y: 1 };
+      const titlePt = hasIcon ? fp(0.5, 0.65) : fp(textRatios.x, textRatios.y);
       svg.push(`<text transform="matrix(${textDir.x},${textDir.y},${textStack.x},${textStack.y},${titlePt.x},${titlePt.y})" fill="#ffffff" font-family="Inter, sans-serif" font-weight="600" font-size="${clampedTitleSize}" text-anchor="middle" dominant-baseline="central">${escapeXml(node.title)}</text>`);
 
       if (node.subtitle) {
         const subtitlePt = { x: titlePt.x + textStack.x * 18, y: titlePt.y + textStack.y * 18 };
         svg.push(`<text transform="matrix(${textDir.x},${textDir.y},${textStack.x},${textStack.y},${subtitlePt.x},${subtitlePt.y})" fill="${light ? 'rgba(255,255,255,0.9)' : hexToRgba(node.glowColor, 0.95)}" font-family="Inter, sans-serif" font-weight="${light ? 600 : 500}" font-size="${clampedSubSize}" text-anchor="middle" dominant-baseline="central">${escapeXml(node.subtitle)}</text>`);
+      }
+
+      svg.push('</g>');
+      break;
+    }
+
+    /* ── Card shape: thin slab with header stripe, stacked title/icon/subtitle ── */
+    if (node.shape === 'card') {
+      const quad = isoQuad(node.x, node.y, node.width, node.height, camera, viewport);
+      const [lt, rt, rb, lb] = quad;
+      const cardDepth = NODE_DEPTH * 0.25 * camera.zoom;
+
+      const topEdgeLen = Math.hypot(rt.x - lt.x, rt.y - lt.y) || 1;
+      const leftEdgeLen = Math.hypot(lb.x - lt.x, lb.y - lt.y) || 1;
+      const bxDir = { x: (rt.x - lt.x) / topEdgeLen, y: (rt.y - lt.y) / topEdgeLen };
+      const byDir = { x: (lb.x - lt.x) / leftEdgeLen, y: (lb.y - lt.y) / leftEdgeLen };
+      const textDirection = node.textRotated ? bxDir : byDir;
+      const textStackDir = node.textRotated
+        ? { x: byDir.x, y: byDir.y }
+        : { x: -bxDir.x, y: -bxDir.y };
+
+      const ltD = { x: lt.x, y: lt.y + cardDepth };
+      const lbD = { x: lb.x, y: lb.y + cardDepth };
+      const rbD = { x: rb.x, y: rb.y + cardDepth };
+      const rtD = { x: rt.x, y: rt.y + cardDepth };
+
+      svg.push('<g>');
+
+      // White base in light mode
+      if (light) {
+        for (const face of [
+          pts([lt, lb, lbD, ltD]),
+          pts([lb, rb, rbD, lbD]),
+          pts(quad),
+        ]) {
+          svg.push(`<polygon points="${face}" fill="rgba(255,255,255,0.88)" />`);
+        }
+      }
+
+      // Left depth face
+      svg.push(`<polygon points="${pts([lt, lb, lbD, ltD])}" fill="${hexToRgba(node.fill, light ? 0.92 : 0.45)}" stroke="${hexToRgba(node.glowColor, 0.18)}" stroke-width="0.6" />`);
+      // Front depth face
+      svg.push(`<polygon points="${pts([lb, rb, rbD, lbD])}" fill="${hexToRgba(node.fill, light ? 0.98 : 0.45)}" stroke="${hexToRgba(node.glowColor, 0.18)}" stroke-width="0.6" />`);
+
+      // Top face with gradient
+      const cgId = uid();
+      svg.push(`<defs><linearGradient id="cg${cgId}" x1="${lt.x}" y1="${lt.y}" x2="${rb.x}" y2="${rb.y}" gradientUnits="userSpaceOnUse">`);
+      svg.push(`<stop offset="0" stop-color="${node.fill}" stop-opacity="${light ? 0.98 : 0.85}"/>`);
+      svg.push(`<stop offset="0.3" stop-color="${node.fill}" stop-opacity="${light ? 0.88 : 0.58}"/>`);
+      svg.push(`<stop offset="0.7" stop-color="${node.fill}" stop-opacity="${light ? 0.78 : 0.30}"/>`);
+      svg.push(`<stop offset="1" stop-color="${node.fill}" stop-opacity="${light ? 0.65 : 0.18}"/>`);
+      svg.push('</linearGradient></defs>');
+      svg.push(`<polygon points="${pts(quad)}" fill="url(#cg${cgId})" filter="url(#softGlow)" />`);
+
+      // Header stripe (top 20%)
+      const hdrFrac = 0.20;
+      const hdrLB = { x: lt.x + (lb.x - lt.x) * hdrFrac, y: lt.y + (lb.y - lt.y) * hdrFrac };
+      const hdrRB = { x: rt.x + (rb.x - rt.x) * hdrFrac, y: rt.y + (rb.y - rt.y) * hdrFrac };
+      svg.push(`<polygon points="${pts([lt, rt, hdrRB, hdrLB])}" fill="${hexToRgba(node.glowColor, light ? 0.18 : 0.12)}" />`);
+      svg.push(`<line x1="${hdrLB.x}" y1="${hdrLB.y}" x2="${hdrRB.x}" y2="${hdrRB.y}" stroke="${hexToRgba(node.glowColor, light ? 0.35 : 0.22)}" stroke-width="1" />`);
+
+      // Top face border
+      svg.push(`<polygon points="${pts(quad)}" fill="none" stroke="${hexToRgba(node.glowColor, light ? 0.82 : 0.68)}" stroke-width="2" />`);
+      svg.push(`<polygon points="${pts(quad)}" fill="none" stroke="${hexToRgba(node.glowColor, light ? 0.10 : 0.14)}" stroke-width="4" />`);
+
+      // Leading edge highlight
+      svg.push(`<line x1="${lt.x}" y1="${lt.y}" x2="${lb.x}" y2="${lb.y}" stroke="${hexToRgba(node.glowColor, 0.92)}" stroke-width="2.4" filter="url(#edgeGlow)" />`);
+
+      // ── Card text + icon stack (matching canvas renderCard layout) ──
+      const cardHasIcon = !!(node.icon && nodeIconCatalog[node.icon]);
+      const cardHasSub = !!node.subtitle;
+
+      const cardTitleSize = node.fontSize ?? 16;
+      const cardScaledTitle = Math.round(cardTitleSize * camera.zoom);
+      const cardTextEdge = node.textRotated ? topEdgeLen : leftEdgeLen;
+      const cardFitW = cardTextEdge * 0.85;
+      const cardApproxW = node.title.length * cardScaledTitle * 0.6 * 0.87;
+      const cardClampedSize = cardApproxW > cardFitW
+        ? Math.max(8, Math.floor(cardScaledTitle * (cardFitW / cardApproxW)))
+        : cardScaledTitle;
+      const cardSubSize = Math.round(cardClampedSize * 0.8125);
+
+      // Compute stack sizes to position elements correctly
+      const gap = 4 * camera.zoom;
+      let cardIconSize = cardHasIcon
+        ? Math.min(node.width, node.height) * NODE_ICON_SCALE * camera.zoom * 0.35
+        : 0;
+      const subtitleFontSize = cardHasSub ? cardSubSize : 0;
+
+      const aboveTitle = cardClampedSize / 2;
+      let belowTitle = cardClampedSize / 2;
+      if (cardHasIcon) belowTitle += gap + cardIconSize;
+      if (cardHasSub) belowTitle += gap + subtitleFontSize;
+      let totalStack = aboveTitle + belowTitle;
+
+      // Shrink icon if stack exceeds 75% of stacking edge
+      const stackEdgeLen = node.textRotated ? leftEdgeLen : topEdgeLen;
+      const maxStack = stackEdgeLen * 0.75;
+      if (totalStack > maxStack && cardHasIcon) {
+        cardIconSize = Math.max(8, cardIconSize - (totalStack - maxStack));
+        belowTitle = cardClampedSize / 2 + gap + cardIconSize + (cardHasSub ? gap + subtitleFontSize : 0);
+      }
+
+      // Clamp title position so the full stack stays inside the card
+      const cardBaseRatios = getTextRatios(node, 0.48);
+      let crx = cardBaseRatios.x;
+      let cry = cardBaseRatios.y;
+      if (node.textRotated) {
+        const abFrac = aboveTitle / leftEdgeLen;
+        const blFrac = belowTitle / leftEdgeLen;
+        cry = Math.max(0.25 + abFrac, Math.min(0.92 - blFrac, cry));
+        crx = Math.max(0.10, Math.min(0.90, crx));
+      } else {
+        const abFrac = aboveTitle / topEdgeLen;
+        const blFrac = belowTitle / topEdgeLen;
+        crx = Math.max(0.05 + blFrac, Math.min(0.95 - abFrac, crx));
+        cry = Math.max(0.25, Math.min(0.88, cry));
+      }
+
+      const cardTitlePt = worldToScreen(
+        { x: node.x + node.width * crx, y: node.y + node.height * cry },
+        camera, viewport,
+      );
+
+      // Title
+      svg.push(`<text transform="matrix(${textDirection.x},${textDirection.y},${textStackDir.x},${textStackDir.y},${cardTitlePt.x},${cardTitlePt.y})" fill="#ffffff" font-family="Inter, sans-serif" font-weight="600" font-size="${cardClampedSize}" text-anchor="middle" dominant-baseline="central">${escapeXml(node.title)}</text>`);
+
+      // Icon (positioned below title along textStackDirection)
+      if (cardHasIcon) {
+        const iconDef = nodeIconCatalog[node.icon!];
+        const iconOffset = cardClampedSize / 2 + gap + cardIconSize / 2;
+        const iconPt = {
+          x: cardTitlePt.x + textStackDir.x * iconOffset,
+          y: cardTitlePt.y + textStackDir.y * iconOffset,
+        };
+        const scale = cardIconSize / 32;
+        const m00 = byDir.x * scale;
+        const m01 = byDir.y * scale;
+        const m10 = -bxDir.x * scale;
+        const m11 = -bxDir.y * scale;
+        const tx = iconPt.x - m00 * 16 - m10 * 16;
+        const ty = iconPt.y - m01 * 16 - m11 * 16;
+        svg.push(`<g transform="matrix(${m00},${m01},${m10},${m11},${tx},${ty})" fill="${hexToRgba(node.glowColor, light ? 0.5 : 1.0)}" opacity="${light ? 1.0 : 0.7}">`);
+        for (const d of iconDef.paths) {
+          svg.push(`<path d="${d}" />`);
+        }
+        svg.push('</g>');
+      }
+
+      // Subtitle (positioned below icon)
+      if (cardHasSub) {
+        const subOffset = cardHasIcon
+          ? cardClampedSize / 2 + gap + cardIconSize + gap + subtitleFontSize / 2
+          : cardClampedSize / 2 + gap + subtitleFontSize / 2;
+        const subPt = {
+          x: cardTitlePt.x + textStackDir.x * subOffset,
+          y: cardTitlePt.y + textStackDir.y * subOffset,
+        };
+        svg.push(`<text transform="matrix(${textDirection.x},${textDirection.y},${textStackDir.x},${textStackDir.y},${subPt.x},${subPt.y})" fill="${light ? 'rgba(255,255,255,0.75)' : hexToRgba(node.glowColor, 0.95)}" font-family="Inter, sans-serif" font-weight="${light ? 600 : 500}" font-size="${cardSubSize}" text-anchor="middle" dominant-baseline="central">${escapeXml(node.subtitle)}</text>`);
       }
 
       svg.push('</g>');
@@ -656,7 +819,8 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
       ? Math.max(8, Math.floor(scaledTitleSize * (nodeTopEdge / approxTitleW)))
       : scaledTitleSize;
     const clampedSubSize = Math.round(clampedTitleSize * 0.8125);
-    const titlePt = worldToScreen({ x: node.x + node.width * 0.5, y: node.y + node.height * 0.46 }, camera, viewport);
+    const defaultTextRatios = getTextRatios(node, 0.46);
+    const titlePt = worldToScreen({ x: node.x + node.width * defaultTextRatios.x, y: node.y + node.height * defaultTextRatios.y }, camera, viewport);
     svg.push(`<text transform="matrix(${textDir.x},${textDir.y},${textStack.x},${textStack.y},${titlePt.x},${titlePt.y})" fill="#ffffff" font-family="Inter, sans-serif" font-weight="600" font-size="${clampedTitleSize}" text-anchor="middle" dominant-baseline="central">${escapeXml(node.title)}</text>`);
 
     // Subtitle text
