@@ -871,8 +871,8 @@
     {
       "id": "1191f628-32ce-42f7-a7db-94a644c1a218",
       "type": "text",
-      "x": 28.53594598985353,
-      "y": -287,
+      "x": 109,
+      "y": -441.6356600695244,
       "label": "Host Proxy bypass traffic",
       "fontSize": 24,
       "color": "#e7f6ff",

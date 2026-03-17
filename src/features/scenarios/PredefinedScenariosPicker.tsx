@@ -18,7 +18,7 @@ export default function PredefinedScenariosPicker() {
   const newDocument = useEditorStore((s) => s.newDocument);
 
   useEffect(() => {
-    fetch(MANIFEST_URL)
+    fetch(`${MANIFEST_URL}?t=${Date.now()}`)
       .then((res) => {
         if (!res.ok) throw new Error(res.statusText);
         return res.json();
@@ -36,7 +36,7 @@ export default function PredefinedScenariosPicker() {
     }
     setLoading(true);
     try {
-      const url = `${import.meta.env.BASE_URL}PredefinedScenarios/${encodeURIComponent(entry.file)}`;
+      const url = `${import.meta.env.BASE_URL}PredefinedScenarios/${encodeURIComponent(entry.file)}?t=${Date.now()}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error(res.statusText);
       const json = await res.json();
