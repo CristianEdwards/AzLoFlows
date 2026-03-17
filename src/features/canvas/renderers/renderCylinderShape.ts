@@ -48,8 +48,11 @@ function body(
   top: Point, bot: Point, hx: Point, hy: Point,
 ) {
   ctx.beginPath();
+  // Start at right edge of top ellipse
   ctx.moveTo(top.x + hx.x, top.y + hx.y);
+  // Right edge down to bottom
   ctx.lineTo(bot.x + hx.x, bot.y + hx.y);
+  // Front half of bottom ellipse (right → front → left)
   for (let i = 0; i <= SEGS / 2; i++) {
     const t = (i / SEGS) * Math.PI * 2;
     ctx.lineTo(
@@ -57,7 +60,16 @@ function body(
       bot.y + Math.cos(t) * hx.y + Math.sin(t) * hy.y,
     );
   }
+  // Left edge up to top
   ctx.lineTo(top.x - hx.x, top.y - hx.y);
+  // Back half of top ellipse (left → back → right) to close properly
+  for (let i = SEGS / 2; i <= SEGS; i++) {
+    const t = (i / SEGS) * Math.PI * 2;
+    ctx.lineTo(
+      top.x + Math.cos(t) * hx.x + Math.sin(t) * hy.x,
+      top.y + Math.cos(t) * hx.y + Math.sin(t) * hy.y,
+    );
+  }
   ctx.closePath();
 }
 
