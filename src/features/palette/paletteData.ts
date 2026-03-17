@@ -124,6 +124,7 @@ const laptopIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" 
 </svg>`;
 
 const browserIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <g transform="translate(64,0) scale(-1,1)">
   <polygon points="28,17 20,13 20,51 28,55" fill="rgba(0,229,255,0.08)" stroke="rgba(0,229,255,0.3)" stroke-width="0.6"/>
   <polygon points="56,6 28,17 20,13 48,2" fill="rgba(0,229,255,0.12)" stroke="rgba(0,229,255,0.5)" stroke-width="0.6"/>
   <polygon points="56,6 28,17 28,55 56,44" fill="rgba(0,229,255,0.18)" stroke="rgba(0,229,255,0.6)" stroke-width="1.2"/>
@@ -137,9 +138,11 @@ const browserIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"
   <polygon points="54,32 43,37 43,43 54,38" fill="rgba(0,229,255,0.06)" stroke="rgba(0,229,255,0.1)" stroke-width="0.4"/>
   <polygon points="41,38 30,43 30,49 41,44" fill="rgba(0,229,255,0.06)" stroke="rgba(0,229,255,0.1)" stroke-width="0.4"/>
   <line x1="56" y1="6" x2="56" y2="44" stroke="rgba(0,229,255,0.9)" stroke-width="1.5"/>
+  </g>
 </svg>`;
 
 const browser2Icon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <g transform="translate(64,0) scale(-1,1)">
   <polygon points="28,17 20,13 20,51 28,55" fill="rgba(0,229,255,0.08)" stroke="rgba(0,229,255,0.3)" stroke-width="0.6"/>
   <polygon points="56,6 28,17 20,13 48,2" fill="rgba(0,229,255,0.12)" stroke="rgba(0,229,255,0.5)" stroke-width="0.6"/>
   <polygon points="56,6 28,17 28,55 56,44" fill="rgba(0,229,255,0.18)" stroke="rgba(0,229,255,0.6)" stroke-width="1.2"/>
@@ -160,6 +163,7 @@ const browser2Icon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64
   <polygon points="48,31 55,27 55,36 48,40" fill="rgba(123,127,138,0.2)"/>
   <polygon points="49.5,32.5 52,31 52,35 49.5,36.5" fill="rgba(74,222,128,0.65)"/>
   <line x1="56" y1="6" x2="56" y2="44" stroke="rgba(0,229,255,0.9)" stroke-width="1.5"/>
+  </g>
 </svg>`;
 
 const shieldIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
@@ -176,6 +180,7 @@ const hexagonIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"
 </svg>`;
 
 const dashboardIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <g transform="translate(64,0) scale(-1,1)">
   <polygon points="28,17 20,13 20,51 28,55" fill="rgba(0,229,255,0.08)" stroke="rgba(0,229,255,0.3)" stroke-width="0.6"/>
   <polygon points="56,6 28,17 20,13 48,2" fill="rgba(0,229,255,0.12)" stroke="rgba(0,229,255,0.5)" stroke-width="0.6"/>
   <polygon points="56,6 28,17 28,55 56,44" fill="rgba(0,229,255,0.16)" stroke="rgba(0,229,255,0.55)" stroke-width="1.2"/>
@@ -191,9 +196,11 @@ const dashboardIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 6
   <polygon points="36,35 29,38 29,46 36,43" fill="rgba(0,229,255,0.06)" stroke="rgba(0,229,255,0.08)" stroke-width="0.4"/>
   <polygon points="55,15 50,17 50,26 55,24" fill="rgba(0,229,255,0.04)" stroke="rgba(0,229,255,0.06)" stroke-width="0.3"/>
   <polygon points="55,27 50,29 50,34 55,32" fill="rgba(0,229,255,0.04)" stroke="rgba(0,229,255,0.06)" stroke-width="0.3"/>
+  </g>
 </svg>`;
 
 const chartPanelIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <g transform="translate(64,0) scale(-1,1)">
   <polygon points="28,17 20,13 20,51 28,55" fill="rgba(0,229,255,0.08)" stroke="rgba(0,229,255,0.3)" stroke-width="0.6"/>
   <polygon points="56,6 28,17 20,13 48,2" fill="rgba(0,229,255,0.12)" stroke="rgba(0,229,255,0.5)" stroke-width="0.6"/>
   <polygon points="56,6 28,17 28,55 56,44" fill="rgba(0,229,255,0.14)" stroke="rgba(0,229,255,0.50)" stroke-width="1"/>
@@ -203,9 +210,11 @@ const chartPanelIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 
   <circle cx="42" cy="35" r="1.5" fill="rgba(0,229,255,0.5)"/>
   <circle cx="37" cy="26" r="1.5" fill="rgba(0,229,255,0.5)"/>
   <circle cx="29" cy="27" r="1.5" fill="rgba(0,229,255,0.5)"/>
+  </g>
 </svg>`;
 
 const analyticsPanelIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <g transform="translate(64,0) scale(-1,1)">
   <polygon points="28,17 20,13 20,51 28,55" fill="rgba(77,141,255,0.08)" stroke="rgba(77,141,255,0.3)" stroke-width="0.6"/>
   <polygon points="56,6 28,17 20,13 48,2" fill="rgba(77,141,255,0.12)" stroke="rgba(77,141,255,0.5)" stroke-width="0.6"/>
   <polygon points="56,6 28,17 28,55 56,44" fill="rgba(77,141,255,0.18)" stroke="rgba(77,141,255,0.6)" stroke-width="1.2"/>
@@ -218,6 +227,7 @@ const analyticsPanelIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0
   <circle cx="32" cy="32" r="1.2" fill="rgba(77,141,255,0.5)"/>
   <circle cx="29" cy="26" r="1.2" fill="rgba(77,141,255,0.5)"/>
   <line x1="56" y1="6" x2="56" y2="44" stroke="rgba(77,141,255,0.9)" stroke-width="1.5"/>
+  </g>
 </svg>`;
 
 export const paletteShapes: PaletteShape[] = [
