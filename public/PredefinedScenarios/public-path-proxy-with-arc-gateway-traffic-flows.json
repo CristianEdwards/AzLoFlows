@@ -21,7 +21,7 @@
         "yRatio": 0.4347826086956523
       },
       "icon": "svgArcResourceBridge",
-      "zIndex": 2,
+      "zIndex": 77,
       "tags": [
         "flow:arb"
       ]
@@ -88,7 +88,7 @@
         "yRatio": 0.608695652173913
       },
       "icon": "svgAzureLocalAKS",
-      "zIndex": 5,
+      "zIndex": 78,
       "tags": [
         "flow:aks"
       ]
@@ -110,7 +110,7 @@
         "yRatio": 0.7909722222222224
       },
       "icon": "svgAzureLocalVM",
-      "zIndex": 6,
+      "zIndex": 79,
       "tags": [
         "flow:vms"
       ]
