@@ -127,7 +127,7 @@
       "fill": "#5b320f",
       "glowColor": "#ff8800",
       "icon": "svgAzureFirewallPolicy",
-      "zIndex": 56,
+      "zIndex": 81,
       "tags": [
         "proxy-no-arc",
         "proxy-arc"
@@ -204,7 +204,7 @@
       "fill": "#5b320f",
       "glowColor": "#ff8800",
       "textRotated": true,
-      "zIndex": 16,
+      "zIndex": 80,
       "tags": [
         "flow:vms"
       ]
