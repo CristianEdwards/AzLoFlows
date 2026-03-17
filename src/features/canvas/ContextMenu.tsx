@@ -364,13 +364,14 @@ export default function ContextMenu({ x, y, onClose }: ContextMenuProps) {
         </div>
       )}
 
-      <div className="context-menu__divider" />
-
-      {/* ── Common actions ── */}
-      <button className="context-menu__item" onClick={action(bringToFront)}>Bring to Front</button>
-      <button className="context-menu__item" onClick={action(sendToBack)}>Send to Back</button>
-      <button className="context-menu__item" onClick={action(duplicateSelection)}>Duplicate</button>
-      <button className="context-menu__item context-menu__item--danger" onClick={action(deleteSelection)}>Delete</button>
+      <div className="context-menu__actions-sticky">
+        <div className="context-menu__divider" />
+        {/* ── Common actions ── */}
+        <button className="context-menu__item" onClick={action(bringToFront)}>Bring to Front</button>
+        <button className="context-menu__item" onClick={action(sendToBack)}>Send to Back</button>
+        <button className="context-menu__item" onClick={action(duplicateSelection)}>Duplicate</button>
+        <button className="context-menu__item context-menu__item--danger" onClick={action(deleteSelection)}>Delete</button>
+      </div>
     </div>
   );
 }
