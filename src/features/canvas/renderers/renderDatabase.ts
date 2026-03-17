@@ -57,63 +57,45 @@ export function renderDatabase(
     botE.push(ePt(a, depth));
   }
 
-  /* ═══ LAYER 1 – Bottom ellipse (solid dark background) ══════ */
-  ctx.beginPath();
-  ctx.moveTo(botE[0].x, botE[0].y);
-  for (let i = 1; i <= SEGS; i++) ctx.lineTo(botE[i].x, botE[i].y);
-  ctx.closePath();
-  ctx.fillStyle = darkenHex(base, 0.35);
-  ctx.fill();
-
-  /* ═══ LAYER 2a – Back wall (darkest, painted first) ══════════
-   * Path: left of top → straight down → back arc of bottom
-   *        (left→right via back) → straight up → close.
-   * "Back" = indices SEGS/2 → SEGS (angle π → 2π).              */
+  /* ═══ LAYER 1 – Full silhouette fill (gap-proof base) ═════════
+   * Single closed path: top ellipse CW → right edge down →
+   * bottom ellipse CCW → left edge up.  Fills the entire visible
+   * shape as one solid block so no sub-pixel gaps are possible.  */
   const half = SEGS / 2;
   ctx.beginPath();
-  ctx.moveTo(topE[half].x, topE[half].y);
-  ctx.lineTo(botE[half].x, botE[half].y);
-  for (let i = half + 1; i <= SEGS; i++) ctx.lineTo(botE[i].x, botE[i].y);
-  ctx.lineTo(topE[SEGS].x, topE[SEGS].y);
+  ctx.moveTo(topE[0].x, topE[0].y);
+  for (let i = 1; i <= SEGS; i++) ctx.lineTo(topE[i].x, topE[i].y);
+  ctx.lineTo(botE[SEGS].x, botE[SEGS].y);
+  for (let i = SEGS - 1; i >= 0; i--) ctx.lineTo(botE[i].x, botE[i].y);
   ctx.closePath();
-  {
-    const g = ctx.createLinearGradient(
-      topE[half].x, topE[half].y,
-      botE[SEGS * 3 / 4].x, botE[SEGS * 3 / 4].y,
-    );
-    g.addColorStop(0, darkenHex(base, 0.30));
-    g.addColorStop(1, darkenHex(base, 0.45));
-    ctx.fillStyle = g;
-  }
+  ctx.fillStyle = darkenHex(base, 0.38);
   ctx.fill();
 
-  /* ═══ LAYER 2b – Front wall (lighter, painted on top) ═════════
-   * Path: right of top → straight down → front arc of bottom
-   *        (right→left) → straight up → close.
-   * "Front" = indices 0 → SEGS/2 (angle 0 → π).                */
+  /* ═══ LAYER 2 – Front wall gradient (shading over silhouette)
+   * Covers front half of the wall + includes front arc of top
+   * ellipse to prevent chord gaps.                               */
   ctx.beginPath();
-  // Start at top-right of ellipse (angle 0)
+  // Front arc of top ellipse (angle 0 → π)
   ctx.moveTo(topE[0].x, topE[0].y);
-  // Right edge down to bottom-right
-  ctx.lineTo(botE[0].x, botE[0].y);
-  // Front arc of bottom ellipse: right → front → left
-  for (let i = 1; i <= half; i++) ctx.lineTo(botE[i].x, botE[i].y);
-  // Left edge up to top-left
-  ctx.lineTo(topE[half].x, topE[half].y);
+  for (let i = 1; i <= half; i++) ctx.lineTo(topE[i].x, topE[i].y);
+  // Left edge down
+  ctx.lineTo(botE[half].x, botE[half].y);
+  // Front arc of bottom ellipse (π → 0, backwards)
+  for (let i = half - 1; i >= 0; i--) ctx.lineTo(botE[i].x, botE[i].y);
   ctx.closePath();
   {
     const g = ctx.createLinearGradient(
       topE[0].x, topE[0].y,
       botE[half].x, botE[half].y,
     );
-    g.addColorStop(0, darkenHex(base, 0.08));
-    g.addColorStop(0.5, darkenHex(base, 0.22));
-    g.addColorStop(1, darkenHex(base, 0.35));
+    g.addColorStop(0, darkenHex(base, 0.05));
+    g.addColorStop(0.5, darkenHex(base, 0.18));
+    g.addColorStop(1, darkenHex(base, 0.32));
     ctx.fillStyle = g;
   }
   ctx.fill();
 
-  /* ═══ LAYER 3 – Top ellipse (cap) ════════════════════════════ */
+  /* ═══ LAYER 3 – Top ellipse (cap, painted last = frontmost) ═ */
   ctx.beginPath();
   ctx.moveTo(topE[0].x, topE[0].y);
   for (let i = 1; i <= SEGS; i++) ctx.lineTo(topE[i].x, topE[i].y);
