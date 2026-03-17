@@ -1,14 +1,18 @@
 import { getTextRatios } from '@/lib/geometry/textPosition';
 import { NODE_DEPTH, DETAIL_ZOOM_THRESHOLD, DEFAULT_FONT_SIZE } from '@/lib/config';
 import { isoQuad, type ViewportSize } from '@/lib/geometry/iso';
-import { drawPolygon, drawTransformedText } from '@/lib/rendering/canvasPrimitives';
+import { drawTransformedText } from '@/lib/rendering/canvasPrimitives';
 import { lightenHex, darkenHex } from '@/lib/rendering/tokens';
 import type { CameraState, NodeEntity, Point } from '@/types/document';
 
+const SEGS = 48; // segments per full ellipse – smooth at any zoom
+
 /**
- * Renders a database shape in isometric using proven iso-box faces
- * (top, left, front) for guaranteed complete solid coverage, with
- * decorative band lines and indicator dots.
+ * Renders an isometric cylinder (database shape) using a 3-layer
+ * painting approach that guarantees complete solid coverage:
+ *   1. Bottom ellipse fill  (catches any sub-pixel leaks)
+ *   2. Front wall path      (right edge → bottom arc → left edge)
+ *   3. Top ellipse fill     (cap – hides the chord)
  */
 export function renderDatabase(
   ctx: CanvasRenderingContext2D,
@@ -24,103 +28,128 @@ export function renderDatabase(
   const [lt, rt, rb, lb] = pts;
   const depth = NODE_DEPTH * 1.6 * camera.zoom;
 
+  // Ellipse centre & half-axes (iso-projected)
+  const cx = (lt.x + rt.x + rb.x + lb.x) / 4;
+  const cy = (lt.y + rt.y + rb.y + lb.y) / 4;
+  const hx: Point = { x: (rt.x - lt.x) / 2, y: (rt.y - lt.y) / 2 };
+  const hy: Point = { x: (lb.x - lt.x) / 2, y: (lb.y - lt.y) / 2 };
+
   const topLen = Math.hypot(rt.x - lt.x, rt.y - lt.y) || 1;
   const leftLen = Math.hypot(lb.x - lt.x, lb.y - lt.y) || 1;
   const bScale = Math.min(1, Math.max(0.35, (topLen + leftLen) * 0.5 / 120));
-
   const bx: Point = { x: (rt.x - lt.x) / topLen, y: (rt.y - lt.y) / topLen };
-
-  // Depth-shifted corners
-  const ltD: Point = { x: lt.x, y: lt.y + depth };
-  const rtD: Point = { x: rt.x, y: rt.y + depth };
-  const rbD: Point = { x: rb.x, y: rb.y + depth };
-  const lbD: Point = { x: lb.x, y: lb.y + depth };
 
   const base = node.fill;
   const glow = node.glowColor;
 
-  /* ═══ SOLID BOX FACES ═══════════════════════════════════════ */
+  // Helper: point on ellipse at angle t (centre + offset dy for depth)
+  const ePt = (t: number, dy: number): Point => ({
+    x: cx + Math.cos(t) * hx.x + Math.sin(t) * hy.x,
+    y: cy + Math.cos(t) * hx.y + Math.sin(t) * hy.y + dy,
+  });
 
-  /* ── Left face ── */
-  drawPolygon(ctx, [lt, lb, lbD, ltD]);
+  // Pre-compute top & bottom ellipse point arrays
+  const topE: Point[] = [];
+  const botE: Point[] = [];
+  for (let i = 0; i <= SEGS; i++) {
+    const a = (i / SEGS) * Math.PI * 2;
+    topE.push(ePt(a, 0));
+    botE.push(ePt(a, depth));
+  }
+
+  /* ═══ LAYER 1 – Bottom ellipse (solid dark background) ══════ */
+  ctx.beginPath();
+  ctx.moveTo(botE[0].x, botE[0].y);
+  for (let i = 1; i <= SEGS; i++) ctx.lineTo(botE[i].x, botE[i].y);
+  ctx.closePath();
+  ctx.fillStyle = darkenHex(base, 0.35);
+  ctx.fill();
+
+  /* ═══ LAYER 2 – Front wall ════════════════════════════════════
+   * Path: right of top → straight down → front arc of bottom
+   *        (right→left) → straight up → close.
+   * "Front" = indices 0 → SEGS/2 (angle 0 → π), which sweeps
+   * through the +hy direction (toward the viewer in iso).        */
+  const half = SEGS / 2;
+  ctx.beginPath();
+  // Start at top-right of ellipse (angle 0)
+  ctx.moveTo(topE[0].x, topE[0].y);
+  // Right edge down to bottom-right
+  ctx.lineTo(botE[0].x, botE[0].y);
+  // Front arc of bottom ellipse: right → front → left
+  for (let i = 1; i <= half; i++) ctx.lineTo(botE[i].x, botE[i].y);
+  // Left edge up to top-left
+  ctx.lineTo(topE[half].x, topE[half].y);
+  ctx.closePath();
   {
-    const g = ctx.createLinearGradient(lt.x, lt.y, lbD.x, lbD.y);
-    g.addColorStop(0, lightenHex(base, 0.15));
-    g.addColorStop(1, darkenHex(base, 0.20));
+    const g = ctx.createLinearGradient(
+      topE[0].x, topE[0].y,
+      botE[half].x, botE[half].y,
+    );
+    g.addColorStop(0, darkenHex(base, 0.08));
+    g.addColorStop(0.5, darkenHex(base, 0.22));
+    g.addColorStop(1, darkenHex(base, 0.35));
     ctx.fillStyle = g;
   }
   ctx.fill();
 
-  /* ── Front face ── */
-  drawPolygon(ctx, [lb, rb, rbD, lbD]);
+  /* ═══ LAYER 3 – Top ellipse (cap) ════════════════════════════ */
+  ctx.beginPath();
+  ctx.moveTo(topE[0].x, topE[0].y);
+  for (let i = 1; i <= SEGS; i++) ctx.lineTo(topE[i].x, topE[i].y);
+  ctx.closePath();
   {
-    const g = ctx.createLinearGradient(lb.x, lb.y, rbD.x, rbD.y);
-    g.addColorStop(0, darkenHex(base, 0.20));
-    g.addColorStop(1, darkenHex(base, 0.38));
-    ctx.fillStyle = g;
-  }
-  ctx.fill();
-
-  /* ── Top face ── */
-  drawPolygon(ctx, [lt, rt, rb, lb]);
-  {
-    const g = ctx.createLinearGradient(lt.x, lt.y, rb.x, rb.y);
+    const g = ctx.createLinearGradient(
+      topE[SEGS * 3 / 4].x, topE[SEGS * 3 / 4].y,
+      topE[SEGS / 4].x, topE[SEGS / 4].y,
+    );
     g.addColorStop(0, lightenHex(base, 0.22));
     g.addColorStop(0.5, base);
-    g.addColorStop(1, darkenHex(base, 0.12));
+    g.addColorStop(1, darkenHex(base, 0.10));
     ctx.fillStyle = g;
   }
   ctx.fill();
 
   /* ═══ DECORATIVE DETAILS ════════════════════════════════════ */
 
+  // Elliptical band lines on the front wall
   const bandCount = 3;
-
-  /* ── Horizontal bands on front face ── */
   for (let b = 1; b < bandCount; b++) {
     const t = b / bandCount;
-    const p1: Point = { x: lb.x + (lbD.x - lb.x) * t, y: lb.y + (lbD.y - lb.y) * t };
-    const p2: Point = { x: rb.x + (rbD.x - rb.x) * t, y: rb.y + (rbD.y - rb.y) * t };
+    const dy = depth * t;
     ctx.beginPath();
-    ctx.moveTo(p1.x, p1.y + 1.5 * camera.zoom);
-    ctx.lineTo(p2.x, p2.y + 1.5 * camera.zoom);
-    ctx.strokeStyle = darkenHex(base, 0.50);
+    const p0 = ePt(0, dy);
+    ctx.moveTo(p0.x, p0.y);
+    for (let i = 1; i <= half; i++) {
+      const a = (i / SEGS) * Math.PI * 2;
+      const p = ePt(a, dy);
+      ctx.lineTo(p.x, p.y);
+    }
+    // shadow line
+    ctx.strokeStyle = darkenHex(base, 0.45);
     ctx.lineWidth = 2 * bScale;
     ctx.stroke();
+    // highlight line (offset up slightly)
     ctx.beginPath();
-    ctx.moveTo(p1.x, p1.y);
-    ctx.lineTo(p2.x, p2.y);
-    ctx.strokeStyle = lightenHex(glow, 0.05);
+    const q0 = ePt(0, dy - 1.5 * camera.zoom);
+    ctx.moveTo(q0.x, q0.y);
+    for (let i = 1; i <= half; i++) {
+      const a = (i / SEGS) * Math.PI * 2;
+      const q = ePt(a, dy - 1.5 * camera.zoom);
+      ctx.lineTo(q.x, q.y);
+    }
+    ctx.strokeStyle = lightenHex(glow, 0.04);
     ctx.lineWidth = 1 * bScale;
     ctx.stroke();
   }
 
-  /* ── Horizontal bands on left face ── */
-  for (let b = 1; b < bandCount; b++) {
-    const t = b / bandCount;
-    const p1: Point = { x: lt.x + (ltD.x - lt.x) * t, y: lt.y + (ltD.y - lt.y) * t };
-    const p2: Point = { x: lb.x + (lbD.x - lb.x) * t, y: lb.y + (lbD.y - lb.y) * t };
-    ctx.beginPath();
-    ctx.moveTo(p1.x, p1.y + 1.5 * camera.zoom);
-    ctx.lineTo(p2.x, p2.y + 1.5 * camera.zoom);
-    ctx.strokeStyle = darkenHex(base, 0.40);
-    ctx.lineWidth = 2 * bScale;
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(p1.x, p1.y);
-    ctx.lineTo(p2.x, p2.y);
-    ctx.strokeStyle = lightenHex(glow, 0.02);
-    ctx.lineWidth = 1 * bScale;
-    ctx.stroke();
-  }
-
-  /* ── Indicator dots on front face ── */
+  // Indicator dots along the front wall
   for (let b = 0; b < bandCount; b++) {
     const t = (b + 0.5) / bandCount;
-    const dotPt: Point = {
-      x: lb.x + (lbD.x - lb.x) * t + (rb.x - lb.x) * 0.08,
-      y: lb.y + (lbD.y - lb.y) * t + (rb.y - lb.y) * 0.08,
-    };
+    const dy = depth * t;
+    // Place dot at ~15° from right edge on front arc
+    const dotA = Math.PI * 0.08;
+    const dotPt = ePt(dotA, dy);
     const dr = 2.5 * camera.zoom;
     ctx.beginPath();
     ctx.arc(dotPt.x, dotPt.y, dr, 0, Math.PI * 2);
@@ -132,47 +161,53 @@ export function renderDatabase(
     ctx.fill();
   }
 
-  /* ── Specular on left face ── */
-  {
-    const sp1: Point = { x: lt.x * 0.7 + lb.x * 0.3, y: lt.y * 0.7 + lb.y * 0.3 };
-    const sp2: Point = { x: ltD.x * 0.7 + lbD.x * 0.3, y: ltD.y * 0.7 + lbD.y * 0.3 };
-    ctx.beginPath();
-    ctx.moveTo(sp1.x, sp1.y);
-    ctx.lineTo(sp2.x, sp2.y);
-    ctx.strokeStyle = lightenHex(base, 0.18);
-    ctx.lineWidth = 2 * bScale;
-    ctx.stroke();
-  }
+  /* ═══ STROKES ═══════════════════════════════════════════════ */
 
-  /* ── Face borders ── */
-  drawPolygon(ctx, [lt, rt, rb, lb]);
+  // Top ellipse border
+  ctx.beginPath();
+  ctx.moveTo(topE[0].x, topE[0].y);
+  for (let i = 1; i <= SEGS; i++) ctx.lineTo(topE[i].x, topE[i].y);
+  ctx.closePath();
   ctx.strokeStyle = selected ? lightenHex(glow, 0.10) : darkenHex(glow, 0.10);
   ctx.lineWidth = (selected ? 2.5 : 1.2) * bScale;
   ctx.stroke();
 
-  drawPolygon(ctx, [lt, lb, lbD, ltD]);
+  // Front wall side edges + bottom arc
+  ctx.beginPath();
+  ctx.moveTo(topE[0].x, topE[0].y);
+  ctx.lineTo(botE[0].x, botE[0].y);
+  for (let i = 1; i <= half; i++) ctx.lineTo(botE[i].x, botE[i].y);
+  ctx.lineTo(topE[half].x, topE[half].y);
   ctx.strokeStyle = darkenHex(glow, 0.20);
   ctx.lineWidth = 0.8 * bScale;
   ctx.stroke();
 
-  drawPolygon(ctx, [lb, rb, rbD, lbD]);
-  ctx.strokeStyle = darkenHex(glow, 0.25);
-  ctx.lineWidth = 0.8 * bScale;
-  ctx.stroke();
-
-  /* ── Specular on top face ── */
+  // Specular highlight on front wall (vertical line near the right edge)
   {
-    const tSpec1: Point = { x: lt.x * 0.55 + rt.x * 0.45, y: lt.y * 0.55 + rt.y * 0.45 };
-    const tSpec2: Point = { x: lb.x * 0.45 + rb.x * 0.55, y: lb.y * 0.45 + rb.y * 0.55 };
+    const specA = Math.PI * 0.15;
+    const sp1 = ePt(specA, depth * 0.1);
+    const sp2 = ePt(specA, depth * 0.9);
     ctx.beginPath();
-    ctx.moveTo(tSpec1.x, tSpec1.y);
-    ctx.lineTo(tSpec2.x, tSpec2.y);
-    ctx.strokeStyle = lightenHex(base, 0.18);
+    ctx.moveTo(sp1.x, sp1.y);
+    ctx.lineTo(sp2.x, sp2.y);
+    ctx.strokeStyle = lightenHex(base, 0.16);
+    ctx.lineWidth = 2 * bScale;
+    ctx.stroke();
+  }
+
+  // Specular highlight across top ellipse
+  {
+    const ts1 = ePt(Math.PI * 1.35, 0);
+    const ts2 = ePt(Math.PI * 0.35, 0);
+    ctx.beginPath();
+    ctx.moveTo(ts1.x, ts1.y);
+    ctx.lineTo(ts2.x, ts2.y);
+    ctx.strokeStyle = lightenHex(base, 0.16);
     ctx.lineWidth = 2.5 * bScale;
     ctx.stroke();
   }
 
-  /* ═══ TITLE TEXT ════════════════════════════════════════════ */
+  /* ═══ TITLE TEXT ═════════════════════════════════════════════ */
 
   const showDetail = camera.zoom >= DETAIL_ZOOM_THRESHOLD;
   if (showDetail && node.title !== 'New Node') {
