@@ -1,5 +1,5 @@
 import GlassPanel from '@/components/ui/GlassPanel';
-import { colorSwatches, paletteShapes, componentTemplates } from '@/features/palette/paletteData';
+import { colorSwatches, paletteShapes } from '@/features/palette/paletteData';
 import PredefinedScenariosPicker from '@/features/scenarios/PredefinedScenariosPicker';
 import { useEditorStore } from '@/state/useEditorStore';
 
@@ -26,30 +26,6 @@ export default function ShapePalette() {
             >
               <div className="component-tile__icon" dangerouslySetInnerHTML={{ __html: shape.icon }} />
               <span className="component-tile__label">{shape.title}</span>
-            </button>
-          ))}
-        </div>
-      </GlassPanel>
-      <GlassPanel title="Components" className="template-panel">
-        <div className="template-list">
-          {componentTemplates.map((tpl) => (
-            <button
-              key={tpl.id}
-              className="template-row"
-              draggable
-              onDragStart={(event) => {
-                event.dataTransfer.setData('application/x-isoflow-shape', 'node');
-                event.dataTransfer.setData('application/x-isoflow-template', JSON.stringify({
-                  title: tpl.title,
-                  subtitle: tpl.subtitle,
-                  fill: tpl.fill,
-                  glowColor: tpl.glowColor,
-                  icon: tpl.icon,
-                }));
-              }}
-            >
-              <span className="template-row__dot" style={{ background: tpl.glowColor, boxShadow: `0 0 8px ${tpl.glowColor}` }} />
-              <span className="template-row__title">{tpl.title}</span>
             </button>
           ))}
         </div>

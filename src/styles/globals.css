@@ -1276,7 +1276,9 @@ select:focus-visible {
   position: absolute;
   z-index: 50;
   min-width: 200px;
-  max-width: 280px;
+  max-width: 300px;
+  max-height: 70vh;
+  overflow-y: auto;
   padding: 6px;
   border-radius: 14px;
   background: rgba(15, 23, 42, 0.94);
@@ -1422,6 +1424,78 @@ select:focus-visible {
 .context-menu__item--danger:hover {
   background: rgba(248, 113, 113, 0.18);
   color: var(--red-400);
+}
+
+.context-menu__input {
+  width: 100%;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(51, 65, 85, 0.6);
+  background: rgba(15, 23, 42, 0.6);
+  color: var(--slate-200);
+  font-size: 12px;
+  outline: none;
+}
+
+.context-menu__input:focus {
+  border-color: rgba(34, 211, 238, 0.5);
+}
+
+.context-menu__input--num {
+  width: 60px;
+}
+
+.context-menu__select {
+  width: 100%;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(51, 65, 85, 0.6);
+  background: rgba(15, 23, 42, 0.6);
+  color: var(--slate-200);
+  font-size: 12px;
+  outline: none;
+  cursor: pointer;
+}
+
+.context-menu__select:focus {
+  border-color: rgba(34, 211, 238, 0.5);
+}
+
+.context-menu__textarea {
+  width: 100%;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(51, 65, 85, 0.6);
+  background: rgba(15, 23, 42, 0.6);
+  color: var(--slate-200);
+  font-size: 12px;
+  resize: vertical;
+  outline: none;
+}
+
+.context-menu__textarea:focus {
+  border-color: rgba(34, 211, 238, 0.5);
+}
+
+.context-menu__field-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.context-menu__field-row label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--slate-400);
+  text-transform: uppercase;
+}
+
+.context-menu__tags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
 }
 
 /* ── Dialog Backdrop (shared) ─────────────────────────── */
