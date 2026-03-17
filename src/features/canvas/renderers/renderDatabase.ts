@@ -65,12 +65,32 @@ export function renderDatabase(
   ctx.fillStyle = darkenHex(base, 0.35);
   ctx.fill();
 
-  /* ═══ LAYER 2 – Front wall ════════════════════════════════════
+  /* ═══ LAYER 2a – Back wall (darkest, painted first) ══════════
+   * Path: left of top → straight down → back arc of bottom
+   *        (left→right via back) → straight up → close.
+   * "Back" = indices SEGS/2 → SEGS (angle π → 2π).              */
+  const half = SEGS / 2;
+  ctx.beginPath();
+  ctx.moveTo(topE[half].x, topE[half].y);
+  ctx.lineTo(botE[half].x, botE[half].y);
+  for (let i = half + 1; i <= SEGS; i++) ctx.lineTo(botE[i].x, botE[i].y);
+  ctx.lineTo(topE[SEGS].x, topE[SEGS].y);
+  ctx.closePath();
+  {
+    const g = ctx.createLinearGradient(
+      topE[half].x, topE[half].y,
+      botE[SEGS * 3 / 4].x, botE[SEGS * 3 / 4].y,
+    );
+    g.addColorStop(0, darkenHex(base, 0.30));
+    g.addColorStop(1, darkenHex(base, 0.45));
+    ctx.fillStyle = g;
+  }
+  ctx.fill();
+
+  /* ═══ LAYER 2b – Front wall (lighter, painted on top) ═════════
    * Path: right of top → straight down → front arc of bottom
    *        (right→left) → straight up → close.
-   * "Front" = indices 0 → SEGS/2 (angle 0 → π), which sweeps
-   * through the +hy direction (toward the viewer in iso).        */
-  const half = SEGS / 2;
+   * "Front" = indices 0 → SEGS/2 (angle 0 → π).                */
   ctx.beginPath();
   // Start at top-right of ellipse (angle 0)
   ctx.moveTo(topE[0].x, topE[0].y);
@@ -112,7 +132,7 @@ export function renderDatabase(
 
   /* ═══ DECORATIVE DETAILS ════════════════════════════════════ */
 
-  // Elliptical band lines on the front wall
+  // Elliptical band lines around the full circumference
   const bandCount = 3;
   for (let b = 1; b < bandCount; b++) {
     const t = b / bandCount;
@@ -120,11 +140,12 @@ export function renderDatabase(
     ctx.beginPath();
     const p0 = ePt(0, dy);
     ctx.moveTo(p0.x, p0.y);
-    for (let i = 1; i <= half; i++) {
+    for (let i = 1; i <= SEGS; i++) {
       const a = (i / SEGS) * Math.PI * 2;
       const p = ePt(a, dy);
       ctx.lineTo(p.x, p.y);
     }
+    ctx.closePath();
     // shadow line
     ctx.strokeStyle = darkenHex(base, 0.45);
     ctx.lineWidth = 2 * bScale;
@@ -133,11 +154,12 @@ export function renderDatabase(
     ctx.beginPath();
     const q0 = ePt(0, dy - 1.5 * camera.zoom);
     ctx.moveTo(q0.x, q0.y);
-    for (let i = 1; i <= half; i++) {
+    for (let i = 1; i <= SEGS; i++) {
       const a = (i / SEGS) * Math.PI * 2;
       const q = ePt(a, dy - 1.5 * camera.zoom);
       ctx.lineTo(q.x, q.y);
     }
+    ctx.closePath();
     ctx.strokeStyle = lightenHex(glow, 0.04);
     ctx.lineWidth = 1 * bScale;
     ctx.stroke();
@@ -172,12 +194,20 @@ export function renderDatabase(
   ctx.lineWidth = (selected ? 2.5 : 1.2) * bScale;
   ctx.stroke();
 
-  // Front wall side edges + bottom arc
+  // Full wall outline: both side edges + full bottom arc
   ctx.beginPath();
   ctx.moveTo(topE[0].x, topE[0].y);
   ctx.lineTo(botE[0].x, botE[0].y);
-  for (let i = 1; i <= half; i++) ctx.lineTo(botE[i].x, botE[i].y);
-  ctx.lineTo(topE[half].x, topE[half].y);
+  for (let i = 1; i <= SEGS; i++) ctx.lineTo(botE[i].x, botE[i].y);
+  ctx.lineTo(topE[SEGS].x, topE[SEGS].y);
+  ctx.strokeStyle = darkenHex(glow, 0.20);
+  ctx.lineWidth = 0.8 * bScale;
+  ctx.stroke();
+
+  // Side edge on the back-left
+  ctx.beginPath();
+  ctx.moveTo(topE[half].x, topE[half].y);
+  ctx.lineTo(botE[half].x, botE[half].y);
   ctx.strokeStyle = darkenHex(glow, 0.20);
   ctx.lineWidth = 0.8 * bScale;
   ctx.stroke();
