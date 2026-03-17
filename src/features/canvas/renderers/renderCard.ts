@@ -210,12 +210,10 @@ export function renderCard(
     : { x: -bxDir.x, y: -bxDir.y };
 
   if (showDetail) {
-    // Title sits below the header area
-    const textRatios = getTextRatios(node, 0.48);
-    const titlePoint = worldToScreen(
-      { x: node.x + node.width * textRatios.x, y: node.y + node.height * textRatios.y },
-      camera, viewport,
-    );
+    const hasIcon = !!(node.icon && nodeIconCatalog[node.icon]);
+    const hasSub = !!node.subtitle;
+
+    // ── Font sizing ──
     const nodeTitleSize = node.fontSize ?? DEFAULT_FONT_SIZE;
     const scaledTitleSize = Math.round(nodeTitleSize * camera.zoom);
     const textEdgeLength = node.textRotated ? topEdgeLen : leftEdgeLen;
@@ -226,15 +224,61 @@ export function renderCard(
       ? Math.max(8, Math.floor(scaledTitleSize * (nodeTopEdge / titleTextWidth)))
       : scaledTitleSize;
 
+    // ── Stack layout: measure extent above / below title center ──
+    const gap = 4 * camera.zoom;
+    let iconSize = hasIcon
+      ? Math.min(node.width, node.height) * NODE_ICON_SCALE * camera.zoom * 0.35
+      : 0;
+    const subtitleFontSize = hasSub ? Math.round(clampedSize * 0.8125) : 0;
+
+    const aboveTitle = clampedSize / 2;
+    let belowTitle = clampedSize / 2;
+    if (hasIcon) belowTitle += gap + iconSize;
+    if (hasSub) belowTitle += gap + subtitleFontSize;
+    let totalStack = aboveTitle + belowTitle;
+
+    // Shrink icon if the stack exceeds 75 % of the stacking edge
+    const stackEdgeLen = node.textRotated ? leftEdgeLen : topEdgeLen;
+    const maxStack = stackEdgeLen * 0.75;
+    if (totalStack > maxStack && hasIcon) {
+      iconSize = Math.max(8, iconSize - (totalStack - maxStack));
+      belowTitle = clampedSize / 2 + gap + iconSize + (hasSub ? gap + subtitleFontSize : 0);
+      totalStack = aboveTitle + belowTitle;
+    }
+
+    // ── Clamp title position so the full stack stays inside the card ──
+    const baseRatios = getTextRatios(node, 0.48);
+    let rx = baseRatios.x;
+    let ry = baseRatios.y;
+
+    if (node.textRotated) {
+      // Stacking along by (y-axis), extends in +y from title center
+      const aboveFrac = aboveTitle / leftEdgeLen;
+      const belowFrac = belowTitle / leftEdgeLen;
+      ry = Math.max(0.25 + aboveFrac, Math.min(0.92 - belowFrac, ry));
+      rx = Math.max(0.10, Math.min(0.90, rx));
+    } else {
+      // Stacking along bx (x-axis), extends in -x from title center
+      const aboveFrac = aboveTitle / topEdgeLen;
+      const belowFrac = belowTitle / topEdgeLen;
+      rx = Math.max(0.05 + belowFrac, Math.min(0.95 - aboveFrac, rx));
+      ry = Math.max(0.25, Math.min(0.88, ry));
+    }
+
+    const titlePoint = worldToScreen(
+      { x: node.x + node.width * rx, y: node.y + node.height * ry },
+      camera, viewport,
+    );
+
+    // ── Draw title ──
     drawTransformedText(ctx, node.title, titlePoint, textDirection, textStackDirection,
       light ? 'rgba(255,255,255,0.95)' : '#ffffff',
       `${light ? 700 : 600} ${clampedSize}px Inter, sans-serif`);
 
-    // Icon positioned just below the title, following text position
-    if (node.icon && nodeIconCatalog[node.icon]) {
-      const iconDef = nodeIconCatalog[node.icon];
-      const iconSize = Math.min(node.width, node.height) * NODE_ICON_SCALE * camera.zoom * 0.35;
-      const iconOffset = clampedSize + iconSize * 0.6 + 4 * camera.zoom;
+    // ── Draw icon (centered below title) ──
+    if (hasIcon) {
+      const iconDef = nodeIconCatalog[node.icon!];
+      const iconOffset = clampedSize / 2 + gap + iconSize / 2;
       const iconPt = {
         x: titlePoint.x + textStackDirection.x * iconOffset,
         y: titlePoint.y + textStackDirection.y * iconOffset,
@@ -251,18 +295,18 @@ export function renderCard(
       ctx.restore();
     }
 
-    if (node.subtitle) {
-      const iconSizeSub = Math.min(node.width, node.height) * NODE_ICON_SCALE * camera.zoom * 0.35;
-      const subtitleOffset = (node.icon && nodeIconCatalog[node.icon])
-        ? clampedSize + iconSizeSub * 1.2 + 8 * camera.zoom
-        : 18;
+    // ── Draw subtitle ──
+    if (hasSub) {
+      const subtitleOffset = hasIcon
+        ? clampedSize / 2 + gap + iconSize + gap + subtitleFontSize / 2
+        : clampedSize / 2 + gap + subtitleFontSize / 2;
       const subtitlePoint = {
         x: titlePoint.x + textStackDirection.x * subtitleOffset,
         y: titlePoint.y + textStackDirection.y * subtitleOffset,
       };
       drawTransformedText(ctx, node.subtitle, subtitlePoint, textDirection, textStackDirection,
         light ? 'rgba(255,255,255,0.75)' : hexToRgba(node.glowColor, 0.95),
-        `${light ? 600 : 500} ${Math.round(clampedSize * 0.8125)}px Inter, sans-serif`);
+        `${light ? 600 : 500} ${subtitleFontSize}px Inter, sans-serif`);
     }
   }
 }
