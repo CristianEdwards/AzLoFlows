@@ -473,20 +473,25 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
         }
       }
 
-      // Top thin strip (between back-top and front-top)
+      // Top thin strip (between back-top and front-top) â€” matches canvas darkenHex(glowColor, 0.20)
       if (panelThick > 0) {
-        svg.push(`<polygon points="${pts([bTL, bTR, fTR, fTL])}" fill="${hexToRgba(faceFill, light ? 0.88 : 0.20)}" stroke="${hexToRgba(node.glowColor, 0.4)}" stroke-width="1" />`);
+        svg.push(`<polygon points="${pts([bTL, bTR, fTR, fTL])}" fill="${light ? hexToRgba(faceFill, 0.88) : darkenHex(faceFill, 0.20)}" stroke="${hexToRgba(node.glowColor, 0.4)}" stroke-width="1" />`);
       }
 
-      // Right side face
-      svg.push(`<polygon points="${pts([bTR, bBR, fBR, fTR])}" fill="${hexToRgba(faceFill, light ? 0.92 : 0.30)}" stroke="${hexToRgba(node.glowColor, 0.3)}" stroke-width="1" />`);
+      // Right side face â€” matches canvas darkenHex(glowColor, 0.45)
+      svg.push(`<polygon points="${pts([bTR, bBR, fBR, fTR])}" fill="${light ? hexToRgba(faceFill, 0.92) : darkenHex(faceFill, 0.45)}" stroke="${hexToRgba(node.glowColor, 0.3)}" stroke-width="1" />`);
 
-      // Front face with gradient
+      // Front face with gradient (matching canvas)
       const gId = uid();
       svg.push(`<defs><linearGradient id="sg${gId}" x1="${fTL.x}" y1="${fTL.y}" x2="${fBR.x}" y2="${fBR.y}" gradientUnits="userSpaceOnUse">`);
-      svg.push(`<stop offset="0" stop-color="${faceFill}" stop-opacity="${light ? 0.98 : 0.84}"/>`);
-      svg.push(`<stop offset="0.5" stop-color="${faceFill}" stop-opacity="${light ? 0.88 : 0.46}"/>`);
-      svg.push(`<stop offset="1" stop-color="${faceFill}" stop-opacity="${light ? 0.72 : 0.24}"/>`);
+      if (light) {
+        svg.push(`<stop offset="0" stop-color="${faceFill}" stop-opacity="0.98"/>`);
+        svg.push(`<stop offset="0.5" stop-color="${faceFill}" stop-opacity="0.88"/>`);
+        svg.push(`<stop offset="1" stop-color="${faceFill}" stop-opacity="0.72"/>`);
+      } else {
+        svg.push(`<stop offset="0" stop-color="${darkenHex(faceFill, 0.10)}" stop-opacity="1"/>`);
+        svg.push(`<stop offset="1" stop-color="${darkenHex(faceFill, 0.25)}" stop-opacity="1"/>`);
+      }
       svg.push('</linearGradient></defs>');
       svg.push(`<polygon points="${pts([fTL, fTR, fBR, fBL])}" fill="url(#sg${gId})" filter="url(#softGlow)" />`);
 
@@ -586,18 +591,47 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
         }
       }
 
-      // Left depth face
-      svg.push(`<polygon points="${pts([lt, lb, lbD, ltD])}" fill="${hexToRgba(faceFill, light ? 0.92 : 0.45)}" stroke="${hexToRgba(node.glowColor, 0.18)}" stroke-width="0.6" />`);
-      // Front depth face
-      svg.push(`<polygon points="${pts([lb, rb, rbD, lbD])}" fill="${hexToRgba(faceFill, light ? 0.98 : 0.45)}" stroke="${hexToRgba(node.glowColor, 0.18)}" stroke-width="0.6" />`);
+      // Left depth face (gradient matching canvas)
+      const clgLeft = uid();
+      svg.push(`<defs><linearGradient id="clf${clgLeft}" x1="${lt.x}" y1="${lt.y}" x2="${lbD.x}" y2="${lbD.y}" gradientUnits="userSpaceOnUse">`);
+      if (light) {
+        svg.push(`<stop offset="0" stop-color="${faceFill}" stop-opacity="0.92"/>`);
+        svg.push(`<stop offset="1" stop-color="${faceFill}" stop-opacity="0.82"/>`);
+      } else {
+        svg.push(`<stop offset="0" stop-color="${hexToRgba(faceFill, 0.45)}" stop-opacity="1"/>`);
+        svg.push(`<stop offset="0.5" stop-color="${darkenHex(faceFill, 0.40)}" stop-opacity="1"/>`);
+        svg.push(`<stop offset="1" stop-color="${darkenHex(faceFill, 0.60)}" stop-opacity="1"/>`);
+      }
+      svg.push('</linearGradient></defs>');
+      svg.push(`<polygon points="${pts([lt, lb, lbD, ltD])}" fill="url(#clf${clgLeft})" stroke="${hexToRgba(node.glowColor, 0.18)}" stroke-width="0.6" />`);
+      // Front depth face (gradient matching canvas)
+      const clgFront = uid();
+      svg.push(`<defs><linearGradient id="cff${clgFront}" x1="${lb.x}" y1="${lb.y}" x2="${rbD.x}" y2="${rbD.y}" gradientUnits="userSpaceOnUse">`);
+      if (light) {
+        svg.push(`<stop offset="0" stop-color="${faceFill}" stop-opacity="0.98"/>`);
+        svg.push(`<stop offset="1" stop-color="${faceFill}" stop-opacity="0.88"/>`);
+      } else {
+        svg.push(`<stop offset="0" stop-color="${darkenHex(faceFill, 0.45)}" stop-opacity="1"/>`);
+        svg.push(`<stop offset="0.5" stop-color="${darkenHex(faceFill, 0.55)}" stop-opacity="1"/>`);
+        svg.push(`<stop offset="1" stop-color="${darkenHex(faceFill, 0.70)}" stop-opacity="1"/>`);
+      }
+      svg.push('</linearGradient></defs>');
+      svg.push(`<polygon points="${pts([lb, rb, rbD, lbD])}" fill="url(#cff${clgFront})" stroke="${hexToRgba(node.glowColor, 0.18)}" stroke-width="0.6" />`);
 
-      // Top face with gradient
+      // Top face with gradient (matching canvas)
       const cgId = uid();
       svg.push(`<defs><linearGradient id="cg${cgId}" x1="${lt.x}" y1="${lt.y}" x2="${rb.x}" y2="${rb.y}" gradientUnits="userSpaceOnUse">`);
-      svg.push(`<stop offset="0" stop-color="${faceFill}" stop-opacity="${light ? 0.98 : 0.85}"/>`);
-      svg.push(`<stop offset="0.3" stop-color="${faceFill}" stop-opacity="${light ? 0.88 : 0.58}"/>`);
-      svg.push(`<stop offset="0.7" stop-color="${faceFill}" stop-opacity="${light ? 0.78 : 0.30}"/>`);
-      svg.push(`<stop offset="1" stop-color="${faceFill}" stop-opacity="${light ? 0.65 : 0.18}"/>`);
+      if (light) {
+        svg.push(`<stop offset="0" stop-color="${faceFill}" stop-opacity="0.98"/>`);
+        svg.push(`<stop offset="0.3" stop-color="${faceFill}" stop-opacity="0.88"/>`);
+        svg.push(`<stop offset="0.7" stop-color="${faceFill}" stop-opacity="0.78"/>`);
+        svg.push(`<stop offset="1" stop-color="${faceFill}" stop-opacity="0.65"/>`);
+      } else {
+        svg.push(`<stop offset="0" stop-color="${hexToRgba(faceFill, 0.85)}" stop-opacity="1"/>`);
+        svg.push(`<stop offset="0.3" stop-color="${hexToRgba(faceFill, 0.58)}" stop-opacity="1"/>`);
+        svg.push(`<stop offset="0.7" stop-color="${darkenHex(faceFill, 0.30)}" stop-opacity="1"/>`);
+        svg.push(`<stop offset="1" stop-color="${darkenHex(faceFill, 0.50)}" stop-opacity="1"/>`);
+      }
       svg.push('</linearGradient></defs>');
       svg.push(`<polygon points="${pts(quad)}" fill="url(#cg${cgId})" filter="url(#softGlow)" />`);
 
@@ -748,11 +782,32 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
         const brbD = { x: brb.x, y: brb.y + bladeDepth };
         const blbD = { x: blb.x, y: blb.y + bladeDepth };
 
-        // Left face
-        svg.push(`<polygon points="${pts([blt, blb, blbD, bltD])}" fill="${hexToRgba(faceFill, light ? 0.92 : 0.45 * bladeAlpha)}" stroke="${hexToRgba(node.glowColor, 0.18)}" stroke-width="0.8" />`);
+        // Left face (gradient matching canvas)
+        const slfId = uid();
+        svg.push(`<defs><linearGradient id="slf${slfId}" x1="${blt.x}" y1="${blt.y}" x2="${blbD.x}" y2="${blbD.y}" gradientUnits="userSpaceOnUse">`);
+        if (light) {
+          svg.push(`<stop offset="0" stop-color="${faceFill}" stop-opacity="0.92"/>`);
+          svg.push(`<stop offset="1" stop-color="${faceFill}" stop-opacity="0.82"/>`);
+        } else {
+          svg.push(`<stop offset="0" stop-color="${hexToRgba(faceFill, 0.45 * bladeAlpha)}" stop-opacity="1"/>`);
+          svg.push(`<stop offset="1" stop-color="${darkenHex(faceFill, 0.55)}" stop-opacity="1"/>`);
+        }
+        svg.push('</linearGradient></defs>');
+        svg.push(`<polygon points="${pts([blt, blb, blbD, bltD])}" fill="url(#slf${slfId})" stroke="${hexToRgba(node.glowColor, 0.18)}" stroke-width="0.8" />`);
 
-        // Front face
-        svg.push(`<polygon points="${pts([blb, brb, brbD, blbD])}" fill="${hexToRgba(faceFill, light ? 0.98 : 0.40)}" stroke="${hexToRgba(node.glowColor, 0.18)}" stroke-width="0.8" />`);
+        // Front face (gradient matching canvas)
+        const sffId = uid();
+        svg.push(`<defs><linearGradient id="sff${sffId}" x1="${blb.x}" y1="${blb.y}" x2="${brbD.x}" y2="${brbD.y}" gradientUnits="userSpaceOnUse">`);
+        if (light) {
+          svg.push(`<stop offset="0" stop-color="${faceFill}" stop-opacity="0.98"/>`);
+          svg.push(`<stop offset="1" stop-color="${faceFill}" stop-opacity="0.88"/>`);
+        } else {
+          svg.push(`<stop offset="0" stop-color="${darkenHex(faceFill, 0.40)}" stop-opacity="1"/>`);
+          svg.push(`<stop offset="0.5" stop-color="${darkenHex(faceFill, 0.52)}" stop-opacity="1"/>`);
+          svg.push(`<stop offset="1" stop-color="${darkenHex(faceFill, 0.65)}" stop-opacity="1"/>`);
+        }
+        svg.push('</linearGradient></defs>');
+        svg.push(`<polygon points="${pts([blb, brb, brbD, blbD])}" fill="url(#sff${sffId})" stroke="${hexToRgba(node.glowColor, 0.18)}" stroke-width="0.8" />`);
 
         // LED on front face
         const ledCx = blb.x + (blbD.x - blb.x) * 0.5 + (brb.x - blb.x) * 0.06;
@@ -760,16 +815,23 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
         const ledColor = ledColors[blade % ledColors.length];
         svg.push(`<circle cx="${ledCx}" cy="${ledCy}" r="${2.2 * bScale}" fill="${ledColor}" opacity="0.9" />`);
 
-        // Right face
-        svg.push(`<polygon points="${pts([brt, brb, brbD, brtD])}" fill="${hexToRgba(faceFill, light ? 0.85 : 0.28)}" />`);
+        // Right face â€” matches canvas darkenHex(glowColor, 0.65)
+        svg.push(`<polygon points="${pts([brt, brb, brbD, brtD])}" fill="${light ? hexToRgba(faceFill, 0.85) : darkenHex(faceFill, 0.65)}" />`);
 
-        // Top face with gradient
+        // Top face with gradient (matching canvas)
         const bgId = uid();
         svg.push(`<defs><linearGradient id="br${bgId}" x1="${blt.x}" y1="${blt.y}" x2="${brb.x}" y2="${brb.y}" gradientUnits="userSpaceOnUse">`);
-        svg.push(`<stop offset="0" stop-color="${faceFill}" stop-opacity="${light ? 0.98 : (0.90 * bladeAlpha)}"/>`);
-        svg.push(`<stop offset="0.3" stop-color="${faceFill}" stop-opacity="${light ? 0.88 : (0.60 * bladeAlpha)}"/>`);
-        svg.push(`<stop offset="0.7" stop-color="${faceFill}" stop-opacity="${light ? 0.78 : 0.30}"/>`);
-        svg.push(`<stop offset="1" stop-color="${faceFill}" stop-opacity="${light ? 0.65 : 0.18}"/>`);
+        if (light) {
+          svg.push(`<stop offset="0" stop-color="${faceFill}" stop-opacity="0.98"/>`);
+          svg.push(`<stop offset="0.3" stop-color="${faceFill}" stop-opacity="0.88"/>`);
+          svg.push(`<stop offset="0.7" stop-color="${faceFill}" stop-opacity="0.78"/>`);
+          svg.push(`<stop offset="1" stop-color="${faceFill}" stop-opacity="0.65"/>`);
+        } else {
+          svg.push(`<stop offset="0" stop-color="${hexToRgba(faceFill, 0.90 * bladeAlpha)}" stop-opacity="1"/>`);
+          svg.push(`<stop offset="0.3" stop-color="${hexToRgba(faceFill, 0.60 * bladeAlpha)}" stop-opacity="1"/>`);
+          svg.push(`<stop offset="0.7" stop-color="${darkenHex(faceFill, 0.30)}" stop-opacity="1"/>`);
+          svg.push(`<stop offset="1" stop-color="${darkenHex(faceFill, 0.50)}" stop-opacity="1"/>`);
+        }
         svg.push('</linearGradient></defs>');
         svg.push(`<polygon points="${pts([blt, brt, brb, blb])}" fill="url(#br${bgId})" />`);
 
@@ -877,19 +939,59 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
       }
     }
 
-    // Left depth face
-    svg.push(`<polygon points="${pts([leftTop, leftBottom, frontLeftBottom, leftTopDepth])}" fill="${hexToRgba(faceFill, light ? 0.92 : 0.22)}" stroke="${hexToRgba(node.glowColor, light ? 0.48 : 0.34)}" stroke-width="1.6" />`);
-    // Front depth face
-    svg.push(`<polygon points="${pts([leftBottom, rightBottom, frontRightBottom, frontLeftBottom])}" fill="${hexToRgba(faceFill, light ? 0.98 : 0.42)}" stroke="${hexToRgba(node.glowColor, light ? 0.48 : 0.34)}" stroke-width="1.6" />`);
-    // Right depth face
-    svg.push(`<polygon points="${pts([rightTop, rightBottom, frontRightBottom, rightTopDepth])}" fill="${hexToRgba(faceFill, light ? 0.95 : 0.28)}" stroke="${hexToRgba(node.glowColor, light ? 0.42 : 0.3)}" stroke-width="1.4" />`);
+    // Left depth face (gradient matching canvas)
+    const lgLeft = uid();
+    svg.push(`<defs><linearGradient id="dlf${lgLeft}" x1="${leftTop.x}" y1="${leftTop.y}" x2="${frontLeftBottom.x}" y2="${frontLeftBottom.y}" gradientUnits="userSpaceOnUse">`);
+    if (light) {
+      svg.push(`<stop offset="0" stop-color="${faceFill}" stop-opacity="0.92"/>`);
+      svg.push(`<stop offset="1" stop-color="${faceFill}" stop-opacity="0.82"/>`);
+    } else {
+      svg.push(`<stop offset="0" stop-color="${hexToRgba(faceFill, 0.50)}" stop-opacity="1"/>`);
+      svg.push(`<stop offset="0.5" stop-color="${darkenHex(faceFill, 0.40)}" stop-opacity="1"/>`);
+      svg.push(`<stop offset="1" stop-color="${darkenHex(faceFill, 0.60)}" stop-opacity="1"/>`);
+    }
+    svg.push('</linearGradient></defs>');
+    svg.push(`<polygon points="${pts([leftTop, leftBottom, frontLeftBottom, leftTopDepth])}" fill="url(#dlf${lgLeft})" stroke="${hexToRgba(node.glowColor, light ? 0.48 : 0.34)}" stroke-width="1.6" />`);
+    // Front depth face (gradient matching canvas)
+    const lgFront = uid();
+    svg.push(`<defs><linearGradient id="dff${lgFront}" x1="${leftBottom.x}" y1="${leftBottom.y}" x2="${frontRightBottom.x}" y2="${frontRightBottom.y}" gradientUnits="userSpaceOnUse">`);
+    if (light) {
+      svg.push(`<stop offset="0" stop-color="${faceFill}" stop-opacity="0.98"/>`);
+      svg.push(`<stop offset="1" stop-color="${faceFill}" stop-opacity="0.88"/>`);
+    } else {
+      svg.push(`<stop offset="0" stop-color="${darkenHex(faceFill, 0.45)}" stop-opacity="1"/>`);
+      svg.push(`<stop offset="0.5" stop-color="${darkenHex(faceFill, 0.55)}" stop-opacity="1"/>`);
+      svg.push(`<stop offset="1" stop-color="${darkenHex(faceFill, 0.70)}" stop-opacity="1"/>`);
+    }
+    svg.push('</linearGradient></defs>');
+    svg.push(`<polygon points="${pts([leftBottom, rightBottom, frontRightBottom, frontLeftBottom])}" fill="url(#dff${lgFront})" stroke="${hexToRgba(node.glowColor, light ? 0.48 : 0.34)}" stroke-width="1.6" />`);
+    // Right depth face (gradient matching canvas)
+    const lgRight = uid();
+    svg.push(`<defs><linearGradient id="drf${lgRight}" x1="${rightTop.x}" y1="${rightTop.y}" x2="${frontRightBottom.x}" y2="${frontRightBottom.y}" gradientUnits="userSpaceOnUse">`);
+    if (light) {
+      svg.push(`<stop offset="0" stop-color="${faceFill}" stop-opacity="0.95"/>`);
+      svg.push(`<stop offset="1" stop-color="${faceFill}" stop-opacity="0.85"/>`);
+    } else {
+      svg.push(`<stop offset="0" stop-color="${hexToRgba(faceFill, 0.35)}" stop-opacity="1"/>`);
+      svg.push(`<stop offset="0.5" stop-color="${darkenHex(faceFill, 0.50)}" stop-opacity="1"/>`);
+      svg.push(`<stop offset="1" stop-color="${darkenHex(faceFill, 0.65)}" stop-opacity="1"/>`);
+    }
+    svg.push('</linearGradient></defs>');
+    svg.push(`<polygon points="${pts([rightTop, rightBottom, frontRightBottom, rightTopDepth])}" fill="url(#drf${lgRight})" stroke="${hexToRgba(node.glowColor, light ? 0.42 : 0.3)}" stroke-width="1.4" />`);
 
-    // Top face with gradient
+    // Top face with gradient (matching canvas)
     const tgId = uid();
     svg.push(`<defs><linearGradient id="ng${tgId}" x1="${quad[0].x}" y1="${quad[0].y}" x2="${quad[2].x}" y2="${quad[2].y}" gradientUnits="userSpaceOnUse">`);
-    svg.push(`<stop offset="0" stop-color="${faceFill}" stop-opacity="${light ? 0.98 : 0.84}"/>`);
-    svg.push(`<stop offset="0.5" stop-color="${faceFill}" stop-opacity="${light ? 0.88 : 0.46}"/>`);
-    svg.push(`<stop offset="1" stop-color="${faceFill}" stop-opacity="${light ? 0.72 : 0.24}"/>`);
+    if (light) {
+      svg.push(`<stop offset="0" stop-color="${faceFill}" stop-opacity="0.98"/>`);
+      svg.push(`<stop offset="0.5" stop-color="${faceFill}" stop-opacity="0.88"/>`);
+      svg.push(`<stop offset="1" stop-color="${faceFill}" stop-opacity="0.72"/>`);
+    } else {
+      svg.push(`<stop offset="0" stop-color="${hexToRgba(faceFill, 0.90)}" stop-opacity="1"/>`);
+      svg.push(`<stop offset="0.3" stop-color="${hexToRgba(faceFill, 0.60)}" stop-opacity="1"/>`);
+      svg.push(`<stop offset="0.7" stop-color="${darkenHex(faceFill, 0.30)}" stop-opacity="1"/>`);
+      svg.push(`<stop offset="1" stop-color="${darkenHex(faceFill, 0.50)}" stop-opacity="1"/>`);
+    }
     svg.push('</linearGradient></defs>');
     svg.push(`<polygon points="${pts(quad)}" fill="url(#ng${tgId})" filter="url(#softGlow)" />`);
 
@@ -1200,7 +1302,7 @@ export async function exportDocumentAsPdf(canvas: HTMLCanvasElement | null, file
   obj(3); write(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageW} ${pageH}] /Contents 4 0 R /Resources << /XObject << /Img 5 0 R >> >> >>`); write('endobj');
   obj(4); write(`<< /Length ${stream.length} >>`); write('stream'); write(stream); write('endstream'); write('endobj');
 
-  // For the image stream, we need binary handling — use Blob composition instead
+  // For the image stream, we need binary handling ï¿½ use Blob composition instead
   const pdfParts: (string | Uint8Array)[] = [];
   const offsets2: number[] = [];
   let pos2 = 0;
@@ -1252,7 +1354,7 @@ function buildInteractiveHtml(svgContent: string, docJson: string, title: string
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${title} — AzLoFlows Diagram</title>
+<title>${title} ï¿½ AzLoFlows Diagram</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { height: 100%; overflow: hidden; font-family: Inter, -apple-system, sans-serif; }
