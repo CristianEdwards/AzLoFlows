@@ -78,6 +78,9 @@ export default function ContextMenu({ x, y, onClose }: ContextMenuProps) {
     if (left < pad) left = pad;
     el.style.left = `${left}px`;
     el.style.top = `${top}px`;
+    // Adjust max-height so the full scroll range fits within the viewport
+    const availableHeight = window.innerHeight - top - pad;
+    el.style.maxHeight = `${availableHeight}px`;
   }, [x, y]);
 
   if (!selection.type || selection.ids.length === 0) return null;
