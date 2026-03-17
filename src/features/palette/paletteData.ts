@@ -2,7 +2,7 @@ import { palette, companionPalette } from '@/lib/rendering/tokens';
 import type { NodeShape } from '@/types/document';
 
 export interface PaletteShape {
-  id: 'area' | 'node' | 'standingNode' | 'text' | 'pipe' | 'serverRack' | 'card' | 'platform' | 'browser' | 'browser2' | 'dashboard' | 'database' | 'chartPanel' | 'analyticsPanel';
+  id: 'area' | 'node' | 'standingNode' | 'text' | 'pipe' | 'serverRack' | 'card' | 'platform' | 'browser' | 'browser2' | 'dashboard' | 'storage' | 'chartPanel' | 'analyticsPanel';
   title: string;
   /** Inline SVG markup (64×64 viewBox) showing an isometric preview */
   icon: string;
@@ -57,7 +57,7 @@ const pipeIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fi
 
 /* ── New shape preview icons ── */
 
-const databaseIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+const storageIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
   <ellipse cx="32" cy="18" rx="18" ry="7" fill="rgba(0,229,255,0.25)" stroke="rgba(0,229,255,0.7)" stroke-width="1.2"/>
   <path d="M14,18 v22 a18,7 0 0,0 36,0 v-22" fill="rgba(0,229,255,0.10)" stroke="rgba(0,229,255,0.5)" stroke-width="1"/>
   <ellipse cx="32" cy="28" rx="18" ry="7" fill="none" stroke="rgba(0,229,255,0.25)" stroke-width="0.6"/>
@@ -230,7 +230,7 @@ export const paletteShapes: PaletteShape[] = [
   { id: 'browser',  title: 'Browser',  icon: browserIcon,  nodeShape: 'browser' },
   { id: 'browser2', title: 'Browser 2', icon: browser2Icon, nodeShape: 'browser2' },
   { id: 'dashboard', title: 'Dashboard', icon: dashboardIcon, nodeShape: 'dashboard' },
-  { id: 'database', title: 'Database', icon: databaseIcon, nodeShape: 'database' },
+  { id: 'storage', title: 'Storage', icon: storageIcon, nodeShape: 'storage' },
   { id: 'chartPanel', title: 'Chart Panel', icon: chartPanelIcon, nodeShape: 'chartPanel' },
   { id: 'analyticsPanel', title: 'Analytics Panel', icon: analyticsPanelIcon, nodeShape: 'analyticsPanel' },
   { id: 'text', title: 'Text Label', icon: textIcon },

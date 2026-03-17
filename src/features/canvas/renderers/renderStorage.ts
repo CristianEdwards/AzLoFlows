@@ -10,7 +10,7 @@ const HALF = SEGS / 2;
 const TIERS = 3;
 
 /**
- * Renders an isometric database cylinder as 3 stacked disk tiers
+ * Renders an isometric storage cylinder as 3 stacked disk tiers
  * (matching the reference SVG structure).  Each tier paints:
  *   1. Back wall half  (darker gradient)
  *   2. Front wall half (lighter gradient)
@@ -20,7 +20,7 @@ const TIERS = 3;
  * edges — closePath only ever draws a straight vertical side edge,
  * never a chord across an ellipse.  This eliminates all gaps.
  */
-export function renderDatabase(
+export function renderStorage(
   ctx: CanvasRenderingContext2D,
   node: NodeEntity,
   selected: boolean,

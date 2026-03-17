@@ -233,7 +233,7 @@ export default function InspectorPanel() {
               <span>Shape</span>
               <select value={selectedNode.shape ?? 'box'} onChange={(event) => updateNode(selectedNode.id, { shape: (event.target.value || 'box') as NodeShape })}>
                 <option value="box">Box</option>
-                <option value="database">Database</option>
+                <option value="storage">Storage</option>
                 <option value="monitor">Monitor</option>
                 <option value="serverRack">Server Rack</option>
                 <option value="diamond">Diamond</option>
@@ -245,7 +245,7 @@ export default function InspectorPanel() {
                 <option value="shield">Shield</option>
                 <option value="hexagon">Hexagon</option>
                 <option value="dashboard">Dashboard</option>
-                <option value="database">Database</option>
+                <option value="storage">Storage</option>
                 <option value="chartPanel">Chart Panel</option>
               </select>
             </label>

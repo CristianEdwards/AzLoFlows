@@ -340,7 +340,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
                : templateOverrides?.shape === 'browser' ? 140
                : templateOverrides?.shape === 'platform' ? 180
                : templateOverrides?.shape === 'dashboard' ? 200
-               : templateOverrides?.shape === 'database' ? 120
+               : templateOverrides?.shape === 'storage' ? 120
                : templateOverrides?.shape === 'chartPanel' ? 120
                : templateOverrides?.shape === 'analyticsPanel' ? 160
                : 140,
@@ -348,7 +348,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
                 : templateOverrides?.shape === 'browser' ? 120
                 : templateOverrides?.shape === 'platform' ? 180
                 : templateOverrides?.shape === 'dashboard' ? 160
-                : templateOverrides?.shape === 'database' ? 120
+                : templateOverrides?.shape === 'storage' ? 120
                 : templateOverrides?.shape === 'chartPanel' ? 100
                 : templateOverrides?.shape === 'analyticsPanel' ? 140
                 : 96,
