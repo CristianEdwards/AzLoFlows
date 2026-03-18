@@ -334,21 +334,6 @@ export default function InspectorPanel() {
               <button className="ui-button" onClick={addConnectorWaypoint}>Add Bend</button>
               <button className="ui-button" onClick={removeLastConnectorWaypoint} disabled={selectedConnector.waypoints.length === 0}>Remove Bend</button>
             </div>
-            {selectedConnector.waypoints.length > 0 && (
-              <div className="field">
-                <span>Bend Elevation</span>
-                {selectedConnector.waypoints.map((wp, idx) => (
-                  <label key={idx} className="field" style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <span style={{ minWidth: 50, fontSize: 11 }}>Bend {idx + 1}</span>
-                    <input type="number" step={10} style={{ width: 64 }} value={wp.elevation ?? 0} onChange={(e) => {
-                      const wps = [...selectedConnector.waypoints];
-                      wps[idx] = { ...wps[idx], elevation: Number(e.target.value) || 0 };
-                      updateConnector(selectedConnector.id, { waypoints: wps });
-                    }} />
-                  </label>
-                ))}
-              </div>
-            )}
             <label className="field">
               <span>Tags</span>
               <div className="tag-pills">
@@ -451,46 +436,6 @@ export default function InspectorPanel() {
                 ))}
               </div>
             </label>
-            {/* ── Risers ── */}
-            <div className="field">
-              <span>Risers</span>
-              {(selectedPipe.risers ?? []).map((riser, idx) => (
-                <div key={idx} className="field-row" style={{ marginBottom: 4 }}>
-                  <label className="field" style={{ flex: 1 }}>
-                    <span>Start</span>
-                    <input type="number" min={0} max={1} step={0.05} value={riser.start} onChange={(e) => {
-                      const risers = [...(selectedPipe.risers ?? [])];
-                      risers[idx] = { ...risers[idx], start: Number(e.target.value) };
-                      updatePipe(selectedPipe.id, { risers });
-                    }} />
-                  </label>
-                  <label className="field" style={{ flex: 1 }}>
-                    <span>End</span>
-                    <input type="number" min={0} max={1} step={0.05} value={riser.end} onChange={(e) => {
-                      const risers = [...(selectedPipe.risers ?? [])];
-                      risers[idx] = { ...risers[idx], end: Number(e.target.value) };
-                      updatePipe(selectedPipe.id, { risers });
-                    }} />
-                  </label>
-                  <label className="field" style={{ flex: 1 }}>
-                    <span>Elev</span>
-                    <input type="number" step={10} value={riser.elevation} onChange={(e) => {
-                      const risers = [...(selectedPipe.risers ?? [])];
-                      risers[idx] = { ...risers[idx], elevation: Number(e.target.value) };
-                      updatePipe(selectedPipe.id, { risers });
-                    }} />
-                  </label>
-                  <button className="ui-button" style={{ alignSelf: 'flex-end', padding: '2px 6px' }} onClick={() => {
-                    const risers = (selectedPipe.risers ?? []).filter((_, i) => i !== idx);
-                    updatePipe(selectedPipe.id, { risers });
-                  }}>✕</button>
-                </div>
-              ))}
-              <button className="ui-button" style={{ marginTop: 4 }} onClick={() => {
-                const risers = [...(selectedPipe.risers ?? []), { start: 0.3, end: 0.7, elevation: 120 }];
-                updatePipe(selectedPipe.id, { risers });
-              }}>+ Add Riser</button>
-            </div>
             <label className="field">
               <span>Tags</span>
               <div className="tag-pills">

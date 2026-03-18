@@ -141,18 +141,13 @@ function buildConnectorScreenPath(connector: ConnectorEntity, source: NodeEntity
   const targetStub = { x: end.x + tOff.x, y: end.y + tOff.y };
 
   const screenPath: Point[] = [start, sourceStub];
-  const keyElev: { idx: number; elev: number }[] = [
-    { idx: 0, elev: 0 },
-    { idx: 1, elev: 0 },
-  ];
   if (connector.waypoints.length > 0) {
     const screenWPs = connector.waypoints.map((wp) => worldToScreen(wp, camera, viewport));
     let prev = sourceStub;
-    for (let wi = 0; wi < screenWPs.length; wi++) {
-      const seg = buildIsoPath(prev, screenWPs[wi], camera);
+    for (const wp of screenWPs) {
+      const seg = buildIsoPath(prev, wp, camera);
       screenPath.push(...seg.slice(1));
-      keyElev.push({ idx: screenPath.length - 1, elev: (connector.waypoints[wi].elevation ?? 0) * camera.zoom });
-      prev = screenWPs[wi];
+      prev = wp;
     }
     const lastSeg = buildIsoPath(prev, targetStub, camera);
     screenPath.push(...lastSeg.slice(1));
@@ -160,23 +155,7 @@ function buildConnectorScreenPath(connector: ConnectorEntity, source: NodeEntity
     const mainSeg = buildIsoPath(sourceStub, targetStub, camera);
     screenPath.push(...mainSeg.slice(1));
   }
-  keyElev.push({ idx: screenPath.length - 1, elev: 0 }); // targetStub
   screenPath.push(end);
-  keyElev.push({ idx: screenPath.length - 1, elev: 0 }); // end
-
-  // Apply per-waypoint elevation: interpolate between key points
-  for (let k = 0; k < keyElev.length - 1; k++) {
-    const from = keyElev[k];
-    const to = keyElev[k + 1];
-    for (let i = from.idx; i <= to.idx; i++) {
-      const span = to.idx - from.idx;
-      const t = span === 0 ? 0 : (i - from.idx) / span;
-      const elev = from.elev + (to.elev - from.elev) * t;
-      if (elev !== 0) {
-        screenPath[i] = { x: screenPath[i].x, y: screenPath[i].y - elev };
-      }
-    }
-  }
 
   return screenPath;
 }
@@ -408,6 +387,10 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
     const topRight = pQuad[1];
     const bottomRight = pQuad[2];
     const bottomLeft = pQuad[3];
+    const rTopLeft = { x: topLeft.x, y: topLeft.y - pDepth };
+    const rTopRight = { x: topRight.x, y: topRight.y - pDepth };
+    const rBottomRight = { x: bottomRight.x, y: bottomRight.y - pDepth };
+    const rBottomLeft = { x: bottomLeft.x, y: bottomLeft.y - pDepth };
     const color = pipe.color;
 
     // Clipping: exclude node volumes
@@ -434,78 +417,20 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
       pipeClipAttr = ` clip-path="url(#pc${pcId})"`;
     }
 
-    // Build riser segments
-    const pipeRisers = pipe.risers;
-    interface _PipeSeg { tStart: number; tEnd: number; elevPx: number }
-    const pipeSegs: _PipeSeg[] = [];
-    if (pipeRisers && pipeRisers.length > 0) {
-      const sorted = pipeRisers
-        .map((r) => ({ s: Math.max(0, Math.min(1, r.start)), e: Math.max(0, Math.min(1, r.end)), elev: r.elevation * camera.zoom }))
-        .filter((r) => r.e > r.s)
-        .sort((a, b) => a.s - b.s);
-      let cursor = 0;
-      for (const r of sorted) {
-        if (r.s > cursor) pipeSegs.push({ tStart: cursor, tEnd: r.s, elevPx: 0 });
-        pipeSegs.push({ tStart: r.s, tEnd: r.e, elevPx: r.elev });
-        cursor = r.e;
-      }
-      if (cursor < 1) pipeSegs.push({ tStart: cursor, tEnd: 1, elevPx: 0 });
-    } else {
-      pipeSegs.push({ tStart: 0, tEnd: 1, elevPx: 0 });
-    }
-
-    const pLerp = (a: Point, b: Point, t: number): Point => ({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
-
     svg.push(`<g${pipeClipAttr}>`);
-
-    for (let si = 0; si < pipeSegs.length; si++) {
-      const seg = pipeSegs[si];
-      const eTL = pLerp(topLeft, topRight, seg.tStart);
-      const eTR = pLerp(topLeft, topRight, seg.tEnd);
-      const eBR = pLerp(bottomLeft, bottomRight, seg.tEnd);
-      const eBL = pLerp(bottomLeft, bottomRight, seg.tStart);
-      const e = seg.elevPx;
-      // Shift floor and roof by elevation
-      const fTL = { x: eTL.x, y: eTL.y - e };
-      const fTR = { x: eTR.x, y: eTR.y - e };
-      const fBR = { x: eBR.x, y: eBR.y - e };
-      const fBL = { x: eBL.x, y: eBL.y - e };
-      const rTL = { x: eTL.x, y: eTL.y - pDepth - e };
-      const rTR = { x: eTR.x, y: eTR.y - pDepth - e };
-      const rBR = { x: eBR.x, y: eBR.y - pDepth - e };
-      const rBL = { x: eBL.x, y: eBL.y - pDepth - e };
-
-      // Bottom face
-      svg.push(`<polygon points="${pts([fTL, fTR, fBR, fBL])}" fill="${hexToRgba(color, light ? 0.62 : 0.08)}" />`);
-      svg.push(`<polygon points="${pts([fTL, fTR, fBR, fBL])}" fill="none" stroke="${hexToRgba(color, light ? 0.90 : 0.3)}" stroke-width="1" />`);
-      // Left wall
-      svg.push(`<polygon points="${pts([fTL, rTL, rBL, fBL])}" fill="${hexToRgba(color, light ? 0.70 : 0.072)}" stroke="${hexToRgba(color, light ? 0.90 : 0.4)}" stroke-width="1.5" />`);
-      // Right wall
-      svg.push(`<polygon points="${pts([fBR, rBR, rTR, fTR])}" fill="${hexToRgba(color, light ? 0.65 : 0.06)}" stroke="${hexToRgba(color, light ? 0.90 : 0.4)}" stroke-width="1.5" />`);
-      // Top face (roof)
-      svg.push(`<polygon points="${pts([rTL, rTR, rBR, rBL])}" fill="${hexToRgba(color, light ? 0.55 : 0.036)}" stroke="${hexToRgba(color, light ? 0.72 : 0.5)}" stroke-width="1.5" />`);
-      // Vertical edges
-      for (const [a, b] of [[fTL, rTL], [fTR, rTR], [fBR, rBR], [fBL, rBL]]) {
-        svg.push(`<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${hexToRgba(color, light ? 0.72 : 0.5)}" stroke-width="1.2" />`);
-      }
-
-      // Transition walls between segments at different elevations
-      if (si < pipeSegs.length - 1) {
-        const nSeg = pipeSegs[si + 1];
-        if (Math.abs(seg.elevPx - nSeg.elevPx) > 0.5) {
-          const ne = nSeg.elevPx;
-          const nfTL = { x: eTR.x, y: eTR.y - ne };
-          const nrTL = { x: eTR.x, y: eTR.y - pDepth - ne };
-          const nfBL = { x: eBR.x, y: eBR.y - ne };
-          const nrBL = { x: eBR.x, y: eBR.y - pDepth - ne };
-          // Front connecting wall
-          svg.push(`<polygon points="${pts([fTR, rTR, nrTL, nfTL])}" fill="${hexToRgba(color, light ? 0.68 : 0.06)}" stroke="${hexToRgba(color, light ? 0.90 : 0.4)}" stroke-width="1.5" />`);
-          // Back connecting wall
-          svg.push(`<polygon points="${pts([fBR, rBR, nrBL, nfBL])}" fill="${hexToRgba(color, light ? 0.60 : 0.048)}" stroke="${hexToRgba(color, light ? 0.90 : 0.4)}" stroke-width="1.5" />`);
-        }
-      }
+    // Bottom face
+    svg.push(`<polygon points="${pts(pQuad)}" fill="${hexToRgba(color, light ? 0.62 : 0.08)}" />`);
+    svg.push(`<polygon points="${pts(pQuad)}" fill="none" stroke="${hexToRgba(color, light ? 0.90 : 0.3)}" stroke-width="1" />`);
+    // Left wall
+    svg.push(`<polygon points="${pts([topLeft, rTopLeft, rBottomLeft, bottomLeft])}" fill="${hexToRgba(color, light ? 0.70 : 0.072)}" stroke="${hexToRgba(color, light ? 0.90 : 0.4)}" stroke-width="1.5" />`);
+    // Right wall
+    svg.push(`<polygon points="${pts([bottomRight, rBottomRight, rTopRight, topRight])}" fill="${hexToRgba(color, light ? 0.65 : 0.06)}" stroke="${hexToRgba(color, light ? 0.90 : 0.4)}" stroke-width="1.5" />`);
+    // Top face (roof)
+    svg.push(`<polygon points="${pts([rTopLeft, rTopRight, rBottomRight, rBottomLeft])}" fill="${hexToRgba(color, light ? 0.55 : 0.036)}" stroke="${hexToRgba(color, light ? 0.72 : 0.5)}" stroke-width="1.5" />`);
+    // Vertical edges
+    for (const [a, b] of [[topLeft, rTopLeft], [topRight, rTopRight], [bottomRight, rBottomRight], [bottomLeft, rBottomLeft]]) {
+      svg.push(`<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${hexToRgba(color, light ? 0.72 : 0.5)}" stroke-width="1.2" />`);
     }
-
     svg.push('</g>');
     break;
       }

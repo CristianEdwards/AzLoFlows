@@ -122,10 +122,6 @@ export interface NodeEntity {
   notes?: string;
 }
 
-export interface ConnectorWaypoint extends Point {
-  elevation?: number;
-}
-
 export interface ConnectorEntity {
   id: string;
   type: 'connector';
@@ -136,7 +132,7 @@ export interface ConnectorEntity {
   color: string;
   label: string;
   style: ConnectorStyle;
-  waypoints: ConnectorWaypoint[];
+  waypoints: Point[];
   tunnel?: boolean;
   zIndex: number;
   tags?: string[];
@@ -157,15 +153,6 @@ export interface TextEntity {
   notes?: string;
 }
 
-export interface PipeRiser {
-  /** Normalized start position along the pipe's X-axis (0–1). */
-  start: number;
-  /** Normalized end position along the pipe's X-axis (0–1). */
-  end: number;
-  /** Elevation in world units (positive = upward). */
-  elevation: number;
-}
-
 export interface PipeEntity {
   id: string;
   type: 'pipe';
@@ -177,7 +164,6 @@ export interface PipeEntity {
   zIndex: number;
   tags?: string[];
   notes?: string;
-  risers?: PipeRiser[];
 }
 
 export const DOCUMENT_VERSION = 1;
