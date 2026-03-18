@@ -116,7 +116,10 @@ function buildConnectorScreenPath(connector: ConnectorEntity, source: NodeEntity
   const iyU = { x: iyR.x / iyL, y: iyR.y / iyL };
 
   const STUB = CONNECTOR_STUB;
-  function stubOffset(side: string): Point {
+  function stubOffset(side: string, node: NodeEntity): Point {
+    if (node.shape === 'standingNode') {
+      return { x: -ixU.x * STUB, y: -ixU.y * STUB };
+    }
     switch (side) {
       case 'top': return { x: -iyU.x * STUB, y: -iyU.y * STUB };
       case 'bottom': return { x: iyU.x * STUB, y: iyU.y * STUB };
@@ -126,8 +129,8 @@ function buildConnectorScreenPath(connector: ConnectorEntity, source: NodeEntity
     }
   }
 
-  const sOff = stubOffset(parseAnchorId(connector.sourceAnchor).side);
-  const tOff = stubOffset(parseAnchorId(connector.targetAnchor).side);
+  const sOff = stubOffset(parseAnchorId(connector.sourceAnchor).side, source);
+  const tOff = stubOffset(parseAnchorId(connector.targetAnchor).side, target);
   const sourceStub = { x: start.x + sOff.x, y: start.y + sOff.y };
   const targetStub = { x: end.x + tOff.x, y: end.y + tOff.y };
 
