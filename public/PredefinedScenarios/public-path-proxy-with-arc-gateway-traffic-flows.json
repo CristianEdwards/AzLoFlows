@@ -150,7 +150,7 @@
     {
       "id": "0bf0cb3c-e62c-4767-9595-7f5f90f66a01",
       "type": "node",
-      "x": 991,
+      "x": 988,
       "y": -328,
       "width": 80,
       "height": 200,
@@ -158,7 +158,7 @@
       "subtitle": "",
       "fill": "#0a4152",
       "glowColor": "#00e5ff",
-      "zIndex": 82,
+      "zIndex": -3,
       "tags": [
         "no-proxy-arc",
         "proxy-arc"
@@ -222,7 +222,7 @@
       "glowColor": "#00e5ff",
       "shape": "standingNode",
       "textPosition": "top-center",
-      "zIndex": 62
+      "zIndex": -7
     },
     {
       "id": "46e316c3-65d1-4413-8edb-41aaba09ea7f",
@@ -237,7 +237,7 @@
       "glowColor": "#536dfe",
       "shape": "standingNode",
       "icon": "svgAzure",
-      "zIndex": 66
+      "zIndex": -6
     },
     {
       "id": "e048a083-a7af-4375-a9d2-74f1fc553842",
@@ -399,7 +399,7 @@
       "label": "Arc gateway to Azure",
       "style": "animated",
       "waypoints": [],
-      "zIndex": 71,
+      "zIndex": -5,
       "tags": [
         "type:azure-public-endpoint",
         "no-proxy-arc",
@@ -670,7 +670,7 @@
       "label": "Firewall to Azure No Arc gw",
       "style": "animated",
       "waypoints": [],
-      "zIndex": 30,
+      "zIndex": -4,
       "tags": [
         "type:azure-public-endpoint",
         "proxy-no-arc",
