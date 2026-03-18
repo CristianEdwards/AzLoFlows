@@ -43,7 +43,7 @@
         "yRatio": 0.24444444444444435
       },
       "textRotated": true,
-      "zIndex": 76,
+      "zIndex": 91,
       "tags": [
         "no-proxy-arc",
         "proxy-arc"
@@ -136,7 +136,7 @@
     {
       "id": "c85b075a-0040-4bd1-a36d-2cf74f70f370",
       "type": "node",
-      "x": 440,
+      "x": 439,
       "y": -328,
       "width": 200,
       "height": 200,
@@ -145,7 +145,7 @@
       "fill": "#5b1622",
       "glowColor": "#ff3355",
       "icon": "svgAzureFirewall",
-      "zIndex": 73
+      "zIndex": 94
     },
     {
       "id": "0bf0cb3c-e62c-4767-9595-7f5f90f66a01",
@@ -167,8 +167,8 @@
     {
       "id": "ea71de16-deae-46c8-b994-c1160d35c42e",
       "type": "node",
-      "x": 931.1989090089626,
-      "y": 422.44838645079426,
+      "x": 825.1989090089626,
+      "y": 384.44838645079426,
       "width": 320,
       "height": 280,
       "title": "Internet",
@@ -267,7 +267,7 @@
       "glowColor": "#536dfe",
       "shape": "serverRack",
       "icon": "svgAzureLocalMachine",
-      "zIndex": 75
+      "zIndex": 89
     },
     {
       "id": "85e51ef3-29ba-4bd4-b9e7-b7f5a49d5b01",
@@ -284,6 +284,50 @@
       "textPosition": "bottom-left",
       "icon": "svgAzureLocalCluster",
       "zIndex": -2
+    },
+    {
+      "id": "04db091f-afa2-4d48-97ed-37f51832d2fb",
+      "type": "node",
+      "shape": "card",
+      "x": 722,
+      "y": -835,
+      "width": 360,
+      "height": 320,
+      "title": "Intranet Services",
+      "subtitle": "",
+      "fill": "#1a2a6b",
+      "glowColor": "#536dfe",
+      "zIndex": 84,
+      "textPosition": "top-right",
+      "fontSize": 18
+    },
+    {
+      "id": "c6bebd5c-1204-436c-9eb0-a49e44f448bb",
+      "type": "node",
+      "x": 836.460912409457,
+      "y": -688.7878648465096,
+      "width": 160,
+      "height": 120,
+      "title": "DNS server",
+      "subtitle": "",
+      "fill": "#1f3f77",
+      "glowColor": "#4d8dff",
+      "icon": "dns",
+      "zIndex": 93
+    },
+    {
+      "id": "78064ddc-68e0-4cf3-9a83-8aa2de4aadc9",
+      "type": "node",
+      "x": 836.460912409457,
+      "y": -837,
+      "width": 160,
+      "height": 120,
+      "title": "AD",
+      "subtitle": "",
+      "fill": "#1f3f77",
+      "glowColor": "#4d8dff",
+      "icon": "svgKeyVault",
+      "zIndex": 87
     }
   ],
   "connectors": [
@@ -412,7 +456,7 @@
       "sourceId": "fdac6edc-33f7-4a40-be1e-732e5ad73f00",
       "targetId": "c85b075a-0040-4bd1-a36d-2cf74f70f370",
       "sourceAnchor": "top-2",
-      "targetAnchor": "top-2",
+      "targetAnchor": "top-1",
       "color": "#ff0066",
       "label": "Host proxy bypass traffic",
       "style": "animated",
@@ -848,14 +892,14 @@
       "type": "connector",
       "sourceId": "c85b075a-0040-4bd1-a36d-2cf74f70f370",
       "targetId": "46e316c3-65d1-4413-8edb-41aaba09ea7f",
-      "sourceAnchor": "top-3",
+      "sourceAnchor": "top-4",
       "targetAnchor": "top-0",
       "color": "#536dfe",
       "label": "Firewall to Azure non allowed public endpoints",
       "style": "animated",
       "waypoints": [
         {
-          "x": 520,
+          "x": 560,
           "y": -360
         }
       ],
@@ -864,6 +908,29 @@
         "type:non-allowed-arc-gw-azure-public",
         "no-proxy-arc",
         "proxy-arc"
+      ]
+    },
+    {
+      "id": "9302a816-b004-4da9-81bd-9c74ac12f291",
+      "type": "connector",
+      "sourceId": "c85b075a-0040-4bd1-a36d-2cf74f70f370",
+      "targetId": "04db091f-afa2-4d48-97ed-37f51832d2fb",
+      "sourceAnchor": "top-3",
+      "targetAnchor": "left-2",
+      "color": "#536dfe",
+      "label": "Firewall to Intranet bypass",
+      "style": "animated",
+      "waypoints": [
+        {
+          "x": 520,
+          "y": -640
+        }
+      ],
+      "zIndex": 92,
+      "tags": [
+        "no-proxy-arc",
+        "proxy-arc",
+        "type:bypass"
       ]
     }
   ],
@@ -955,8 +1022,8 @@
     {
       "id": "1bbb6fd0-6567-48b8-8ad5-32edab3de818",
       "type": "text",
-      "x": 698,
-      "y": 600,
+      "x": 648.3989860010988,
+      "y": 604.972061840743,
       "label": "HTTP and 3rd party \nHTTPS endpoints",
       "fontSize": 24,
       "color": "#0d0d1a",
@@ -1003,10 +1070,10 @@
     {
       "id": "a538418e-e643-4f3a-985e-4ff3a3b006a7",
       "type": "text",
-      "x": 662,
-      "y": -35,
+      "x": 672,
+      "y": -51,
       "label": "ExpressRoute HTTPS \noutbound traffic",
-      "fontSize": 18,
+      "fontSize": 20,
       "color": "#0d0d1a",
       "zIndex": 11,
       "tags": [
@@ -1077,10 +1144,10 @@
     {
       "id": "581cd255-93ec-4e1a-89e4-bb65be8ae980",
       "type": "text",
-      "x": 724,
-      "y": -417,
+      "x": 916.460912409457,
+      "y": -412.25154045007906,
       "label": "Non allowed \nArc gateway\nAzure Public endpoints",
-      "fontSize": 20,
+      "fontSize": 23,
       "color": "#e7f6ff",
       "zIndex": 53,
       "rotated": true,
@@ -1088,6 +1155,24 @@
         "no-proxy-arc",
         "type:non-allowed-arc-gw-azure-public",
         "proxy-arc"
+      ]
+    },
+    {
+      "id": "1e1c183d-f357-452a-8c79-a338b5c5228d",
+      "type": "text",
+      "x": 474.5783505054052,
+      "y": -551.8773839137592,
+      "label": "Intranet traffic\nproxy bypass",
+      "fontSize": 24,
+      "color": "#e7f6ff",
+      "zIndex": 90,
+      "rotated": false,
+      "tags": [
+        "flow:hosts",
+        "proxy-arc",
+        "proxy-no-arc",
+        "type:bypass",
+        "no-proxy-arc"
       ]
     }
   ],
