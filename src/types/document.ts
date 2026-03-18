@@ -153,6 +153,15 @@ export interface TextEntity {
   notes?: string;
 }
 
+export interface PipeRiser {
+  /** Normalized start position along the pipe's X-axis (0–1). */
+  start: number;
+  /** Normalized end position along the pipe's X-axis (0–1). */
+  end: number;
+  /** Elevation in world units (positive = upward). */
+  elevation: number;
+}
+
 export interface PipeEntity {
   id: string;
   type: 'pipe';
@@ -164,6 +173,7 @@ export interface PipeEntity {
   zIndex: number;
   tags?: string[];
   notes?: string;
+  risers?: PipeRiser[];
 }
 
 export const DOCUMENT_VERSION = 1;
