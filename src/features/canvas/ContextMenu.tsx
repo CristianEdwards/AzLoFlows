@@ -302,6 +302,10 @@ export default function ContextMenu({ x, y, onClose }: ContextMenuProps) {
           <button className={`context-menu__item${selectedConnector.tunnel ? ' is-active' : ''}`} onClick={() => updateConnector(selectedConnector.id, { tunnel: !selectedConnector.tunnel })}>
             {selectedConnector.tunnel ? '✓ ' : ''}Tunnel
           </button>
+          <div className="context-menu__section">
+            <span className="context-menu__section-label">Elevation</span>
+            <input type="number" step={10} className="context-menu__input context-menu__input--num" value={selectedConnector.elevation ?? 0} onChange={(e) => updateConnector(selectedConnector.id, { elevation: Number(e.target.value) || 0 })} />
+          </div>
           <div className="context-menu__field-row">
             <button className="context-menu__item" onClick={() => addConnectorWaypoint()}>Add Bend</button>
             <button className="context-menu__item" onClick={() => removeLastConnectorWaypoint()} disabled={selectedConnector.waypoints.length === 0}>Remove Bend</button>
@@ -366,6 +370,7 @@ export default function ContextMenu({ x, y, onClose }: ContextMenuProps) {
 
       {/* ═══════════ PIPE ═══════════ */}
       {selectedPipe && (
+        <>
         <div className="context-menu__section">
           <span className="context-menu__section-label">Color</span>
           <div className="context-menu__swatches">
@@ -374,6 +379,19 @@ export default function ContextMenu({ x, y, onClose }: ContextMenuProps) {
             ))}
           </div>
         </div>
+        <div className="context-menu__section">
+          <span className="context-menu__section-label">Risers</span>
+          {(selectedPipe.risers ?? []).map((riser, idx) => (
+            <div key={idx} className="context-menu__field-row" style={{ gap: 4 }}>
+              <input type="number" min={0} max={1} step={0.05} className="context-menu__input context-menu__input--num" value={riser.start} style={{ width: 48 }} onChange={(e) => { const risers = [...(selectedPipe.risers ?? [])]; risers[idx] = { ...risers[idx], start: Number(e.target.value) }; updatePipe(selectedPipe.id, { risers }); }} />
+              <input type="number" min={0} max={1} step={0.05} className="context-menu__input context-menu__input--num" value={riser.end} style={{ width: 48 }} onChange={(e) => { const risers = [...(selectedPipe.risers ?? [])]; risers[idx] = { ...risers[idx], end: Number(e.target.value) }; updatePipe(selectedPipe.id, { risers }); }} />
+              <input type="number" step={10} className="context-menu__input context-menu__input--num" value={riser.elevation} style={{ width: 52 }} onChange={(e) => { const risers = [...(selectedPipe.risers ?? [])]; risers[idx] = { ...risers[idx], elevation: Number(e.target.value) }; updatePipe(selectedPipe.id, { risers }); }} />
+              <button className="context-menu__item" style={{ padding: '2px 6px' }} onClick={() => { const risers = (selectedPipe.risers ?? []).filter((_, i) => i !== idx); updatePipe(selectedPipe.id, { risers }); }}>✕</button>
+            </div>
+          ))}
+          <button className="context-menu__item" onClick={() => { const risers = [...(selectedPipe.risers ?? []), { start: 0.3, end: 0.7, elevation: 120 }]; updatePipe(selectedPipe.id, { risers }); }}>+ Add Riser</button>
+        </div>
+        </>
       )}
 
     </div>
