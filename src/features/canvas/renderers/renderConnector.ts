@@ -39,9 +39,14 @@ export function renderConnector(
   const STUB = CONNECTOR_STUB;
   function stubOffset(side: string, node: NodeEntity): { x: number; y: number } {
     if (node.shape === 'standingNode') {
-      // Standing nodes only have anchors on their visual base (the world Y axis edge, x=node.x).
-      // To attach perpendicularly, the connector must extend straight out into the -X floor direction.
-      return { x: -ixU.x * STUB, y: -ixU.y * STUB };
+      // Standing panels have anchors on all 4 edges of the vertical front face.
+      switch (side) {
+        case 'bottom': return { x: -ixU.x * STUB, y: -ixU.y * STUB };
+        case 'top':    return { x: 0, y: -STUB };
+        case 'left':   return { x: -iyU.x * STUB, y: -iyU.y * STUB };
+        case 'right':  return { x: iyU.x * STUB, y: iyU.y * STUB };
+        default:       return { x: -ixU.x * STUB, y: -ixU.y * STUB };
+      }
     }
     switch (side) {
       case 'top': return { x: -iyU.x * STUB, y: -iyU.y * STUB };

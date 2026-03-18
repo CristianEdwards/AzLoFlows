@@ -17,10 +17,14 @@ export function getAnchorPoint(node: NodeEntity, anchorId: AnchorId): Point {
   const { side, index } = parseAnchorId(normalizedAnchor);
   
   if (node.shape === 'standingNode') {
-    // For standing nodes, force all anchors to the "bottom line" footprint in world space.
-    // The visual base corresponds to the line from (node.x, node.y) to (node.x, node.y + node.height)
-    const step = node.height / 6;
-    return { x: node.x, y: node.y + step * (index + 1) };
+    // Standing panels have anchors on all 4 edges of the vertical front face.
+    // node.width maps to the visual height; node.height is the base width.
+    const hStep = node.height / (anchorCounts[side] + 1);
+    const wStep = node.width / (anchorCounts[side] + 1);
+    if (side === 'bottom') return { x: node.x, y: node.y + hStep * (index + 1) };
+    if (side === 'top')    return { x: node.x - node.width, y: node.y + hStep * (index + 1) };
+    if (side === 'left')   return { x: node.x - wStep * (index + 1), y: node.y };
+    return { x: node.x - wStep * (index + 1), y: node.y + node.height };
   }
 
   if (side === 'top') {
@@ -119,10 +123,17 @@ export function getScreenAnchorPoint(node: NodeEntity, anchorId: AnchorId, camer
   const t = (index + 1) / 6;
 
   if (node.shape === 'standingNode') {
-    // Force all anchors to visually align with the bottom-most boundary line of the 2D plane
+    // Standing panels: anchors on all 4 edges of the visible front face.
+    const SCREEN_H_FACTOR = 0.85;
+    const screenH = node.width * SCREEN_H_FACTOR * camera.zoom;
     const bBL = worldToScreen({ x: node.x, y: node.y }, camera, viewport);
     const bBR = worldToScreen({ x: node.x, y: node.y + node.height }, camera, viewport);
-    return lerp(bBL, bBR, t);
+    const fTL = { x: bBL.x, y: bBL.y - screenH };
+    const fTR = { x: bBR.x, y: bBR.y - screenH };
+    if (side === 'bottom') return lerp(bBL, bBR, t);
+    if (side === 'top')    return lerp(fTL, fTR, t);
+    if (side === 'left')   return lerp(fTL, bBL, t);
+    return lerp(fTR, bBR, t);
   }
 
   const points = isoQuad(node.x, node.y, node.width, node.height, camera, viewport);
