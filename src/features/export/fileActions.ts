@@ -156,6 +156,15 @@ function buildConnectorScreenPath(connector: ConnectorEntity, source: NodeEntity
     screenPath.push(...mainSeg.slice(1));
   }
   screenPath.push(end);
+
+  // Apply elevation: shift all middle points (not start/end anchors) upward
+  if (connector.elevation) {
+    const elevPx = connector.elevation * camera.zoom;
+    for (let i = 1; i < screenPath.length - 1; i++) {
+      screenPath[i] = { x: screenPath[i].x, y: screenPath[i].y - elevPx };
+    }
+  }
+
   return screenPath;
 }
 

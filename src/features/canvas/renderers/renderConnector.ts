@@ -80,6 +80,14 @@ export function renderConnector(
   }
   screenPath.push(end);
 
+  // Apply elevation: shift all middle points (not start/end anchors) upward
+  if (connector.elevation) {
+    const elevPx = connector.elevation * camera.zoom;
+    for (let i = 1; i < screenPath.length - 1; i++) {
+      screenPath[i] = { x: screenPath[i].x, y: screenPath[i].y - elevPx };
+    }
+  }
+
   const smoothPath = buildSmoothPath(screenPath, 6, true, true);
   const color = light ? darkenHex(connector.color, 0.55) : connector.color;
 

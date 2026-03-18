@@ -134,6 +134,7 @@ export interface ConnectorEntity {
   style: ConnectorStyle;
   waypoints: Point[];
   tunnel?: boolean;
+  elevation?: number;
   zIndex: number;
   tags?: string[];
   notes?: string;
