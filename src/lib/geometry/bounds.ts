@@ -170,6 +170,20 @@ export function hitTestNodeScreen(nodes: NodeEntity[], screenPoint: Point, camer
     const bottomRight = quad[2];
     const bottomLeft = quad[3];
 
+    if (node.shape === 'standingNode') {
+      // Standing nodes: vertical panel extending upward using node.width for screen height
+      const screenH = node.width * PANEL_SCREEN_H_FACTOR * camera.zoom;
+      const bBL = worldToScreen({ x: node.x, y: node.y }, camera, viewport);
+      const bBR = worldToScreen({ x: node.x, y: node.y + node.height }, camera, viewport);
+      const silhouette = [
+        { x: bBL.x, y: bBL.y - screenH },
+        { x: bBR.x, y: bBR.y - screenH },
+        bBR,
+        bBL,
+      ];
+      return pointInPolygon(screenPoint, silhouette);
+    }
+
     if (PANEL_SHAPES.has(node.shape ?? '')) {
       // Standing panels extend upward from their footprint
       const screenH = node.height * PANEL_SCREEN_H_FACTOR * camera.zoom;
