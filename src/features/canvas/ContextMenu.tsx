@@ -302,14 +302,21 @@ export default function ContextMenu({ x, y, onClose }: ContextMenuProps) {
           <button className={`context-menu__item${selectedConnector.tunnel ? ' is-active' : ''}`} onClick={() => updateConnector(selectedConnector.id, { tunnel: !selectedConnector.tunnel })}>
             {selectedConnector.tunnel ? '✓ ' : ''}Tunnel
           </button>
-          <div className="context-menu__section">
-            <span className="context-menu__section-label">Elevation</span>
-            <input type="number" step={10} className="context-menu__input context-menu__input--num" value={selectedConnector.elevation ?? 0} onChange={(e) => updateConnector(selectedConnector.id, { elevation: Number(e.target.value) || 0 })} />
-          </div>
           <div className="context-menu__field-row">
             <button className="context-menu__item" onClick={() => addConnectorWaypoint()}>Add Bend</button>
             <button className="context-menu__item" onClick={() => removeLastConnectorWaypoint()} disabled={selectedConnector.waypoints.length === 0}>Remove Bend</button>
           </div>
+          {selectedConnector.waypoints.length > 0 && (
+            <div className="context-menu__section">
+              <span className="context-menu__section-label">Bend Elevation</span>
+              {selectedConnector.waypoints.map((wp, idx) => (
+                <div key={idx} className="context-menu__field-row" style={{ alignItems: 'center', gap: 4 }}>
+                  <span style={{ fontSize: 11, minWidth: 44 }}>Bend {idx + 1}</span>
+                  <input type="number" step={10} className="context-menu__input context-menu__input--num" style={{ width: 58 }} value={wp.elevation ?? 0} onChange={(e) => { const wps = [...selectedConnector.waypoints]; wps[idx] = { ...wps[idx], elevation: Number(e.target.value) || 0 }; updateConnector(selectedConnector.id, { waypoints: wps }); }} />
+                </div>
+              ))}
+            </div>
+          )}
           {TAG_OPTIONS.length > 0 && (
             <div className="context-menu__section">
               <span className="context-menu__section-label">Tags</span>

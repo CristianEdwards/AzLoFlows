@@ -640,7 +640,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       if (!connector || !connector.waypoints[index]) {
         return state;
       }
-      connector.waypoints[index] = state.snapEnabled ? snapToGrid(point) : point;
+      connector.waypoints[index] = { ...connector.waypoints[index], ...(state.snapEnabled ? snapToGrid(point) : point) };
       return { document };
     });
   },

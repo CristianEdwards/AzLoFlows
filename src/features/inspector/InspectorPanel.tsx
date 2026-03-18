@@ -330,14 +330,25 @@ export default function InspectorPanel() {
               <span>Tunnel</span>
               <input type="checkbox" checked={selectedConnector.tunnel ?? false} onChange={(event) => updateConnector(selectedConnector.id, { tunnel: event.target.checked })} />
             </label>
-            <label className="field">
-              <span>Elevation</span>
-              <input type="number" step={10} value={selectedConnector.elevation ?? 0} onChange={(e) => updateConnector(selectedConnector.id, { elevation: Number(e.target.value) || 0 })} />
-            </label>
             <div className="toolbar-group toolbar-group--inspector">
               <button className="ui-button" onClick={addConnectorWaypoint}>Add Bend</button>
               <button className="ui-button" onClick={removeLastConnectorWaypoint} disabled={selectedConnector.waypoints.length === 0}>Remove Bend</button>
             </div>
+            {selectedConnector.waypoints.length > 0 && (
+              <div className="field">
+                <span>Bend Elevation</span>
+                {selectedConnector.waypoints.map((wp, idx) => (
+                  <label key={idx} className="field" style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <span style={{ minWidth: 50, fontSize: 11 }}>Bend {idx + 1}</span>
+                    <input type="number" step={10} style={{ width: 64 }} value={wp.elevation ?? 0} onChange={(e) => {
+                      const wps = [...selectedConnector.waypoints];
+                      wps[idx] = { ...wps[idx], elevation: Number(e.target.value) || 0 };
+                      updateConnector(selectedConnector.id, { waypoints: wps });
+                    }} />
+                  </label>
+                ))}
+              </div>
+            )}
             <label className="field">
               <span>Tags</span>
               <div className="tag-pills">

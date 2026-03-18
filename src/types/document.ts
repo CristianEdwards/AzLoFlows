@@ -122,6 +122,10 @@ export interface NodeEntity {
   notes?: string;
 }
 
+export interface ConnectorWaypoint extends Point {
+  elevation?: number;
+}
+
 export interface ConnectorEntity {
   id: string;
   type: 'connector';
@@ -132,9 +136,8 @@ export interface ConnectorEntity {
   color: string;
   label: string;
   style: ConnectorStyle;
-  waypoints: Point[];
+  waypoints: ConnectorWaypoint[];
   tunnel?: boolean;
-  elevation?: number;
   zIndex: number;
   tags?: string[];
   notes?: string;

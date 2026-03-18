@@ -141,13 +141,18 @@ function buildConnectorScreenPath(connector: ConnectorEntity, source: NodeEntity
   const targetStub = { x: end.x + tOff.x, y: end.y + tOff.y };
 
   const screenPath: Point[] = [start, sourceStub];
+  const keyElev: { idx: number; elev: number }[] = [
+    { idx: 0, elev: 0 },
+    { idx: 1, elev: 0 },
+  ];
   if (connector.waypoints.length > 0) {
     const screenWPs = connector.waypoints.map((wp) => worldToScreen(wp, camera, viewport));
     let prev = sourceStub;
-    for (const wp of screenWPs) {
-      const seg = buildIsoPath(prev, wp, camera);
+    for (let wi = 0; wi < screenWPs.length; wi++) {
+      const seg = buildIsoPath(prev, screenWPs[wi], camera);
       screenPath.push(...seg.slice(1));
-      prev = wp;
+      keyElev.push({ idx: screenPath.length - 1, elev: (connector.waypoints[wi].elevation ?? 0) * camera.zoom });
+      prev = screenWPs[wi];
     }
     const lastSeg = buildIsoPath(prev, targetStub, camera);
     screenPath.push(...lastSeg.slice(1));
@@ -155,13 +160,21 @@ function buildConnectorScreenPath(connector: ConnectorEntity, source: NodeEntity
     const mainSeg = buildIsoPath(sourceStub, targetStub, camera);
     screenPath.push(...mainSeg.slice(1));
   }
+  keyElev.push({ idx: screenPath.length - 1, elev: 0 }); // targetStub
   screenPath.push(end);
+  keyElev.push({ idx: screenPath.length - 1, elev: 0 }); // end
 
-  // Apply elevation: shift all middle points (not start/end anchors) upward
-  if (connector.elevation) {
-    const elevPx = connector.elevation * camera.zoom;
-    for (let i = 1; i < screenPath.length - 1; i++) {
-      screenPath[i] = { x: screenPath[i].x, y: screenPath[i].y - elevPx };
+  // Apply per-waypoint elevation: interpolate between key points
+  for (let k = 0; k < keyElev.length - 1; k++) {
+    const from = keyElev[k];
+    const to = keyElev[k + 1];
+    for (let i = from.idx; i <= to.idx; i++) {
+      const span = to.idx - from.idx;
+      const t = span === 0 ? 0 : (i - from.idx) / span;
+      const elev = from.elev + (to.elev - from.elev) * t;
+      if (elev !== 0) {
+        screenPath[i] = { x: screenPath[i].x, y: screenPath[i].y - elev };
+      }
     }
   }
 
