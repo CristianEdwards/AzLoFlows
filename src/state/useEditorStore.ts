@@ -938,7 +938,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const cx = (minX + maxX) / 2;
     const cy = (minY + maxY) / 2;
     set({
-      camera: { x: -cx * clampedZoom + viewportWidth / 2, y: -cy * clampedZoom + viewportHeight / 2, zoom: clampedZoom },
+      camera: { x: -cx * clampedZoom, y: -cy * clampedZoom, zoom: clampedZoom },
     });
     get().pushToast('Fit to screen', 'info');
   },
@@ -973,7 +973,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const cx = (minX + maxX) / 2;
     const cy = (minY + maxY) / 2;
     set({
-      camera: { x: -cx * clampedZoom + viewportWidth / 2, y: -cy * clampedZoom + viewportHeight / 2, zoom: clampedZoom },
+      camera: { x: -cx * clampedZoom, y: -cy * clampedZoom, zoom: clampedZoom },
     });
   },
 }));
