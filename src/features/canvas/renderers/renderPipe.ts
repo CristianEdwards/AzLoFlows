@@ -30,10 +30,11 @@ export function renderPipe(
   const color = pipe.color;
   const glow = selected ? 0.9 : 0.6;
 
-  // Build a clipping region that excludes node quads (not areas)
+  // Build a clipping region that excludes node quads that render ON TOP of the pipe
   const obstacleQuads: Point[][] = [];
   const nodeDepth = NODE_DEPTH * camera.zoom;
   for (const node of obstacles.nodes) {
+    if (node.zIndex < pipe.zIndex) continue; // nodes behind the pipe don't clip it
     const q = isoQuad(node.x, node.y, node.width, node.height, camera, viewport);
     // Include 3D volume: floor quad expanded upward by node depth
     obstacleQuads.push([

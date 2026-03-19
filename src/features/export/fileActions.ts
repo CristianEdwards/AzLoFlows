@@ -393,10 +393,11 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
     const rBottomLeft = { x: bottomLeft.x, y: bottomLeft.y - pDepth };
     const color = pipe.color;
 
-    // Clipping: exclude node volumes
+    // Clipping: exclude node volumes that render on top of this pipe
     const nodeDepth = NODE_DEPTH * camera.zoom;
     const obstaclePolys: string[] = [];
     for (const node of visibleNodes) {
+      if (node.zIndex < pipe.zIndex) continue; // nodes behind the pipe don't clip it
       const q = isoQuad(node.x, node.y, node.width, node.height, camera, viewport);
       const ob: Point[] = [
         { x: q[0].x, y: q[0].y - nodeDepth },
