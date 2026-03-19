@@ -253,6 +253,9 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       history: { past: [], future: [] },
       camera: defaultCamera,
       presentMode: false,
+      activeScenario: null,
+      activeFlowSources: new Set<FlowSource>(),
+      activeFlowTypes: new Set<FlowType>(),
       toasts: [createToast('Created a new empty diagram', 'success')],
     });
   },
