@@ -132,8 +132,7 @@ export function renderStack(
     }
     ctx.fillStyle = gTop;
     if (layer === 0) {
-      
-      
+      /* first-layer highlight reserved for future iteration */
     }
     ctx.fill();
     

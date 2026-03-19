@@ -28,12 +28,14 @@ function PickerDefEditor({ label, items, onChange }: { label: string; items: Pic
             value={item.label}
             onChange={(e) => updateItem(i, { label: e.target.value })}
             title={`id: ${item.id}`}
+            aria-label={`Label for ${item.id}`}
           />
           <input
             style={{ width: 90 }}
             value={item.id}
             onChange={(e) => updateItem(i, { id: e.target.value })}
             placeholder="id"
+            aria-label="Item ID"
           />
           <button className="ui-button" style={{ padding: '2px 6px', fontSize: 11 }} onClick={() => removeItem(i)}>✕</button>
         </div>

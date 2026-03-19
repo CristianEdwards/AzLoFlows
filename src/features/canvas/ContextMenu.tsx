@@ -146,7 +146,7 @@ export default function ContextMenu({ x, y, onClose }: ContextMenuProps) {
             <span className="context-menu__section-label">Glow</span>
             <div className="context-menu__swatches">
               {colorSwatches.map((c) => (
-                <button key={c.id} className={`swatch ${c.className}${selectedArea.glowColor === c.value ? ' is-active' : ''}`} onClick={() => updateArea(selectedArea.id, { glowColor: c.value, borderColor: c.value })} />
+                <button key={c.id} className={`swatch ${c.className}${selectedArea.glowColor === c.value ? ' is-active' : ''}`} onClick={() => updateArea(selectedArea.id, { glowColor: c.value, borderColor: c.value })} aria-label={`Set glow color to ${c.id}`} />
               ))}
             </div>
           </div>
@@ -219,7 +219,7 @@ export default function ContextMenu({ x, y, onClose }: ContextMenuProps) {
             <span className="context-menu__section-label">Glow</span>
             <div className="context-menu__swatches">
               {colorSwatches.map((c) => (
-                <button key={c.id} className={`swatch ${c.className}${selectedNode.glowColor === c.value ? ' is-active' : ''}`} onClick={() => updateNode(selectedNode.id, { glowColor: c.value, fill: companionFillForGlow(c.value) })} />
+                <button key={c.id} className={`swatch ${c.className}${selectedNode.glowColor === c.value ? ' is-active' : ''}`} onClick={() => updateNode(selectedNode.id, { glowColor: c.value, fill: companionFillForGlow(c.value) })} aria-label={`Set glow color to ${c.id}`} />
               ))}
             </div>
           </div>
@@ -295,7 +295,7 @@ export default function ContextMenu({ x, y, onClose }: ContextMenuProps) {
             <span className="context-menu__section-label">Color</span>
             <div className="context-menu__swatches">
               {colorSwatches.map((c) => (
-                <button key={c.id} className={`swatch ${c.className}${selectedConnector.color === c.value ? ' is-active' : ''}`} onClick={() => updateConnector(selectedConnector.id, { color: c.value })} />
+                <button key={c.id} className={`swatch ${c.className}${selectedConnector.color === c.value ? ' is-active' : ''}`} onClick={() => updateConnector(selectedConnector.id, { color: c.value })} aria-label={`Set color to ${c.id}`} />
               ))}
             </div>
           </div>
@@ -342,7 +342,7 @@ export default function ContextMenu({ x, y, onClose }: ContextMenuProps) {
             <span className="context-menu__section-label">Color</span>
             <div className="context-menu__swatches">
               {textColorSwatches.map((c) => (
-                <button key={c.id} className={`swatch ${c.className}${selectedText.color === c.value ? ' is-active' : ''}`} onClick={() => updateText(selectedText.id, { color: c.value })} />
+                <button key={c.id} className={`swatch ${c.className}${selectedText.color === c.value ? ' is-active' : ''}`} onClick={() => updateText(selectedText.id, { color: c.value })} aria-label={`Set color to ${c.id}`} />
               ))}
             </div>
           </div>
@@ -371,7 +371,7 @@ export default function ContextMenu({ x, y, onClose }: ContextMenuProps) {
           <span className="context-menu__section-label">Color</span>
           <div className="context-menu__swatches">
             {colorSwatches.map((c) => (
-              <button key={c.id} className={`swatch ${c.className}${selectedPipe.color === c.value ? ' is-active' : ''}`} onClick={() => updatePipe(selectedPipe.id, { color: c.value })} />
+              <button key={c.id} className={`swatch ${c.className}${selectedPipe.color === c.value ? ' is-active' : ''}`} onClick={() => updatePipe(selectedPipe.id, { color: c.value })} aria-label={`Set color to ${c.id}`} />
             ))}
           </div>
         </div>

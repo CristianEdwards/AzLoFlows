@@ -119,6 +119,7 @@ export default function TopToolbar({ canvasRef, viewport }: TopToolbarProps) {
   const activeFlowSources = useEditorStore((state) => state.activeFlowSources);
   const activeFlowTypes = useEditorStore((state) => state.activeFlowTypes);
   const [pngPreview, setPngPreview] = useState(false);
+  const [canvasEl, setCanvasEl] = useState<HTMLCanvasElement | null>(null);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
@@ -166,7 +167,7 @@ export default function TopToolbar({ canvasRef, viewport }: TopToolbarProps) {
   ];
 
   const exportItems = [
-    { label: 'PNG image…', onClick: () => { if (canvasRef.current) setPngPreview(true); } },
+    { label: 'PNG image…', onClick: () => { if (canvasRef.current) { setCanvasEl(canvasRef.current); setPngPreview(true); } } },
     { label: 'SVG vector', onClick: () => exportDocumentAsSvg(document, camera, viewport, tagFilter, theme) },
     { label: 'SVG vector As…', onClick: () => exportDocumentAsSvgSaveAs(document, camera, viewport, tagFilter, theme) },
     { separator: true as const },
@@ -233,8 +234,8 @@ export default function TopToolbar({ canvasRef, viewport }: TopToolbarProps) {
       </div>
 
       <input ref={inputRef} hidden type="file" accept="application/json" onChange={onImportFile} />
-      {pngPreview && canvasRef.current && (
-        <ExportPreviewDialog canvas={canvasRef.current} fileName="azloflows-diagram.png" onClose={() => setPngPreview(false)} />
+      {pngPreview && canvasEl && (
+        <ExportPreviewDialog canvas={canvasEl} fileName="azloflows-diagram.png" onClose={() => setPngPreview(false)} />
       )}
       {showShortcuts && <KeyboardShortcutsDialog onClose={() => setShowShortcuts(false)} />}
       {showSearch && <SearchDialog onClose={() => setShowSearch(false)} />}

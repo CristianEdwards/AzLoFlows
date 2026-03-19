@@ -24,7 +24,7 @@ export default function ShapePalette() {
                 }
               }}
             >
-              <div className="component-tile__icon" dangerouslySetInnerHTML={{ __html: shape.icon }} />
+              <div className="component-tile__icon" aria-hidden="true" dangerouslySetInnerHTML={{ __html: shape.icon }} />
               <span className="component-tile__label">{shape.title}</span>
             </button>
           ))}

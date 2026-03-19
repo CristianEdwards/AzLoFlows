@@ -1,7 +1,14 @@
 {
   "name": "azloflows",
-  "private": true,
+  "private": false,
   "version": "1.3.0",
+  "description": "Interactive isometric diagram builder for Azure Local network architectures and traffic flows",
+  "keywords": ["diagram-builder", "azure-local", "network-visualization", "isometric", "canvas", "flow-visualization", "react"],
+  "homepage": "https://cristianedwards.github.io/AzLoFlows/",
+  "bugs": { "url": "https://github.com/CristianEdwards/AzLoFlows/issues" },
+  "repository": { "type": "git", "url": "https://github.com/CristianEdwards/AzLoFlows" },
+  "author": "Cristian Edwards Sabathe",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -15,11 +22,15 @@
     "zustand": "^5.0.3"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "^22.13.10",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "^10.0.3",
+    "eslint-plugin-react-hooks": "^7.0.1",
     "typescript": "^5.8.2",
+    "typescript-eslint": "^8.57.1",
     "vite": "^6.2.1",
     "vitest": "^3.0.8"
   }

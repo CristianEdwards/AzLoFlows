@@ -1,17 +1,13 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import GlassPanel from '@/components/ui/GlassPanel';
 import { loadRecent, type RecentEntry } from '@/lib/serialization/storage';
 import { useEditorStore } from '@/state/useEditorStore';
 
 export default function RecentDocumentsPanel() {
-  const [entries, setEntries] = useState<RecentEntry[]>([]);
   const importDocument = useEditorStore((s) => s.importDocument);
   const pushToast = useEditorStore((s) => s.pushToast);
   const currentDocId = useEditorStore((s) => s.document.id);
-
-  useEffect(() => {
-    setEntries(loadRecent());
-  }, [currentDocId]);
+  const entries = useMemo(() => loadRecent(), [currentDocId]);
 
   const handleLoad = useCallback((entry: RecentEntry) => {
     try {

@@ -142,8 +142,7 @@ export function renderServerRack(
     ctx.arc(ledCx, ledCy, 2.2 * bScale, 0, Math.PI * 2);
     ctx.fillStyle = ledOn ? hexToRgba(ledColors[blade % ledColors.length], 0.9) : 'rgba(60,60,60,0.4)';
     if (ledOn) {
-      
-      
+      /* glow effect reserved for future iteration */
     }
     ctx.fill();
     
@@ -172,8 +171,7 @@ export function renderServerRack(
     }
     ctx.fillStyle = gTop;
     if (blade === 0) {
-      
-      
+      /* first-blade highlight reserved for future iteration */
     }
     ctx.fill();
     
