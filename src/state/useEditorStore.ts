@@ -2,6 +2,7 @@
 import { MIN_ZOOM, MAX_ZOOM } from '@/lib/config';
 import { hitTestArea, hitTestConnector, hitTestNode, hitTestPipe, hitTestText } from '@/lib/geometry/bounds';
 import { snapToGrid } from '@/lib/geometry/grid';
+import { projectIso } from '@/lib/geometry/iso';
 import { resizeRectFromHandle, type ResizeHandle } from '@/lib/geometry/resize';
 import { containsArea, containsNode, containsPipe, containsText, type SelectionBounds } from '@/lib/geometry/selection';
 import { companionPalette, hexToRgba, palette } from '@/lib/rendering/tokens';
@@ -915,10 +916,17 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const { document } = get();
     const xs: number[] = [];
     const ys: number[] = [];
-    for (const a of document.areas) { xs.push(a.x, a.x + a.width); ys.push(a.y, a.y + a.height); }
-    for (const n of document.nodes) { xs.push(n.x, n.x + n.width); ys.push(n.y, n.y + n.height); }
-    for (const t of document.texts ?? []) { xs.push(t.x - 60, t.x + 60); ys.push(t.y - 20, t.y + 20); }
-    for (const p of document.pipes ?? []) { xs.push(p.x, p.x + p.width); ys.push(p.y, p.y + p.height); }
+    const pushRect = (x: number, y: number, w: number, h: number) => {
+      for (const corner of [{x, y}, {x: x + w, y}, {x: x + w, y: y + h}, {x, y: y + h}]) {
+        const p = projectIso(corner);
+        xs.push(p.x);
+        ys.push(p.y);
+      }
+    };
+    for (const a of document.areas) pushRect(a.x, a.y, a.width, a.height);
+    for (const n of document.nodes) pushRect(n.x, n.y, n.width, n.height);
+    for (const t of document.texts ?? []) pushRect(t.x - 60, t.y - 20, 120, 40);
+    for (const p of document.pipes ?? []) pushRect(p.x, p.y, p.width, p.height);
     if (xs.length === 0) return;
     const minX = Math.min(...xs), maxX = Math.max(...xs);
     const minY = Math.min(...ys), maxY = Math.max(...ys);
@@ -943,10 +951,17 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const ids = new Set(selection.ids);
     const xs: number[] = [];
     const ys: number[] = [];
-    if (selection.type === 'area') for (const a of document.areas) { if (ids.has(a.id)) { xs.push(a.x, a.x + a.width); ys.push(a.y, a.y + a.height); } }
-    if (selection.type === 'node') for (const n of document.nodes) { if (ids.has(n.id)) { xs.push(n.x, n.x + n.width); ys.push(n.y, n.y + n.height); } }
-    if (selection.type === 'text') for (const t of document.texts ?? []) { if (ids.has(t.id)) { xs.push(t.x - 60, t.x + 60); ys.push(t.y - 20, t.y + 20); } }
-    if (selection.type === 'pipe') for (const p of document.pipes ?? []) { if (ids.has(p.id)) { xs.push(p.x, p.x + p.width); ys.push(p.y, p.y + p.height); } }
+    const pushRect = (x: number, y: number, w: number, h: number) => {
+      for (const corner of [{x, y}, {x: x + w, y}, {x: x + w, y: y + h}, {x, y: y + h}]) {
+        const p = projectIso(corner);
+        xs.push(p.x);
+        ys.push(p.y);
+      }
+    };
+    if (selection.type === 'area') for (const a of document.areas) { if (ids.has(a.id)) pushRect(a.x, a.y, a.width, a.height); }
+    if (selection.type === 'node') for (const n of document.nodes) { if (ids.has(n.id)) pushRect(n.x, n.y, n.width, n.height); }
+    if (selection.type === 'text') for (const t of document.texts ?? []) { if (ids.has(t.id)) pushRect(t.x - 60, t.y - 20, 120, 40); }
+    if (selection.type === 'pipe') for (const p of document.pipes ?? []) { if (ids.has(p.id)) pushRect(p.x, p.y, p.width, p.height); }
     if (xs.length === 0) return;
     const minX = Math.min(...xs), maxX = Math.max(...xs);
     const minY = Math.min(...ys), maxY = Math.max(...ys);
