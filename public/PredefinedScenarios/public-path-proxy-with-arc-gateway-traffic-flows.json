@@ -2,8 +2,59 @@
   "version": 1,
   "id": "75c425d2-8f29-4785-abc3-57971f326953",
   "name": "Proxy with Arc gateway traffic flows",
-  "areas": [],
+  "areas": [
+    {
+      "id": "382af799-dd34-4f6c-ae9a-89b83c072e72",
+      "type": "area",
+      "x": -440,
+      "y": -360,
+      "width": 440,
+      "height": 960,
+      "label": "Azure Local Cluster",
+      "fill": "#0a4152",
+      "borderColor": "#00bfa5",
+      "glowColor": "#00bfa5",
+      "locked": false,
+      "zIndex": -1,
+      "icon": "svgAzureLocalCluster"
+    },
+    {
+      "id": "fd3072fc-680d-42f1-b164-71ad44d975f8",
+      "type": "area",
+      "x": 920,
+      "y": -400,
+      "width": 640,
+      "height": 760,
+      "label": "Azure Backbone",
+      "fill": "#0a4152",
+      "borderColor": "#4d8dff",
+      "glowColor": "#4d8dff",
+      "locked": false,
+      "zIndex": 2,
+      "icon": "cloud"
+    }
+  ],
   "nodes": [
+    {
+      "id": "ffa7c56e-7d26-422e-bb8a-e5e677dfe8f1",
+      "type": "node",
+      "x": -365,
+      "y": -327.3333333333334,
+      "width": 200,
+      "height": 200,
+      "title": "Host",
+      "subtitle": "Infra LNET",
+      "fill": "#1f3f77",
+      "glowColor": "#4d8dff",
+      "parentAreaId": "382af799-dd34-4f6c-ae9a-89b83c072e72",
+      "parentLayout": {
+        "xRatio": 0.14545454545454545,
+        "yRatio": 0.04444444444444435
+      },
+      "icon": "svgAzureLocalMachine",
+      "zIndex": 45,
+      "tags": []
+    },
     {
       "id": "71fef070-f2f9-4e91-8d16-4498330684e7",
       "type": "node",
@@ -21,7 +72,7 @@
         "yRatio": 0.4347826086956523
       },
       "icon": "svgArcResourceBridge",
-      "zIndex": 77,
+      "zIndex": 2,
       "tags": [
         "flow:arb"
       ]
@@ -43,7 +94,7 @@
         "yRatio": 0.24444444444444435
       },
       "textRotated": true,
-      "zIndex": 91,
+      "zIndex": 55,
       "tags": [
         "no-proxy-arc",
         "proxy-arc"
@@ -52,7 +103,7 @@
     {
       "id": "fbd2525f-04b9-4493-ba37-d506d8c64c1c",
       "type": "node",
-      "x": -62,
+      "x": -83,
       "y": -287,
       "width": 40,
       "height": 120,
@@ -88,7 +139,7 @@
         "yRatio": 0.608695652173913
       },
       "icon": "svgAzureLocalAKS",
-      "zIndex": 78,
+      "zIndex": 5,
       "tags": [
         "flow:aks"
       ]
@@ -110,7 +161,7 @@
         "yRatio": 0.7909722222222224
       },
       "icon": "svgAzureLocalVM",
-      "zIndex": 79,
+      "zIndex": 6,
       "tags": [
         "flow:vms"
       ]
@@ -127,7 +178,7 @@
       "fill": "#5b320f",
       "glowColor": "#ff8800",
       "icon": "svgAzureFirewallPolicy",
-      "zIndex": 81,
+      "zIndex": 56,
       "tags": [
         "proxy-no-arc",
         "proxy-arc"
@@ -136,7 +187,7 @@
     {
       "id": "c85b075a-0040-4bd1-a36d-2cf74f70f370",
       "type": "node",
-      "x": 439,
+      "x": 440,
       "y": -328,
       "width": 200,
       "height": 200,
@@ -145,12 +196,12 @@
       "fill": "#5b1622",
       "glowColor": "#ff3355",
       "icon": "svgAzureFirewall",
-      "zIndex": 94
+      "zIndex": 52
     },
     {
       "id": "0bf0cb3c-e62c-4767-9595-7f5f90f66a01",
       "type": "node",
-      "x": 988,
+      "x": 991,
       "y": -328,
       "width": 80,
       "height": 200,
@@ -158,17 +209,45 @@
       "subtitle": "",
       "fill": "#0a4152",
       "glowColor": "#00e5ff",
-      "zIndex": -3,
+      "zIndex": 41,
       "tags": [
         "no-proxy-arc",
         "proxy-arc"
       ]
     },
     {
+      "id": "a88f2fa5-d4d6-408f-b728-b9a1aca31179",
+      "type": "node",
+      "x": 1162.2727272727273,
+      "y": -20.218487394958004,
+      "width": 320,
+      "height": 280,
+      "title": "Azure Private Endpoints",
+      "subtitle": "",
+      "fill": "#4f2b6b",
+      "glowColor": "#bf5af2",
+      "icon": "svgPrivateEndpoint",
+      "zIndex": 10
+    },
+    {
+      "id": "90f51533-7231-4aea-8534-1872bc588ba8",
+      "type": "node",
+      "x": 1162.2727272727273,
+      "y": -368.12834224598913,
+      "width": 320,
+      "height": 280,
+      "title": "Azure Public Endpoints",
+      "subtitle": "",
+      "fill": "#1f3f77",
+      "glowColor": "#4d8dff",
+      "icon": "svgAzure",
+      "zIndex": 11
+    },
+    {
       "id": "ea71de16-deae-46c8-b994-c1160d35c42e",
       "type": "node",
-      "x": 825.1989090089626,
-      "y": 384.44838645079426,
+      "x": 1160,
+      "y": 384,
       "width": 320,
       "height": 280,
       "title": "Internet",
@@ -190,7 +269,7 @@
       "fill": "#4f2b6b",
       "glowColor": "#bf5af2",
       "icon": "svgExpressRoute",
-      "zIndex": 83
+      "zIndex": 15
     },
     {
       "id": "d24ec785-cef5-4989-81ea-a858810e590b",
@@ -204,132 +283,10 @@
       "fill": "#5b320f",
       "glowColor": "#ff8800",
       "textRotated": true,
-      "zIndex": 80,
+      "zIndex": 16,
       "tags": [
         "flow:vms"
       ]
-    },
-    {
-      "id": "46e316c3-65d1-4413-8edb-41aaba09ea7f",
-      "type": "node",
-      "x": 1240,
-      "y": -320,
-      "width": 280,
-      "height": 280,
-      "title": "Azure Public Endpoints",
-      "subtitle": "Editable",
-      "fill": "#1a2a6b",
-      "glowColor": "#536dfe",
-      "shape": "standingNode",
-      "icon": "svgAzure",
-      "zIndex": -6
-    },
-    {
-      "id": "e048a083-a7af-4375-a9d2-74f1fc553842",
-      "type": "node",
-      "x": 1240,
-      "y": 40,
-      "width": 280,
-      "height": 280,
-      "title": "Azure Public Endpoints",
-      "subtitle": "Editable",
-      "fill": "#4f2b6b",
-      "glowColor": "#bf5af2",
-      "shape": "standingNode",
-      "icon": "svgPrivateEndpoint",
-      "zIndex": 69
-    },
-    {
-      "id": "fdac6edc-33f7-4a40-be1e-732e5ad73f00",
-      "type": "node",
-      "x": -334.33333333333314,
-      "y": -336.89609443108776,
-      "width": 200,
-      "height": 200,
-      "title": "Host",
-      "subtitle": "",
-      "fill": "#1a2a6b",
-      "glowColor": "#536dfe",
-      "shape": "serverRack",
-      "icon": "svgAzureLocalMachine",
-      "zIndex": 89
-    },
-    {
-      "id": "85e51ef3-29ba-4bd4-b9e7-b7f5a49d5b01",
-      "type": "node",
-      "x": -480,
-      "y": -357,
-      "width": 520,
-      "height": 920,
-      "title": "Azure Local Cluster",
-      "subtitle": "",
-      "fill": "#0a4a42",
-      "glowColor": "#00bfa5",
-      "shape": "card",
-      "textPosition": "bottom-left",
-      "icon": "svgAzureLocalCluster",
-      "zIndex": -2
-    },
-    {
-      "id": "04db091f-afa2-4d48-97ed-37f51832d2fb",
-      "type": "node",
-      "x": 722,
-      "y": -837,
-      "width": 360,
-      "height": 320,
-      "title": "Intranet Services",
-      "subtitle": "",
-      "fill": "#1a2a6b",
-      "glowColor": "#536dfe",
-      "shape": "card",
-      "textPosition": "top-right",
-      "fontSize": 18,
-      "zIndex": 84
-    },
-    {
-      "id": "c6bebd5c-1204-436c-9eb0-a49e44f448bb",
-      "type": "node",
-      "x": 836.460912409457,
-      "y": -688.7878648465096,
-      "width": 160,
-      "height": 120,
-      "title": "DNS server",
-      "subtitle": "",
-      "fill": "#1f3f77",
-      "glowColor": "#4d8dff",
-      "icon": "dns",
-      "zIndex": 93
-    },
-    {
-      "id": "78064ddc-68e0-4cf3-9a83-8aa2de4aadc9",
-      "type": "node",
-      "x": 836.460912409457,
-      "y": -837,
-      "width": 160,
-      "height": 120,
-      "title": "AD",
-      "subtitle": "",
-      "fill": "#1f3f77",
-      "glowColor": "#4d8dff",
-      "icon": "svgKeyVault",
-      "zIndex": 87
-    },
-    {
-      "id": "90598903-21f5-490d-ad12-b7b4356114d6",
-      "type": "node",
-      "x": 920,
-      "y": -360,
-      "width": 600,
-      "height": 720,
-      "title": "Azure Backbone",
-      "subtitle": "",
-      "fill": "#1a2a6b",
-      "glowColor": "#536dfe",
-      "shape": "card",
-      "textPosition": "bottom-left",
-      "fontSize": 18,
-      "icon": "cloud",
-      "zIndex": -7
     }
   ],
   "connectors": [
@@ -418,14 +375,14 @@
       "id": "30cced44-0471-45e8-b4fe-2a093e476f3c",
       "type": "connector",
       "sourceId": "756a97e8-7b53-4201-b693-7f4d007a25f1",
-      "targetId": "e048a083-a7af-4375-a9d2-74f1fc553842",
+      "targetId": "a88f2fa5-d4d6-408f-b728-b9a1aca31179",
       "sourceAnchor": "right-2",
-      "targetAnchor": "top-2",
+      "targetAnchor": "left-2",
       "color": "#bf5af2",
       "label": "ExpressRoute to Private Endpoints",
       "style": "animated",
       "waypoints": [],
-      "zIndex": 72,
+      "zIndex": 11,
       "tags": [
         "flow:hosts",
         "flow:arb",
@@ -438,14 +395,14 @@
       "id": "68a23f4e-7d46-4498-9b34-ffd65c3c677e",
       "type": "connector",
       "sourceId": "0bf0cb3c-e62c-4767-9595-7f5f90f66a01",
-      "targetId": "46e316c3-65d1-4413-8edb-41aaba09ea7f",
+      "targetId": "90f51533-7231-4aea-8534-1872bc588ba8",
       "sourceAnchor": "right-2",
-      "targetAnchor": "top-2",
+      "targetAnchor": "left-2",
       "color": "#4d8dff",
       "label": "Arc gateway to Azure",
       "style": "animated",
       "waypoints": [],
-      "zIndex": -5,
+      "zIndex": 14,
       "tags": [
         "type:azure-public-endpoint",
         "no-proxy-arc",
@@ -455,10 +412,10 @@
     {
       "id": "ac6840d2-2602-42b5-87fc-0b64b160677b",
       "type": "connector",
-      "sourceId": "fdac6edc-33f7-4a40-be1e-732e5ad73f00",
+      "sourceId": "ffa7c56e-7d26-422e-bb8a-e5e677dfe8f1",
       "targetId": "c85b075a-0040-4bd1-a36d-2cf74f70f370",
-      "sourceAnchor": "top-2",
-      "targetAnchor": "top-1",
+      "sourceAnchor": "top-3",
+      "targetAnchor": "top-2",
       "color": "#ff0066",
       "label": "Host proxy bypass traffic",
       "style": "animated",
@@ -706,17 +663,34 @@
       ]
     },
     {
+      "id": "1fad83d3-e5ae-4f29-a59b-63c8c19c962b",
+      "type": "connector",
+      "sourceId": "ffa7c56e-7d26-422e-bb8a-e5e677dfe8f1",
+      "targetId": "c85b075a-0040-4bd1-a36d-2cf74f70f370",
+      "sourceAnchor": "right-2",
+      "targetAnchor": "left-2",
+      "color": "#536dfe",
+      "label": "Host to Firewall No Arc gw",
+      "style": "animated",
+      "waypoints": [],
+      "zIndex": 29,
+      "tags": [
+        "no-proxy-no-arc",
+        "flow:hosts"
+      ]
+    },
+    {
       "id": "443325ef-ca47-478c-9107-9fdccff0978e",
       "type": "connector",
       "sourceId": "c85b075a-0040-4bd1-a36d-2cf74f70f370",
-      "targetId": "46e316c3-65d1-4413-8edb-41aaba09ea7f",
+      "targetId": "90f51533-7231-4aea-8534-1872bc588ba8",
       "sourceAnchor": "right-2",
-      "targetAnchor": "top-2",
+      "targetAnchor": "left-2",
       "color": "#536dfe",
       "label": "Firewall to Azure No Arc gw",
       "style": "animated",
       "waypoints": [],
-      "zIndex": -4,
+      "zIndex": 30,
       "tags": [
         "type:azure-public-endpoint",
         "proxy-no-arc",
@@ -763,6 +737,24 @@
       ]
     },
     {
+      "id": "8e4e15d9-4c7a-4ff6-baee-d2deebc4a657",
+      "type": "connector",
+      "sourceId": "ffa7c56e-7d26-422e-bb8a-e5e677dfe8f1",
+      "targetId": "e136af29-cb0e-49f5-ab51-8268a47a48e2",
+      "sourceAnchor": "right-1",
+      "targetAnchor": "left-3",
+      "color": "#007744",
+      "label": "Host to Proxy HTTP and internet",
+      "style": "animated",
+      "waypoints": [],
+      "zIndex": 33,
+      "tags": [
+        "flow:hosts",
+        "proxy-no-arc",
+        "type:http-non-allowed-https"
+      ]
+    },
+    {
       "id": "330b67a0-3811-46d3-a172-f3e6476d6c89",
       "type": "connector",
       "sourceId": "e136af29-cb0e-49f5-ab51-8268a47a48e2",
@@ -781,6 +773,23 @@
         "flow:aks",
         "type:azure-public-endpoint",
         "type:azure-private-endpoint"
+      ]
+    },
+    {
+      "id": "8e6d7776-e6e8-4633-8434-fd63ca3ae0d9",
+      "type": "connector",
+      "sourceId": "ffa7c56e-7d26-422e-bb8a-e5e677dfe8f1",
+      "targetId": "e136af29-cb0e-49f5-ab51-8268a47a48e2",
+      "sourceAnchor": "right-2",
+      "targetAnchor": "left-2",
+      "color": "#536dfe",
+      "label": "Host to Proxy no Arc gw",
+      "style": "animated",
+      "waypoints": [],
+      "zIndex": 35,
+      "tags": [
+        "flow:hosts",
+        "proxy-no-arc"
       ]
     },
     {
@@ -838,9 +847,9 @@
     {
       "id": "70ddcdaf-53f7-4c04-9369-4e636ed487d2",
       "type": "connector",
-      "sourceId": "fdac6edc-33f7-4a40-be1e-732e5ad73f00",
+      "sourceId": "ffa7c56e-7d26-422e-bb8a-e5e677dfe8f1",
       "targetId": "fbd2525f-04b9-4493-ba37-d506d8c64c1c",
-      "sourceAnchor": "right-2",
+      "sourceAnchor": "right-3",
       "targetAnchor": "left-2",
       "color": "#536dfe",
       "label": "Host to Arc proxy",
@@ -893,50 +902,23 @@
       "id": "c9b3fbbd-8b6b-4f81-b690-b9e19a96856c",
       "type": "connector",
       "sourceId": "c85b075a-0040-4bd1-a36d-2cf74f70f370",
-      "targetId": "46e316c3-65d1-4413-8edb-41aaba09ea7f",
-      "sourceAnchor": "top-4",
-      "targetAnchor": "top-0",
+      "targetId": "90f51533-7231-4aea-8534-1872bc588ba8",
+      "sourceAnchor": "top-3",
+      "targetAnchor": "left-0",
       "color": "#536dfe",
       "label": "Firewall to Azure non allowed public endpoints",
       "style": "animated",
       "waypoints": [
         {
-          "x": 560,
+          "x": 520,
           "y": -360
-        },
-        {
-          "x": 560,
-          "y": -400
         }
       ],
-      "zIndex": 70,
+      "zIndex": 51,
       "tags": [
         "type:non-allowed-arc-gw-azure-public",
         "no-proxy-arc",
         "proxy-arc"
-      ]
-    },
-    {
-      "id": "9302a816-b004-4da9-81bd-9c74ac12f291",
-      "type": "connector",
-      "sourceId": "c85b075a-0040-4bd1-a36d-2cf74f70f370",
-      "targetId": "04db091f-afa2-4d48-97ed-37f51832d2fb",
-      "sourceAnchor": "top-3",
-      "targetAnchor": "left-2",
-      "color": "#536dfe",
-      "label": "Firewall to Intranet bypass",
-      "style": "animated",
-      "waypoints": [
-        {
-          "x": 520,
-          "y": -640
-        }
-      ],
-      "zIndex": 92,
-      "tags": [
-        "no-proxy-arc",
-        "proxy-arc",
-        "type:bypass"
       ]
     }
   ],
@@ -944,8 +926,8 @@
     {
       "id": "1191f628-32ce-42f7-a7db-94a644c1a218",
       "type": "text",
-      "x": 109,
-      "y": -441.6356600695244,
+      "x": 120,
+      "y": -427,
       "label": "Host Proxy bypass traffic",
       "fontSize": 24,
       "color": "#e7f6ff",
@@ -1028,8 +1010,8 @@
     {
       "id": "1bbb6fd0-6567-48b8-8ad5-32edab3de818",
       "type": "text",
-      "x": 648.3989860010988,
-      "y": 604.972061840743,
+      "x": 858,
+      "y": 608,
       "label": "HTTP and 3rd party \nHTTPS endpoints",
       "fontSize": 24,
       "color": "#0d0d1a",
@@ -1076,10 +1058,10 @@
     {
       "id": "a538418e-e643-4f3a-985e-4ff3a3b006a7",
       "type": "text",
-      "x": 672,
-      "y": -51,
+      "x": 662,
+      "y": -35,
       "label": "ExpressRoute HTTPS \noutbound traffic",
-      "fontSize": 20,
+      "fontSize": 18,
       "color": "#0d0d1a",
       "zIndex": 11,
       "tags": [
@@ -1150,10 +1132,10 @@
     {
       "id": "581cd255-93ec-4e1a-89e4-bb65be8ae980",
       "type": "text",
-      "x": 916.460912409457,
-      "y": -428.25154045007906,
-      "label": "Non allowed Arc gateway\nAzure Public endpoints",
-      "fontSize": 23,
+      "x": 724,
+      "y": -417,
+      "label": "Non allowed \nArc gateway\nAzure Public endpoints",
+      "fontSize": 20,
       "color": "#e7f6ff",
       "zIndex": 53,
       "rotated": true,
@@ -1161,24 +1143,6 @@
         "no-proxy-arc",
         "type:non-allowed-arc-gw-azure-public",
         "proxy-arc"
-      ]
-    },
-    {
-      "id": "1e1c183d-f357-452a-8c79-a338b5c5228d",
-      "type": "text",
-      "x": 474.5783505054052,
-      "y": -551.8773839137592,
-      "label": "Intranet traffic\nproxy bypass",
-      "fontSize": 24,
-      "color": "#e7f6ff",
-      "zIndex": 90,
-      "rotated": false,
-      "tags": [
-        "flow:hosts",
-        "proxy-arc",
-        "proxy-no-arc",
-        "type:bypass",
-        "no-proxy-arc"
       ]
     }
   ],
