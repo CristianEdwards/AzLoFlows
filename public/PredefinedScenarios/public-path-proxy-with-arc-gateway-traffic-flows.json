@@ -210,21 +210,6 @@
       ]
     },
     {
-      "id": "2d70bda7-309e-49d2-9aab-cc5c86fb30c8",
-      "type": "node",
-      "x": 1200,
-      "y": -320,
-      "width": 400,
-      "height": 720,
-      "title": "Azure Backbone",
-      "subtitle": "",
-      "fill": "#0a4152",
-      "glowColor": "#00e5ff",
-      "shape": "standingNode",
-      "textPosition": "top-center",
-      "zIndex": -7
-    },
-    {
       "id": "46e316c3-65d1-4413-8edb-41aaba09ea7f",
       "type": "node",
       "x": 1240,
@@ -288,18 +273,18 @@
     {
       "id": "04db091f-afa2-4d48-97ed-37f51832d2fb",
       "type": "node",
-      "shape": "card",
       "x": 722,
-      "y": -835,
+      "y": -837,
       "width": 360,
       "height": 320,
       "title": "Intranet Services",
       "subtitle": "",
       "fill": "#1a2a6b",
       "glowColor": "#536dfe",
-      "zIndex": 84,
+      "shape": "card",
       "textPosition": "top-right",
-      "fontSize": 18
+      "fontSize": 18,
+      "zIndex": 84
     },
     {
       "id": "c6bebd5c-1204-436c-9eb0-a49e44f448bb",
@@ -328,6 +313,23 @@
       "glowColor": "#4d8dff",
       "icon": "svgKeyVault",
       "zIndex": 87
+    },
+    {
+      "id": "90598903-21f5-490d-ad12-b7b4356114d6",
+      "type": "node",
+      "x": 920,
+      "y": -360,
+      "width": 600,
+      "height": 720,
+      "title": "Azure Backbone",
+      "subtitle": "",
+      "fill": "#1a2a6b",
+      "glowColor": "#536dfe",
+      "shape": "card",
+      "textPosition": "bottom-left",
+      "fontSize": 18,
+      "icon": "cloud",
+      "zIndex": -7
     }
   ],
   "connectors": [
@@ -901,6 +903,10 @@
         {
           "x": 560,
           "y": -360
+        },
+        {
+          "x": 560,
+          "y": -400
         }
       ],
       "zIndex": 70,
@@ -1145,8 +1151,8 @@
       "id": "581cd255-93ec-4e1a-89e4-bb65be8ae980",
       "type": "text",
       "x": 916.460912409457,
-      "y": -412.25154045007906,
-      "label": "Non allowed \nArc gateway\nAzure Public endpoints",
+      "y": -428.25154045007906,
+      "label": "Non allowed Arc gateway\nAzure Public endpoints",
       "fontSize": 23,
       "color": "#e7f6ff",
       "zIndex": 53,
