@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { MIN_ZOOM, MAX_ZOOM } from '@/lib/config';
+import { MIN_ZOOM, MAX_ZOOM, ZOOM_STEP } from '@/lib/config';
 import Button from '@/components/ui/Button';
 import GlassPanel from '@/components/ui/GlassPanel';
 import ExportPreviewDialog from '@/features/export/ExportPreviewDialog';
@@ -211,9 +211,9 @@ export default function TopToolbar({ canvasRef, viewport }: TopToolbarProps) {
 
       {/* ── Zoom controls ────────── */}
       <div className="toolbar-group tb-zoom">
-        <Button variant="ghost" title="Zoom out" aria-label="Zoom out" onClick={() => setCamera({ zoom: Math.max(MIN_ZOOM, camera.zoom - 0.1) })}>{Icon.zoomOut}</Button>
+        <Button variant="ghost" title="Zoom out" aria-label="Zoom out" onClick={() => setCamera({ zoom: Math.max(MIN_ZOOM, camera.zoom - ZOOM_STEP) })}>{Icon.zoomOut}</Button>
         <button className="tb-zoom__pct" title="Reset to 100%" onClick={() => setCamera({ zoom: 1 })}>{zoomPct}</button>
-        <Button variant="ghost" title="Zoom in" aria-label="Zoom in" onClick={() => setCamera({ zoom: Math.min(MAX_ZOOM, camera.zoom + 0.1) })}>{Icon.zoomIn}</Button>
+        <Button variant="ghost" title="Zoom in" aria-label="Zoom in" onClick={() => setCamera({ zoom: Math.min(MAX_ZOOM, camera.zoom + ZOOM_STEP) })}>{Icon.zoomIn}</Button>
         <Button variant="ghost" title="Fit to screen (Ctrl+0)" aria-label="Fit to screen" onClick={() => fitToScreen(viewport.width, viewport.height)}>{Icon.fit}</Button>
       </div>
 
