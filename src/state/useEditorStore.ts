@@ -116,6 +116,9 @@ function createEmptyDocument(): DiagramDocument {
     connectors: [],
     texts: [],
     pipes: [],
+    scenarios: [],
+    flowSources: [],
+    flowTypes: [],
   };
 }
 
