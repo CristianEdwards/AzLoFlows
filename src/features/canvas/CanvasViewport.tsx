@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { MIN_ZOOM, MAX_ZOOM, ZOOM_SENSITIVITY, MAX_DPR, ARROW_NUDGE_FINE, ARROW_NUDGE_COARSE, SNAP_THRESHOLD } from '@/lib/config';
 import CanvasOverlay from '@/features/canvas/CanvasOverlay';
 import ContextMenu from '@/features/canvas/ContextMenu';
-import { getClosestAnchor } from '@/lib/geometry/anchors';
+import { getClosestAnchorScreen } from '@/lib/geometry/anchors';
 import { hitTestNode, hitTestNodeScreen, hitTestConnectorScreen } from '@/lib/geometry/bounds';
 import { screenToWorld, type ViewportSize } from '@/lib/geometry/iso';
 import type { ResizeHandle } from '@/lib/geometry/resize';
@@ -450,6 +450,7 @@ export default function CanvasViewport({ canvasRef, onCursorWorldChange, onViewp
 
   function onPointerUp(event: React.PointerEvent<HTMLCanvasElement>) {
     event.currentTarget.releasePointerCapture(event.pointerId);
+    const screen = pointerToScreen(event);
     if (interactionRef.current.mode === 'connector') {
       const draft = interactionRef.current;
       const targetNode = hoveredNodeId && hoveredNodeId !== draft.sourceId
@@ -460,7 +461,7 @@ export default function CanvasViewport({ canvasRef, onCursorWorldChange, onViewp
             return Math.abs(center.x - draft.currentWorld.x) <= node.width && Math.abs(center.y - draft.currentWorld.y) <= node.height;
           });
       if (targetNode && targetNode.id !== draft.sourceId) {
-        const targetAnchor = getClosestAnchor(targetNode, draft.currentWorld);
+        const targetAnchor = getClosestAnchorScreen(targetNode, screen, camera, viewport);
         createConnectorBetween(draft.sourceId, draft.sourceAnchor, targetNode.id, targetAnchor);
       }
       setConnectorDraft(null);
@@ -474,7 +475,7 @@ export default function CanvasViewport({ canvasRef, onCursorWorldChange, onViewp
             return Math.abs(center.x - draft.currentWorld.x) <= node.width && Math.abs(center.y - draft.currentWorld.y) <= node.height;
           });
       if (dropNode && dropNode.id !== draft.fixedNodeId) {
-        const newAnchor = getClosestAnchor(dropNode, draft.currentWorld);
+        const newAnchor = getClosestAnchorScreen(dropNode, screen, camera, viewport);
         if (draft.end === 'source') {
           updateConnector(draft.connectorId, { sourceId: dropNode.id, sourceAnchor: newAnchor });
         } else {
