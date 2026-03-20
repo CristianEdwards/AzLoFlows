@@ -362,22 +362,18 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
       crossings.sort((a, b) => a.t - b.t);
       const bgColor = light ? '#f8fafc' : '#020617';
       const hopR = HOP_RADIUS;
+      const innerWidth = light ? 1.6 : 1.2;
       for (const c of crossings) {
-        const cos = Math.cos(c.angle);
-        const sin = Math.sin(c.angle);
-        const gx1 = c.point.x - cos * hopR;
-        const gy1 = c.point.y - sin * hopR;
-        const gx2 = c.point.x + cos * hopR;
-        const gy2 = c.point.y + sin * hopR;
-        // Gap on lower connector
-        svg.push(`<line x1="${gx1}" y1="${gy1}" x2="${gx2}" y2="${gy2}" stroke="${bgColor}" stroke-width="6" />`);
-        // Semicircle arc hop
+        // Semicircle arc endpoints
         const perpAngle = c.angle - Math.PI / 2;
         const ax1 = c.point.x + Math.cos(perpAngle) * hopR;
         const ay1 = c.point.y + Math.sin(perpAngle) * hopR;
         const ax2 = c.point.x + Math.cos(perpAngle + Math.PI) * hopR;
         const ay2 = c.point.y + Math.sin(perpAngle + Math.PI) * hopR;
-        svg.push(`<path d="M${ax1},${ay1} A${hopR},${hopR} 0 0,1 ${ax2},${ay2}" fill="none" stroke="${hexToRgba(color, light ? 0.98 : 0.82)}" stroke-width="${light ? 1.6 : 1.2}" />`);
+        // Background-colored arc (wider) to cleanly mask the lower connector
+        svg.push(`<path d="M${ax1},${ay1} A${hopR},${hopR} 0 0,1 ${ax2},${ay2}" fill="none" stroke="${bgColor}" stroke-width="${innerWidth + 5}" />`);
+        // Connector-colored arc on top
+        svg.push(`<path d="M${ax1},${ay1} A${hopR},${hopR} 0 0,1 ${ax2},${ay2}" fill="none" stroke="${hexToRgba(color, light ? 0.98 : 0.82)}" stroke-width="${innerWidth}" />`);
       }
       renderedSvgPaths.push(rawScreenPath);
     }
