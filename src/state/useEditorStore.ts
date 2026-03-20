@@ -15,6 +15,7 @@ import type {
   DiagramDocument,
   EntityType,
   FlowSource,
+  FlowSourceRules,
   FlowType,
   NodeEntity,
   NodeShape,
@@ -29,7 +30,7 @@ import type {
   ToolMode,
 } from '@/types/document';
 import { DOCUMENT_VERSION } from '@/types/document';
-import { getDocScenarios } from '@/types/document';
+import { getDocScenarios, getDocFlowSourceRules } from '@/types/document';
 import { loadDocument, normalizeDocument } from '@/lib/serialization/storage';
 
 type ClipboardPayload =
@@ -96,7 +97,7 @@ interface EditorStore {
   copySelection: () => void;
   pasteClipboard: () => void;
   batchUpdate: (patch: { glowColor?: string; fontSize?: number; tags?: string[] }) => void;
-  updateDocumentDefs: (patch: { scenarios?: PickerDef[]; flowSources?: PickerDef[]; flowTypes?: PickerDef[] }) => void;
+  updateDocumentDefs: (patch: { scenarios?: PickerDef[]; flowSources?: PickerDef[]; flowTypes?: PickerDef[]; scenarioFlowTypeExclusions?: Record<string, string[]>; sourceFlowTypeExclusions?: Record<string, string[]>; flowSourceRules?: FlowSourceRules }) => void;
   fitToScreen: (viewportWidth: number, viewportHeight: number) => void;
   zoomToSelection: (viewportWidth: number, viewportHeight: number) => void;
 }
@@ -222,10 +223,24 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   toggleTheme: () => set((state) => ({ theme: state.theme === 'dark' ? 'light' : 'dark' })),
   setActiveScenario: (id) => set({ activeScenario: id, activeFlowSources: new Set<FlowSource>(), activeFlowTypes: new Set<FlowType>() }),
   toggleFlowSource: (source) => set((state) => {
+    const rules = getDocFlowSourceRules(state.document);
     const next = new Set(state.activeFlowSources);
     if (next.has(source)) next.delete(source); else next.add(source);
-    const arcScenario = state.activeScenario === 'no-proxy-arc' || state.activeScenario === 'proxy-arc';
-    if (arcScenario && !next.has('hosts')) { next.delete('arb'); next.delete('aks'); }
+    // Mutual exclusion: if source was just activated, deselect others in same group
+    if (next.has(source) && rules.mutualExclusionGroups) {
+      for (const group of rules.mutualExclusionGroups) {
+        if (group.includes(source)) {
+          for (const other of group) { if (other !== source) next.delete(other); }
+        }
+      }
+    }
+    // Dependencies: remove sources whose requirement is no longer met
+    if (rules.dependencies) {
+      for (const dep of rules.dependencies) {
+        const appliesToScenario = !dep.scenarios || dep.scenarios.length === 0 || (state.activeScenario != null && dep.scenarios.includes(state.activeScenario));
+        if (appliesToScenario && !next.has(dep.requires)) next.delete(dep.source);
+      }
+    }
     return { activeFlowSources: next, activeFlowTypes: next.size > 0 ? state.activeFlowTypes : new Set<FlowType>() };
   }),
   toggleFlowType: (type) => set((state) => {

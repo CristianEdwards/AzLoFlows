@@ -1,10 +1,12 @@
+import { useState } from 'react';
 import GlassPanel from '@/components/ui/GlassPanel';
 import { nodeIconList } from '@/lib/icons/nodeIcons';
 import { colorSwatches, textColorSwatches } from '@/features/palette/paletteData';
 import { companionFillForGlow } from '@/lib/rendering/tokens';
-import { getDocScenarios, getDocFlowSources, getDocFlowTypes } from '@/types/document';
+import { getDocScenarios, getDocFlowSources, getDocFlowTypes, getDocFlowTypeExclusions, getDocSourceFlowTypeExclusions, getDocFlowSourceRules } from '@/types/document';
 import type { AreaEntity, NodeShape, PickerDef } from '@/types/document';
 import { getConnectorStyleOptions, getSelectedEntity, useEditorStore } from '@/state/useEditorStore';
+import FlowTypeVisibilityDialog from './FlowTypeVisibilityDialog';
 
 function PickerDefEditor({ label, items, onChange }: { label: string; items: PickerDef[]; onChange: (next: PickerDef[]) => void }) {
   function updateItem(index: number, patch: Partial<PickerDef>) {
@@ -54,6 +56,7 @@ function buildTagOptions(scenarios: PickerDef[], flowSources: PickerDef[], flowT
 }
 
 export default function InspectorPanel() {
+  const [showVisibility, setShowVisibility] = useState(false);
   const selection = useEditorStore((state) => state.selection);
   const document = useEditorStore((state) => state.document);
   const updateArea = useEditorStore((state) => state.updateArea);
@@ -72,6 +75,9 @@ export default function InspectorPanel() {
   const scenarios = getDocScenarios(document);
   const flowSources = getDocFlowSources(document);
   const flowTypes = getDocFlowTypes(document);
+  const flowTypeExclusions = getDocFlowTypeExclusions(document);
+  const sourceFlowTypeExclusions = getDocSourceFlowTypeExclusions(document);
+  const sourceRules = getDocFlowSourceRules(document);
   const TAG_OPTIONS = buildTagOptions(scenarios, flowSources, flowTypes);
 
   const selectedArea = selection.type === 'area' ? getSelectedEntity(document.areas, selection) : null;
@@ -93,6 +99,23 @@ export default function InspectorPanel() {
         <PickerDefEditor label="Traffic Sources" items={flowSources} onChange={(next) => updateDocumentDefs({ flowSources: next })} />
         <PickerDefEditor label="Traffic Types" items={flowTypes} onChange={(next) => updateDocumentDefs({ flowTypes: next })} />
       </GlassPanel>
+      <button className="ui-button ftv-open-btn" onClick={() => setShowVisibility(true)}>
+        Flow-Type Visibility…
+      </button>
+      {showVisibility && (
+        <FlowTypeVisibilityDialog
+          scenarios={scenarios}
+          flowSources={flowSources}
+          flowTypes={flowTypes}
+          scenarioExclusions={flowTypeExclusions}
+          sourceExclusions={sourceFlowTypeExclusions}
+          sourceRules={sourceRules}
+          onChangeScenario={(next) => updateDocumentDefs({ scenarioFlowTypeExclusions: next })}
+          onChangeSource={(next) => updateDocumentDefs({ sourceFlowTypeExclusions: next })}
+          onChangeSourceRules={(next) => updateDocumentDefs({ flowSourceRules: next })}
+          onClose={() => setShowVisibility(false)}
+        />
+      )}
       <GlassPanel title="Inspector">
         {selection.ids.length === 0 ? <p className="empty-copy">Select an area, node, or connector to edit its properties.</p> : null}
         {selection.ids.length > 1 ? <p className="empty-copy">Batch editing is reserved for the next increment. Use duplicate, delete, or connect from the toolbar.</p> : null}

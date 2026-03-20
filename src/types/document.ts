@@ -48,6 +48,33 @@ export const FLOW_TYPES: PickerDef[] = [
   { id: 'non-allowed-arc-gw-azure-public', label: 'Non allowed Azure public endpoints' },
 ];
 
+/** Flow-type IDs to hide for each scenario (e.g. 'bypass' makes no sense without a proxy/arc-gw). */
+export const SCENARIO_FLOW_TYPE_EXCLUSIONS: Record<string, string[]> = {
+  'no-proxy-no-arc': ['bypass'],
+};
+
+/** Flow-type IDs to hide for each traffic source. */
+export const SOURCE_FLOW_TYPE_EXCLUSIONS: Record<string, string[]> = {};
+
+export interface SourceDependency {
+  source: string;
+  requires: string;
+  scenarios?: string[];
+}
+
+export interface FlowSourceRules {
+  mutualExclusionGroups?: string[][];
+  dependencies?: SourceDependency[];
+}
+
+export const DEFAULT_FLOW_SOURCE_RULES: FlowSourceRules = {
+  mutualExclusionGroups: [],
+  dependencies: [
+    { source: 'arb', requires: 'hosts', scenarios: ['no-proxy-arc', 'proxy-arc'] },
+    { source: 'aks', requires: 'hosts', scenarios: ['no-proxy-arc', 'proxy-arc'] },
+  ],
+};
+
 export interface TagFilter {
   scenario: ScenarioId | null;
   sources: Set<FlowSource>;
@@ -55,14 +82,10 @@ export interface TagFilter {
 }
 
 /** Return the display label for a flow type, looking up in provided definitions first. */
-export function flowTypeLabel(ftId: FlowType, scenario: ScenarioId | null, flowTypeDefs?: PickerDef[]): string {
+export function flowTypeLabel(ftId: FlowType, _scenario: ScenarioId | null, flowTypeDefs?: PickerDef[]): string {
   const defs = flowTypeDefs ?? FLOW_TYPES;
   const base = defs.find((f) => f.id === ftId);
-  if (!base) return ftId;
-  if (ftId === 'azure-public-endpoint' && (scenario === 'no-proxy-no-arc' || scenario === 'proxy-no-arc')) {
-    return 'Azure public endpoints';
-  }
-  return base.label;
+  return base?.label ?? ftId;
 }
 
 export interface Point {
@@ -180,12 +203,18 @@ export interface DiagramDocument {
   scenarios?: PickerDef[];
   flowSources?: PickerDef[];
   flowTypes?: PickerDef[];
+  scenarioFlowTypeExclusions?: Record<string, string[]>;
+  sourceFlowTypeExclusions?: Record<string, string[]>;
+  flowSourceRules?: FlowSourceRules;
 }
 
 /** Return the scenario/flow definitions for a document, falling back to globals. */
 export function getDocScenarios(doc: DiagramDocument): PickerDef[] { return doc.scenarios ?? SCENARIOS; }
 export function getDocFlowSources(doc: DiagramDocument): PickerDef[] { return doc.flowSources ?? FLOW_SOURCES; }
 export function getDocFlowTypes(doc: DiagramDocument): PickerDef[] { return doc.flowTypes ?? FLOW_TYPES; }
+export function getDocFlowTypeExclusions(doc: DiagramDocument): Record<string, string[]> { return doc.scenarioFlowTypeExclusions ?? SCENARIO_FLOW_TYPE_EXCLUSIONS; }
+export function getDocSourceFlowTypeExclusions(doc: DiagramDocument): Record<string, string[]> { return doc.sourceFlowTypeExclusions ?? SOURCE_FLOW_TYPE_EXCLUSIONS; }
+export function getDocFlowSourceRules(doc: DiagramDocument): FlowSourceRules { return doc.flowSourceRules ?? DEFAULT_FLOW_SOURCE_RULES; }
 
 export interface SelectionState {
   type: EntityType | null;

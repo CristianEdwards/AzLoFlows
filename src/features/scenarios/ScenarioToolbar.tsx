@@ -1,5 +1,5 @@
 import { useEditorStore } from '@/state/useEditorStore';
-import { getDocScenarios, getDocFlowSources, getDocFlowTypes, flowTypeLabel } from '@/types/document';
+import { getDocScenarios, getDocFlowSources, getDocFlowTypes, getDocFlowTypeExclusions, getDocSourceFlowTypeExclusions, getDocFlowSourceRules, flowTypeLabel } from '@/types/document';
 import type { ScenarioId, FlowSource, FlowType } from '@/types/document';
 
 export default function ScenarioToolbar() {
@@ -13,7 +13,18 @@ export default function ScenarioToolbar() {
 
   const scenarios = getDocScenarios(document);
   const flowSources = getDocFlowSources(document);
-  const flowTypes = getDocFlowTypes(document);
+  const allFlowTypes = getDocFlowTypes(document);
+  const scenarioExclusions = getDocFlowTypeExclusions(document);
+  const sourceExclusions = getDocSourceFlowTypeExclusions(document);
+  const sourceRules = getDocFlowSourceRules(document);
+  const scenarioExcluded = activeScenario ? scenarioExclusions[activeScenario] ?? [] : [];
+  // Source exclusions use intersection: hide a flow type only if ALL active sources exclude it
+  const activeSources = [...activeFlowSources];
+  const sourceExcluded = activeSources.length > 0
+    ? allFlowTypes.filter((ft) => activeSources.every((s) => (sourceExclusions[s] ?? []).includes(ft.id))).map((ft) => ft.id)
+    : [];
+  const allExcluded = new Set([...scenarioExcluded, ...sourceExcluded]);
+  const flowTypes = allFlowTypes.filter((ft) => !allExcluded.has(ft.id));
 
   return (
     <>
@@ -41,9 +52,16 @@ export default function ScenarioToolbar() {
           <div className="source-picker__inner">
             <span className="source-picker__label">Traffic source</span>
             {flowSources.map((source) => {
-              const arcScenario = activeScenario === 'no-proxy-arc' || activeScenario === 'proxy-arc';
-              const needsHosts = arcScenario && (source.id === 'arb' || source.id === 'aks');
-              const disabled = needsHosts && !activeFlowSources.has('hosts');
+              // Compute disabled state from document rules
+              let disabled = false;
+              if (sourceRules.dependencies) {
+                for (const dep of sourceRules.dependencies) {
+                  if (dep.source === source.id) {
+                    const appliesToScenario = !dep.scenarios || dep.scenarios.length === 0 || (activeScenario != null && dep.scenarios.includes(activeScenario));
+                    if (appliesToScenario && !activeFlowSources.has(dep.requires)) { disabled = true; break; }
+                  }
+                }
+              }
               return (
                 <button
                   key={source.id}

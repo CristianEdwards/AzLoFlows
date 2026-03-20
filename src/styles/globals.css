@@ -1505,6 +1505,187 @@ select:focus-visible {
   flex-wrap: wrap;
 }
 
+/* ── Flow-Type Visibility Dialog ─────────────────────── */
+.ftv-open-btn {
+  width: 100%;
+  margin-bottom: 6px;
+  font-size: 12px;
+  padding: 7px 12px;
+  text-align: center;
+}
+
+.ftv-dialog {
+  width: 90vw;
+  max-width: 1100px;
+  max-height: 90vh;
+  background: linear-gradient(168deg, rgba(30, 41, 59, 0.97) 0%, rgba(15, 23, 42, 0.98) 100%);
+  border: 1px solid rgba(51, 65, 85, 0.6);
+  border-radius: 16px;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}
+
+.ftv-dialog__body {
+  padding: 16px 24px 24px;
+}
+
+.ftv-dialog__hint {
+  font-size: 12px;
+  opacity: 0.55;
+  margin: 0 0 16px;
+}
+
+.ftv-grid__section-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--cyan-400);
+  margin-bottom: 8px;
+}
+
+.ftv-grid {
+  display: grid;
+  gap: 4px 6px;
+  align-items: center;
+}
+
+.ftv-grid__col-header {
+  font-size: 11px;
+  opacity: 0.6;
+  text-align: center;
+  line-height: 1.2;
+  padding-bottom: 4px;
+}
+
+.ftv-grid__row-label {
+  font-size: 12px;
+  opacity: 0.85;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-right: 6px;
+}
+
+.ftv-grid__cell {
+  display: flex;
+  justify-content: center;
+}
+
+.ftv-grid__cell input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  cursor: pointer;
+}
+
+/* ── Source Rules ─────────────────────────────────────── */
+.ftv-divider {
+  border: none;
+  border-top: 1px solid rgba(51, 65, 85, 0.4);
+  margin: 20px 0;
+}
+
+.ftv-rule-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.ftv-rule-row__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  flex: 1;
+}
+
+.ftv-rule-row__remove {
+  padding: 2px 7px;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.ftv-chip {
+  padding: 3px 10px;
+  font-size: 11px;
+  border-radius: 12px;
+  border: 1px solid rgba(51, 65, 85, 0.5);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.15s, background 0.15s;
+}
+.ftv-chip:hover { opacity: 0.8; }
+.ftv-chip.is-active {
+  opacity: 1;
+  background: rgba(6, 182, 212, 0.2);
+  border-color: var(--cyan-400);
+}
+.ftv-chip--small {
+  padding: 2px 7px;
+  font-size: 10px;
+}
+
+.ftv-dep-row {
+  border: 1px solid rgba(51, 65, 85, 0.3);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+}
+
+.ftv-dep-row__selects {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ftv-dep-row__selects select {
+  flex: 1;
+  font-size: 12px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid rgba(51, 65, 85, 0.5);
+  background: rgba(15, 23, 42, 0.6);
+  color: var(--text);
+}
+
+.ftv-dep-row__arrow {
+  font-size: 11px;
+  opacity: 0.5;
+  white-space: nowrap;
+}
+
+.ftv-dep-row__scenarios {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.ftv-dep-row__scenarios-label {
+  font-size: 10px;
+  opacity: 0.5;
+  margin-right: 2px;
+}
+
+.ftv-dep-row__all-label {
+  font-size: 10px;
+  opacity: 0.4;
+  font-style: italic;
+}
+
+.ftv-dep-row > .ftv-rule-row__remove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+}
+
 /* ── Dialog Backdrop (shared) ─────────────────────────── */
 .shortcut-dialog-backdrop,
 .search-dialog-backdrop,
@@ -2447,10 +2628,33 @@ select:focus-visible {
 
 [data-theme="light"] .shortcut-dialog,
 [data-theme="light"] .search-dialog,
-[data-theme="light"] .template-gallery {
+[data-theme="light"] .template-gallery,
+[data-theme="light"] .ftv-dialog {
   background: rgba(255, 255, 255, 0.97);
   border-color: rgba(0, 0, 0, 0.12);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .ftv-dep-row__selects select {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(0, 0, 0, 0.15);
+  color: var(--slate-900);
+}
+
+[data-theme="light"] .ftv-chip {
+  border-color: rgba(0, 0, 0, 0.15);
+}
+[data-theme="light"] .ftv-chip.is-active {
+  background: rgba(109, 40, 217, 0.12);
+  border-color: rgba(109, 40, 217, 0.5);
+}
+
+[data-theme="light"] .ftv-divider {
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .ftv-dep-row {
+  border-color: rgba(0, 0, 0, 0.1);
 }
 
 [data-theme="light"] .shortcut-dialog__header,

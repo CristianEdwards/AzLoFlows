@@ -1,7 +1,7 @@
 {
   "name": "azloflows",
   "private": false,
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Interactive isometric diagram builder for Azure Local network architectures and traffic flows",
   "keywords": ["diagram-builder", "azure-local", "network-visualization", "isometric", "canvas", "flow-visualization", "react"],
   "homepage": "https://cristianedwards.github.io/AzLoFlows/",
