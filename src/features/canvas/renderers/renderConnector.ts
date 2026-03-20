@@ -93,25 +93,22 @@ export function renderConnector(
   if (crossings.length > 0) {
     const bgColor = light ? '#f8fafc' : '#020617';
     const hopR = HOP_RADIUS;
+    const innerWidth = selected ? 2 : (light ? 1.6 : 1.2);
     for (const c of crossings) {
-      // Erase a gap on the lower connector by drawing a thick background-color segment
-      const cos = Math.cos(c.angle);
-      const sin = Math.sin(c.angle);
-      const gapStart = { x: c.point.x - cos * hopR, y: c.point.y - sin * hopR };
-      const gapEnd = { x: c.point.x + cos * hopR, y: c.point.y + sin * hopR };
+      const perpAngle = c.angle - Math.PI / 2;
+
+      // Background-colored arc (wider) to cleanly mask the lower connector
       ctx.beginPath();
-      ctx.moveTo(gapStart.x, gapStart.y);
-      ctx.lineTo(gapEnd.x, gapEnd.y);
+      ctx.arc(c.point.x, c.point.y, hopR, perpAngle, perpAngle + Math.PI);
       ctx.strokeStyle = bgColor;
-      ctx.lineWidth = 6;
+      ctx.lineWidth = innerWidth + 5;
       ctx.stroke();
 
-      // Draw the hop arc (semicircle perpendicular to the path direction)
-      const perpAngle = c.angle - Math.PI / 2;
+      // Connector-colored arc on top
       ctx.beginPath();
       ctx.arc(c.point.x, c.point.y, hopR, perpAngle, perpAngle + Math.PI);
       ctx.strokeStyle = hexToRgba(color, selected ? 1.0 : (light ? 0.98 : 0.82));
-      ctx.lineWidth = selected ? 2 : (light ? 1.6 : 1.2);
+      ctx.lineWidth = innerWidth;
       ctx.stroke();
     }
   }
