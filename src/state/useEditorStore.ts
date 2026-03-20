@@ -40,6 +40,8 @@ type ClipboardPayload =
   | { type: 'text'; entities: TextEntity[] }
   | { type: 'pipe'; entities: PipeEntity[] };
 
+const CLIPBOARD_MARKER = 'azloflows:clipboard:';
+
 interface EditorStore {
   document: DiagramDocument;
   selection: SelectionState;
@@ -96,6 +98,8 @@ interface EditorStore {
   sendToBack: () => void;
   copySelection: () => void;
   pasteClipboard: () => void;
+  pasteFromSystemClipboard: () => Promise<void>;
+  _insertClipboardPayload: (clipboard: ClipboardPayload, stripTags: boolean) => void;
   batchUpdate: (patch: { glowColor?: string; fontSize?: number; tags?: string[] }) => void;
   updateDocumentDefs: (patch: { scenarios?: PickerDef[]; flowSources?: PickerDef[]; flowTypes?: PickerDef[]; scenarioFlowTypeExclusions?: Record<string, string[]>; sourceFlowTypeExclusions?: Record<string, string[]>; flowSourceRules?: FlowSourceRules }) => void;
   fitToScreen: (viewportWidth: number, viewportHeight: number) => void;
@@ -871,12 +875,33 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     else if (selection.type === 'pipe') payload = { type: 'pipe', entities: structuredClone((document.pipes ?? []).filter((e) => ids.has(e.id))) };
     if (payload && payload.entities.length > 0) {
       set({ clipboard: payload });
+      // Also write to system clipboard for cross-tab paste
+      try {
+        navigator.clipboard.writeText(CLIPBOARD_MARKER + JSON.stringify(payload));
+      } catch { /* system clipboard may be unavailable */ }
       get().pushToast(`Copied ${payload.entities.length} ${payload.type}(s)`, 'info');
     }
   },
   pasteClipboard: () => {
     const { clipboard } = get();
     if (!clipboard || clipboard.entities.length === 0) return;
+    get()._insertClipboardPayload(clipboard, false);
+  },
+  pasteFromSystemClipboard: async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text.startsWith(CLIPBOARD_MARKER)) {
+        const payload = JSON.parse(text.slice(CLIPBOARD_MARKER.length)) as ClipboardPayload;
+        if (payload && payload.type && Array.isArray(payload.entities) && payload.entities.length > 0) {
+          get()._insertClipboardPayload(payload, true);
+          return;
+        }
+      }
+    } catch { /* system clipboard unavailable or denied */ }
+    // Fall back to in-memory clipboard
+    get().pasteClipboard();
+  },
+  _insertClipboardPayload: (clipboard: ClipboardPayload, stripTags: boolean) => {
     set((state) => {
       const document = cloneDocument(state.document);
       const offset = { x: 40, y: 40 };
@@ -887,6 +912,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         const shifted = { ...structuredClone(entity), id: newId, zIndex: nextZIndex(document) };
         if ('x' in shifted) (shifted as { x: number }).x += offset.x;
         if ('y' in shifted) (shifted as { y: number }).y += offset.y;
+        if (stripTags && 'tags' in shifted) (shifted as { tags?: string[] }).tags = undefined;
         if (clipboard.type === 'area') document.areas.push(shifted as AreaEntity);
         else if (clipboard.type === 'node') document.nodes.push(shifted as NodeEntity);
         else if (clipboard.type === 'text') document.texts.push(shifted as TextEntity);
