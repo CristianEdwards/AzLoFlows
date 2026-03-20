@@ -685,7 +685,7 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
       let belowTitle = cardClampedSize / 2;
       if (cardHasIcon) belowTitle += gap + cardIconSize;
       if (cardHasSub) belowTitle += gap + subtitleFontSize;
-      let totalStack = aboveTitle + belowTitle;
+      const totalStack = aboveTitle + belowTitle;
 
       // Shrink icon if stack exceeds 75% of stacking edge
       const stackEdgeLen = node.textRotated ? leftEdgeLen : topEdgeLen;

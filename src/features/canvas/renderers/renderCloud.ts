@@ -18,11 +18,6 @@ function cloudTopPath(
   hx: Point, hy: Point,
 ) {
   // Map normalised (u,v) in [-1,1] → screen coords
-  const p = (u: number, v: number) => ({
-    x: cx + u * hx.x + v * hy.x,
-    y: cx + u * hx.y + v * hy.y,   // BUG: should use cy
-  });
-  // Fix: use cy for y
   const pt = (u: number, v: number) => ({
     x: cx + u * hx.x + v * hy.x,
     y: cy + u * hx.y + v * hy.y,

@@ -62,8 +62,7 @@ export function renderConnector(
   const sourceStub = { x: start.x + sOff.x, y: start.y + sOff.y };
   const targetStub = { x: end.x + tOff.x, y: end.y + tOff.y };
 
-  let screenPath: { x: number; y: number }[];
-  screenPath = [start, sourceStub];
+  const screenPath: { x: number; y: number }[] = [start, sourceStub];
   if (connector.waypoints.length > 0) {
     const screenWaypoints = connector.waypoints.map((wp) => worldToScreen(wp, camera, viewport));
     let prev = sourceStub;

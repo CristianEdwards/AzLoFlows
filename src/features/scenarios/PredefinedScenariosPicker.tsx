@@ -15,6 +15,7 @@ export default function PredefinedScenariosPicker() {
   const [activeFile, setActiveFile] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const importDocument = useEditorStore((s) => s.importDocument);
+  const fitToScreen = useEditorStore((s) => s.fitToScreen);
   const newDocument = useEditorStore((s) => s.newDocument);
 
   useEffect(() => {
@@ -43,6 +44,13 @@ export default function PredefinedScenariosPicker() {
       const doc = normalizeDocument(json);
       importDocument(doc);
       setActiveFile(entry.file);
+      // Fit imported scenario to the visible canvas area
+      requestAnimationFrame(() => {
+        const canvas = document.querySelector('canvas');
+        if (canvas) {
+          fitToScreen(canvas.clientWidth, canvas.clientHeight);
+        }
+      });
     } catch {
       useEditorStore.getState().pushToast('Failed to load scenario', 'error');
     } finally {

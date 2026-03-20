@@ -31,7 +31,7 @@ jobs:
         run: npm ci
 
       - name: Run ESLint
-        run: npx eslint src/ --ext .ts,.tsx --format stylish
+        run: npx eslint src/
 
   typecheck:
     name: TypeScript

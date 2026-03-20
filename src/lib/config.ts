@@ -18,6 +18,7 @@ export const PIPE_DEPTH = 28;
 /* ── Zoom ── */
 export const MIN_ZOOM = 0.35;
 export const MAX_ZOOM = 2.5;
+export const ZOOM_STEP = 0.05;
 export const ZOOM_SENSITIVITY = 0.001;
 export const DETAIL_ZOOM_THRESHOLD = 0.45;
 export const MAX_DPR = 2;

@@ -235,7 +235,7 @@ export function renderCard(
     let belowTitle = clampedSize / 2;
     if (hasIcon) belowTitle += gap + iconSize;
     if (hasSub) belowTitle += gap + subtitleFontSize;
-    let totalStack = aboveTitle + belowTitle;
+    const totalStack = aboveTitle + belowTitle;
 
     // Shrink icon if the stack exceeds 75 % of the stacking edge
     const stackEdgeLen = node.textRotated ? leftEdgeLen : topEdgeLen;
@@ -243,7 +243,6 @@ export function renderCard(
     if (totalStack > maxStack && hasIcon) {
       iconSize = Math.max(8, iconSize - (totalStack - maxStack));
       belowTitle = clampedSize / 2 + gap + iconSize + (hasSub ? gap + subtitleFontSize : 0);
-      totalStack = aboveTitle + belowTitle;
     }
 
     // ── Clamp title position so the full stack stays inside the card ──

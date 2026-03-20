@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import GlassPanel from '@/components/ui/GlassPanel';
 import { loadSnapshotsForDocument, saveSnapshot, deleteSnapshot, type VersionSnapshot } from '@/lib/serialization/snapshots';
 import { useEditorStore } from '@/state/useEditorStore';
@@ -7,18 +7,19 @@ export default function VersionHistoryPanel() {
   const document = useEditorStore((s) => s.document);
   const importDocument = useEditorStore((s) => s.importDocument);
   const pushToast = useEditorStore((s) => s.pushToast);
-  const [snapshots, setSnapshots] = useState<VersionSnapshot[]>([]);
+  const baseSnapshots = useMemo(() => loadSnapshotsForDocument(document.id), [document.id]);
+  const [extraSnapshots, setExtraSnapshots] = useState<VersionSnapshot[]>([]);
+  const snapshots = useMemo(() => {
+    const baseIds = new Set(baseSnapshots.map(s => s.id));
+    return [...extraSnapshots.filter(s => !baseIds.has(s.id)), ...baseSnapshots];
+  }, [extraSnapshots, baseSnapshots]);
   const [naming, setNaming] = useState(false);
   const [snapshotName, setSnapshotName] = useState('');
-
-  useEffect(() => {
-    setSnapshots(loadSnapshotsForDocument(document.id));
-  }, [document.id]);
 
   const handleSave = useCallback(() => {
     const name = snapshotName.trim() || undefined;
     const snap = saveSnapshot(document, name);
-    setSnapshots((prev) => [snap, ...prev]);
+    setExtraSnapshots((prev) => [snap, ...prev]);
     setNaming(false);
     setSnapshotName('');
     pushToast('Snapshot saved', 'success');
@@ -32,7 +33,7 @@ export default function VersionHistoryPanel() {
 
   const handleDelete = useCallback((id: string) => {
     deleteSnapshot(id);
-    setSnapshots((prev) => prev.filter((s) => s.id !== id));
+    setExtraSnapshots((prev) => prev.filter((s) => s.id !== id));
     pushToast('Snapshot deleted', 'info');
   }, [pushToast]);
 

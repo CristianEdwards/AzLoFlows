@@ -3,6 +3,7 @@ dist/
 *.tsbuildinfo
 vite.config.js
 vite.config.d.ts
+eslint-report.json
 .env
 .env.*
 .DS_Store

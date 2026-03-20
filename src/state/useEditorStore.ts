@@ -2,6 +2,7 @@
 import { MIN_ZOOM, MAX_ZOOM } from '@/lib/config';
 import { hitTestArea, hitTestConnector, hitTestNode, hitTestPipe, hitTestText } from '@/lib/geometry/bounds';
 import { snapToGrid } from '@/lib/geometry/grid';
+import { projectIso } from '@/lib/geometry/iso';
 import { resizeRectFromHandle, type ResizeHandle } from '@/lib/geometry/resize';
 import { containsArea, containsNode, containsPipe, containsText, type SelectionBounds } from '@/lib/geometry/selection';
 import { companionPalette, hexToRgba, palette } from '@/lib/rendering/tokens';
@@ -14,6 +15,7 @@ import type {
   DiagramDocument,
   EntityType,
   FlowSource,
+  FlowSourceRules,
   FlowType,
   NodeEntity,
   NodeShape,
@@ -28,7 +30,7 @@ import type {
   ToolMode,
 } from '@/types/document';
 import { DOCUMENT_VERSION } from '@/types/document';
-import { getDocScenarios } from '@/types/document';
+import { getDocScenarios, getDocFlowSourceRules } from '@/types/document';
 import { loadDocument, normalizeDocument } from '@/lib/serialization/storage';
 
 type ClipboardPayload =
@@ -95,7 +97,7 @@ interface EditorStore {
   copySelection: () => void;
   pasteClipboard: () => void;
   batchUpdate: (patch: { glowColor?: string; fontSize?: number; tags?: string[] }) => void;
-  updateDocumentDefs: (patch: { scenarios?: PickerDef[]; flowSources?: PickerDef[]; flowTypes?: PickerDef[] }) => void;
+  updateDocumentDefs: (patch: { scenarios?: PickerDef[]; flowSources?: PickerDef[]; flowTypes?: PickerDef[]; scenarioFlowTypeExclusions?: Record<string, string[]>; sourceFlowTypeExclusions?: Record<string, string[]>; flowSourceRules?: FlowSourceRules }) => void;
   fitToScreen: (viewportWidth: number, viewportHeight: number) => void;
   zoomToSelection: (viewportWidth: number, viewportHeight: number) => void;
 }
@@ -221,10 +223,24 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   toggleTheme: () => set((state) => ({ theme: state.theme === 'dark' ? 'light' : 'dark' })),
   setActiveScenario: (id) => set({ activeScenario: id, activeFlowSources: new Set<FlowSource>(), activeFlowTypes: new Set<FlowType>() }),
   toggleFlowSource: (source) => set((state) => {
+    const rules = getDocFlowSourceRules(state.document);
     const next = new Set(state.activeFlowSources);
     if (next.has(source)) next.delete(source); else next.add(source);
-    const arcScenario = state.activeScenario === 'no-proxy-arc' || state.activeScenario === 'proxy-arc';
-    if (arcScenario && !next.has('hosts')) { next.delete('arb'); next.delete('aks'); }
+    // Mutual exclusion: if source was just activated, deselect others in same group
+    if (next.has(source) && rules.mutualExclusionGroups) {
+      for (const group of rules.mutualExclusionGroups) {
+        if (group.includes(source)) {
+          for (const other of group) { if (other !== source) next.delete(other); }
+        }
+      }
+    }
+    // Dependencies: remove sources whose requirement is no longer met
+    if (rules.dependencies) {
+      for (const dep of rules.dependencies) {
+        const appliesToScenario = !dep.scenarios || dep.scenarios.length === 0 || (state.activeScenario != null && dep.scenarios.includes(state.activeScenario));
+        if (appliesToScenario && !next.has(dep.requires)) next.delete(dep.source);
+      }
+    }
     return { activeFlowSources: next, activeFlowTypes: next.size > 0 ? state.activeFlowTypes : new Set<FlowType>() };
   }),
   toggleFlowType: (type) => set((state) => {
@@ -915,10 +931,17 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const { document } = get();
     const xs: number[] = [];
     const ys: number[] = [];
-    for (const a of document.areas) { xs.push(a.x, a.x + a.width); ys.push(a.y, a.y + a.height); }
-    for (const n of document.nodes) { xs.push(n.x, n.x + n.width); ys.push(n.y, n.y + n.height); }
-    for (const t of document.texts ?? []) { xs.push(t.x - 60, t.x + 60); ys.push(t.y - 20, t.y + 20); }
-    for (const p of document.pipes ?? []) { xs.push(p.x, p.x + p.width); ys.push(p.y, p.y + p.height); }
+    const pushRect = (x: number, y: number, w: number, h: number) => {
+      for (const corner of [{x, y}, {x: x + w, y}, {x: x + w, y: y + h}, {x, y: y + h}]) {
+        const p = projectIso(corner);
+        xs.push(p.x);
+        ys.push(p.y);
+      }
+    };
+    for (const a of document.areas) pushRect(a.x, a.y, a.width, a.height);
+    for (const n of document.nodes) pushRect(n.x, n.y, n.width, n.height);
+    for (const t of document.texts ?? []) pushRect(t.x - 60, t.y - 20, 120, 40);
+    for (const p of document.pipes ?? []) pushRect(p.x, p.y, p.width, p.height);
     if (xs.length === 0) return;
     const minX = Math.min(...xs), maxX = Math.max(...xs);
     const minY = Math.min(...ys), maxY = Math.max(...ys);
@@ -930,7 +953,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const cx = (minX + maxX) / 2;
     const cy = (minY + maxY) / 2;
     set({
-      camera: { x: -cx * clampedZoom + viewportWidth / 2, y: -cy * clampedZoom + viewportHeight / 2, zoom: clampedZoom },
+      camera: { x: -cx * clampedZoom, y: -cy * clampedZoom, zoom: clampedZoom },
     });
     get().pushToast('Fit to screen', 'info');
   },
@@ -943,10 +966,17 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const ids = new Set(selection.ids);
     const xs: number[] = [];
     const ys: number[] = [];
-    if (selection.type === 'area') for (const a of document.areas) { if (ids.has(a.id)) { xs.push(a.x, a.x + a.width); ys.push(a.y, a.y + a.height); } }
-    if (selection.type === 'node') for (const n of document.nodes) { if (ids.has(n.id)) { xs.push(n.x, n.x + n.width); ys.push(n.y, n.y + n.height); } }
-    if (selection.type === 'text') for (const t of document.texts ?? []) { if (ids.has(t.id)) { xs.push(t.x - 60, t.x + 60); ys.push(t.y - 20, t.y + 20); } }
-    if (selection.type === 'pipe') for (const p of document.pipes ?? []) { if (ids.has(p.id)) { xs.push(p.x, p.x + p.width); ys.push(p.y, p.y + p.height); } }
+    const pushRect = (x: number, y: number, w: number, h: number) => {
+      for (const corner of [{x, y}, {x: x + w, y}, {x: x + w, y: y + h}, {x, y: y + h}]) {
+        const p = projectIso(corner);
+        xs.push(p.x);
+        ys.push(p.y);
+      }
+    };
+    if (selection.type === 'area') for (const a of document.areas) { if (ids.has(a.id)) pushRect(a.x, a.y, a.width, a.height); }
+    if (selection.type === 'node') for (const n of document.nodes) { if (ids.has(n.id)) pushRect(n.x, n.y, n.width, n.height); }
+    if (selection.type === 'text') for (const t of document.texts ?? []) { if (ids.has(t.id)) pushRect(t.x - 60, t.y - 20, 120, 40); }
+    if (selection.type === 'pipe') for (const p of document.pipes ?? []) { if (ids.has(p.id)) pushRect(p.x, p.y, p.width, p.height); }
     if (xs.length === 0) return;
     const minX = Math.min(...xs), maxX = Math.max(...xs);
     const minY = Math.min(...ys), maxY = Math.max(...ys);
@@ -958,7 +988,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const cx = (minX + maxX) / 2;
     const cy = (minY + maxY) / 2;
     set({
-      camera: { x: -cx * clampedZoom + viewportWidth / 2, y: -cy * clampedZoom + viewportHeight / 2, zoom: clampedZoom },
+      camera: { x: -cx * clampedZoom, y: -cy * clampedZoom, zoom: clampedZoom },
     });
   },
 }));
