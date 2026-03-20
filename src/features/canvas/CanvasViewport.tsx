@@ -136,7 +136,7 @@ export default function CanvasViewport({ canvasRef, onCursorWorldChange, onViewp
       }
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'v') {
         event.preventDefault();
-        useEditorStore.getState().pasteClipboard();
+        useEditorStore.getState().pasteFromSystemClipboard();
       }
       if ((event.ctrlKey || event.metaKey) && event.key === '0') {
         event.preventDefault();
