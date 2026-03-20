@@ -1,10 +1,23 @@
 import { isValidAnchorId } from '@/lib/geometry/anchors';
-import type { AnchorId, DiagramDocument, NodeEntity, NodeShape } from '@/types/document';
+import type { AnchorId, DiagramDocument, FlowSourceRules, NodeEntity, NodeShape } from '@/types/document';
 import { DOCUMENT_VERSION } from '@/types/document';
 
 const STORAGE_KEY = 'isoflows.diagram.document';
 const RECENT_KEY = 'isoflows.recent';
 const MAX_RECENT = 10;
+
+function isRecordOfStringArrays(v: unknown): v is Record<string, string[]> {
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return false;
+  return Object.values(v as Record<string, unknown>).every((arr) => Array.isArray(arr) && arr.every((s) => typeof s === 'string'));
+}
+
+function isFlowSourceRules(v: unknown): v is FlowSourceRules {
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return false;
+  const obj = v as Record<string, unknown>;
+  if (obj.mutualExclusionGroups !== undefined && !Array.isArray(obj.mutualExclusionGroups)) return false;
+  if (obj.dependencies !== undefined && !Array.isArray(obj.dependencies)) return false;
+  return true;
+}
 
 export interface RecentEntry {
   id: string;
@@ -76,6 +89,9 @@ export function normalizeDocument(input: unknown): DiagramDocument {
     scenarios: Array.isArray(value?.scenarios) ? value!.scenarios : undefined,
     flowSources: Array.isArray(value?.flowSources) ? value!.flowSources : undefined,
     flowTypes: Array.isArray(value?.flowTypes) ? value!.flowTypes : undefined,
+    scenarioFlowTypeExclusions: isRecordOfStringArrays(value?.scenarioFlowTypeExclusions) ? value!.scenarioFlowTypeExclusions : undefined,
+    sourceFlowTypeExclusions: isRecordOfStringArrays(value?.sourceFlowTypeExclusions) ? value!.sourceFlowTypeExclusions : undefined,
+    flowSourceRules: isFlowSourceRules(value?.flowSourceRules) ? value!.flowSourceRules : undefined,
   };
 }
 
