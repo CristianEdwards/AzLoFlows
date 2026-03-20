@@ -1,6 +1,7 @@
 import { ISO_ANGLE_DEG, ISO_Y_SCALE, ISO_SCALE, CONNECTOR_STUB, NODE_DEPTH } from '@/lib/config';
 import { getScreenAnchorPoint, parseAnchorId } from '@/lib/geometry/anchors';
 import { buildIsoPath, worldToScreen, type ViewportSize } from '@/lib/geometry/iso';
+import { findPathCrossings, HOP_RADIUS, type Crossing } from '@/lib/geometry/crossings';
 import { drawArrowHead, drawPolyline, roundRectPath } from '@/lib/rendering/canvasPrimitives';
 import { hexToRgba, darkenHex } from '@/lib/rendering/tokens';
 import { isoQuad } from '@/lib/geometry/iso';
@@ -18,69 +19,18 @@ export function renderConnector(
   viewport: ViewportSize,
   time: number,
   theme: 'dark' | 'light' = 'dark',
+  otherPaths: Point[][] = [],
 ): void {
   const light = theme === 'light';
-  const start = getScreenAnchorPoint(source, connector.sourceAnchor, camera, viewport);
-  const end = getScreenAnchorPoint(target, connector.targetAnchor, camera, viewport);
-
-  // Compute iso axis unit vectors in screen space for perpendicular stubs
-  const _ANG = (ISO_ANGLE_DEG * Math.PI) / 180;
-  const _C = Math.cos(_ANG);
-  const _S = Math.sin(_ANG);
-  const _YS = ISO_Y_SCALE;
-  const _IS = ISO_SCALE;
-  const ixR = { x: _C * _IS, y: _S * _YS * _IS };
-  const iyR = { x: -_S * _IS, y: _C * _YS * _IS };
-  const ixL = Math.hypot(ixR.x, ixR.y);
-  const iyL = Math.hypot(iyR.x, iyR.y);
-  const ixU = { x: ixR.x / ixL, y: ixR.y / ixL };
-  const iyU = { x: iyR.x / iyL, y: iyR.y / iyL };
-
-  const STUB = CONNECTOR_STUB;
-  function stubOffset(side: string, node: NodeEntity): { x: number; y: number } {
-    if (node.shape === 'standingNode') {
-      // Standing panels have anchors on all 4 edges of the vertical front face.
-      switch (side) {
-        case 'bottom': return { x: -ixU.x * STUB, y: -ixU.y * STUB };
-        case 'top':    return { x: 0, y: -STUB };
-        case 'left':   return { x: -iyU.x * STUB, y: -iyU.y * STUB };
-        case 'right':  return { x: iyU.x * STUB, y: iyU.y * STUB };
-        default:       return { x: -ixU.x * STUB, y: -ixU.y * STUB };
-      }
-    }
-    switch (side) {
-      case 'top': return { x: -iyU.x * STUB, y: -iyU.y * STUB };
-      case 'bottom': return { x: iyU.x * STUB, y: iyU.y * STUB };
-      case 'left': return { x: -ixU.x * STUB, y: -ixU.y * STUB };
-      case 'right': return { x: ixU.x * STUB, y: ixU.y * STUB };
-      default: return { x: 0, y: 0 };
-    }
-  }
-
-  const sOff = stubOffset(parseAnchorId(connector.sourceAnchor).side, source);
-  const tOff = stubOffset(parseAnchorId(connector.targetAnchor).side, target);
-  const sourceStub = { x: start.x + sOff.x, y: start.y + sOff.y };
-  const targetStub = { x: end.x + tOff.x, y: end.y + tOff.y };
-
-  const screenPath: { x: number; y: number }[] = [start, sourceStub];
-  if (connector.waypoints.length > 0) {
-    const screenWaypoints = connector.waypoints.map((wp) => worldToScreen(wp, camera, viewport));
-    let prev = sourceStub;
-    for (const wp of screenWaypoints) {
-      const seg = buildIsoPath(prev, wp, camera);
-      screenPath.push(...seg.slice(1));
-      prev = wp;
-    }
-    const lastSeg = buildIsoPath(prev, targetStub, camera);
-    screenPath.push(...lastSeg.slice(1));
-  } else {
-    const mainSeg = buildIsoPath(sourceStub, targetStub, camera);
-    screenPath.push(...mainSeg.slice(1));
-  }
-  screenPath.push(end);
-
-  const smoothPath = buildSmoothPath(screenPath, 6, true, true);
+  const smoothPath = buildConnectorSmoothPath(connector, source, target, camera, viewport);
   const color = light ? darkenHex(connector.color, 0.55) : connector.color;
+
+  // Compute crossings with lower-z connectors
+  const crossings: Crossing[] = [];
+  for (const other of otherPaths) {
+    crossings.push(...findPathCrossings(smoothPath, other));
+  }
+  crossings.sort((a, b) => a.t - b.t);
 
   // If tunnel mode, clip out node and area shapes so connector is hidden where it crosses them
   if (connector.tunnel) {
@@ -138,6 +88,33 @@ export function renderConnector(
   ctx.strokeStyle = hexToRgba(color, selected ? 1.0 : (light ? 0.98 : 0.82));
   ctx.lineWidth = selected ? 2 : (light ? 1.6 : 1.2);
   ctx.stroke();
+
+  // Draw hop arcs at crossing points
+  if (crossings.length > 0) {
+    const bgColor = light ? '#f8fafc' : '#020617';
+    const hopR = HOP_RADIUS;
+    for (const c of crossings) {
+      // Erase a gap on the lower connector by drawing a thick background-color segment
+      const cos = Math.cos(c.angle);
+      const sin = Math.sin(c.angle);
+      const gapStart = { x: c.point.x - cos * hopR, y: c.point.y - sin * hopR };
+      const gapEnd = { x: c.point.x + cos * hopR, y: c.point.y + sin * hopR };
+      ctx.beginPath();
+      ctx.moveTo(gapStart.x, gapStart.y);
+      ctx.lineTo(gapEnd.x, gapEnd.y);
+      ctx.strokeStyle = bgColor;
+      ctx.lineWidth = 6;
+      ctx.stroke();
+
+      // Draw the hop arc (semicircle perpendicular to the path direction)
+      const perpAngle = c.angle - Math.PI / 2;
+      ctx.beginPath();
+      ctx.arc(c.point.x, c.point.y, hopR, perpAngle, perpAngle + Math.PI);
+      ctx.strokeStyle = hexToRgba(color, selected ? 1.0 : (light ? 0.98 : 0.82));
+      ctx.lineWidth = selected ? 2 : (light ? 1.6 : 1.2);
+      ctx.stroke();
+    }
+  }
 
 
 
@@ -333,4 +310,73 @@ function pointAlongPath(points: { x: number; y: number }[], t: number) {
   }
 
   return points[points.length - 1];
+}
+
+/* ── Build the smooth screen-space path for a connector (reusable) ── */
+
+export function buildConnectorSmoothPath(
+  connector: ConnectorEntity,
+  source: NodeEntity,
+  target: NodeEntity,
+  camera: CameraState,
+  viewport: ViewportSize,
+): Point[] {
+  const start = getScreenAnchorPoint(source, connector.sourceAnchor, camera, viewport);
+  const end = getScreenAnchorPoint(target, connector.targetAnchor, camera, viewport);
+
+  const _ANG = (ISO_ANGLE_DEG * Math.PI) / 180;
+  const _C = Math.cos(_ANG);
+  const _S = Math.sin(_ANG);
+  const _YS = ISO_Y_SCALE;
+  const _IS = ISO_SCALE;
+  const ixR = { x: _C * _IS, y: _S * _YS * _IS };
+  const iyR = { x: -_S * _IS, y: _C * _YS * _IS };
+  const ixL = Math.hypot(ixR.x, ixR.y);
+  const iyL = Math.hypot(iyR.x, iyR.y);
+  const ixU = { x: ixR.x / ixL, y: ixR.y / ixL };
+  const iyU = { x: iyR.x / iyL, y: iyR.y / iyL };
+
+  const STUB = CONNECTOR_STUB;
+  function stubOffset(side: string, node: NodeEntity): { x: number; y: number } {
+    if (node.shape === 'standingNode') {
+      switch (side) {
+        case 'bottom': return { x: -ixU.x * STUB, y: -ixU.y * STUB };
+        case 'top':    return { x: 0, y: -STUB };
+        case 'left':   return { x: -iyU.x * STUB, y: -iyU.y * STUB };
+        case 'right':  return { x: iyU.x * STUB, y: iyU.y * STUB };
+        default:       return { x: -ixU.x * STUB, y: -ixU.y * STUB };
+      }
+    }
+    switch (side) {
+      case 'top': return { x: -iyU.x * STUB, y: -iyU.y * STUB };
+      case 'bottom': return { x: iyU.x * STUB, y: iyU.y * STUB };
+      case 'left': return { x: -ixU.x * STUB, y: -ixU.y * STUB };
+      case 'right': return { x: ixU.x * STUB, y: ixU.y * STUB };
+      default: return { x: 0, y: 0 };
+    }
+  }
+
+  const sOff = stubOffset(parseAnchorId(connector.sourceAnchor).side, source);
+  const tOff = stubOffset(parseAnchorId(connector.targetAnchor).side, target);
+  const sourceStub = { x: start.x + sOff.x, y: start.y + sOff.y };
+  const targetStub = { x: end.x + tOff.x, y: end.y + tOff.y };
+
+  const screenPath: Point[] = [start, sourceStub];
+  if (connector.waypoints.length > 0) {
+    const screenWaypoints = connector.waypoints.map((wp) => worldToScreen(wp, camera, viewport));
+    let prev = sourceStub;
+    for (const wp of screenWaypoints) {
+      const seg = buildIsoPath(prev, wp, camera);
+      screenPath.push(...seg.slice(1));
+      prev = wp;
+    }
+    const lastSeg = buildIsoPath(prev, targetStub, camera);
+    screenPath.push(...lastSeg.slice(1));
+  } else {
+    const mainSeg = buildIsoPath(sourceStub, targetStub, camera);
+    screenPath.push(...mainSeg.slice(1));
+  }
+  screenPath.push(end);
+
+  return buildSmoothPath(screenPath, 6, true, true);
 }

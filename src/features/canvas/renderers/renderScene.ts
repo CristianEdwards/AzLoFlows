@@ -2,14 +2,14 @@ import { CULL_MARGIN } from '@/lib/config';
 import { isVisible } from '@/lib/visibility';
 import { renderArea } from '@/features/canvas/renderers/renderArea';
 import { renderBackground } from '@/features/canvas/renderers/renderBackground';
-import { renderConnector } from '@/features/canvas/renderers/renderConnector';
+import { renderConnector, buildConnectorSmoothPath } from '@/features/canvas/renderers/renderConnector';
 import { renderIsoGrid } from '@/features/canvas/renderers/renderIsoGrid';
 import { renderNode } from '@/features/canvas/renderers/renderNode';
 import { renderPipe } from '@/features/canvas/renderers/renderPipe';
 import { renderSelectionOutline } from '@/features/canvas/renderers/renderSelection';
 import { renderText } from '@/features/canvas/renderers/renderText';
 import { isoQuad, type ViewportSize } from '@/lib/geometry/iso';
-import type { DiagramDocument, SelectionState, CameraState, TagFilter } from '@/types/document';
+import type { DiagramDocument, SelectionState, CameraState, TagFilter, Point } from '@/types/document';
 
 interface RenderSceneArgs {
   ctx: CanvasRenderingContext2D;
@@ -60,6 +60,18 @@ export function renderScene({ ctx, viewport, document, selection, camera, time, 
   for (const e of (document.texts ?? [])) if (isVisible(e.tags, tagFilter) && isOnScreen({ x: e.x - e.fontSize * 4, y: e.y - e.fontSize, width: e.fontSize * 12, height: e.fontSize * 4 }, camera, viewport)) items.push({ kind: 'text', entity: e });
   items.sort((a, b) => a.entity.zIndex - b.entity.zIndex);
 
+  // Pre-compute smooth paths for all visible connectors (for crossing detection)
+  const connectorPaths = new Map<string, Point[]>();
+  for (const item of items) {
+    if (item.kind !== 'connector') continue;
+    const source = document.nodes.find((n) => n.id === item.entity.sourceId);
+    const target = document.nodes.find((n) => n.id === item.entity.targetId);
+    if (source && target) {
+      connectorPaths.set(item.entity.id, buildConnectorSmoothPath(item.entity, source, target, camera, viewport));
+    }
+  }
+
+  const renderedConnectorPaths: Point[][] = [];
   for (const item of items) {
     switch (item.kind) {
       case 'area':
@@ -69,7 +81,9 @@ export function renderScene({ ctx, viewport, document, selection, camera, time, 
         const source = document.nodes.find((node) => node.id === item.entity.sourceId);
         const target = document.nodes.find((node) => node.id === item.entity.targetId);
         if (source && target) {
-          renderConnector(ctx, item.entity, source, target, selection.type === 'connector' && selection.ids.includes(item.entity.id), visibleNodes, visibleAreas, camera, viewport, time, theme);
+          renderConnector(ctx, item.entity, source, target, selection.type === 'connector' && selection.ids.includes(item.entity.id), visibleNodes, visibleAreas, camera, viewport, time, theme, renderedConnectorPaths);
+          const path = connectorPaths.get(item.entity.id);
+          if (path) renderedConnectorPaths.push(path);
         }
         break;
       }
