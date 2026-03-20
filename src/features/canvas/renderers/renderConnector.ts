@@ -1,7 +1,7 @@
 import { ISO_ANGLE_DEG, ISO_Y_SCALE, ISO_SCALE, CONNECTOR_STUB, NODE_DEPTH } from '@/lib/config';
 import { getScreenAnchorPoint, parseAnchorId } from '@/lib/geometry/anchors';
 import { buildIsoPath, worldToScreen, type ViewportSize } from '@/lib/geometry/iso';
-import { findPathCrossings, HOP_RADIUS, type Crossing } from '@/lib/geometry/crossings';
+import { findPathCrossings, insertHopsIntoPath, type Crossing } from '@/lib/geometry/crossings';
 import { drawArrowHead, drawPolyline, roundRectPath } from '@/lib/rendering/canvasPrimitives';
 import { hexToRgba, darkenHex } from '@/lib/rendering/tokens';
 import { isoQuad } from '@/lib/geometry/iso';
@@ -25,12 +25,13 @@ export function renderConnector(
   const smoothPath = buildConnectorSmoothPath(connector, source, target, camera, viewport);
   const color = light ? darkenHex(connector.color, 0.55) : connector.color;
 
-  // Compute crossings with lower-z connectors
+  // Compute crossings with lower-z connectors and integrate hops into the path
   const crossings: Crossing[] = [];
   for (const other of otherPaths) {
     crossings.push(...findPathCrossings(smoothPath, other));
   }
   crossings.sort((a, b) => a.t - b.t);
+  const displayPath = insertHopsIntoPath(smoothPath, crossings);
 
   // If tunnel mode, clip out node and area shapes so connector is hidden where it crosses them
   if (connector.tunnel) {
@@ -65,16 +66,13 @@ export function renderConnector(
 
   // Outer glow (dark mode only — skipped in light mode for a clean look)
   if (!light) {
-    drawPolyline(ctx, smoothPath);
+    drawPolyline(ctx, displayPath);
     ctx.strokeStyle = hexToRgba(color, 0.04);
     ctx.lineWidth = 14;
-    
-    
     ctx.stroke();
-    
   }
 
-  drawPolyline(ctx, smoothPath);
+  drawPolyline(ctx, displayPath);
   if (connector.style === 'dashed') {
     ctx.setLineDash([10, 8]);
     ctx.lineDashOffset = -(time * 0.02);
@@ -84,34 +82,10 @@ export function renderConnector(
   ctx.stroke();
   ctx.setLineDash([]);
 
-  drawPolyline(ctx, smoothPath);
+  drawPolyline(ctx, displayPath);
   ctx.strokeStyle = hexToRgba(color, selected ? 1.0 : (light ? 0.98 : 0.82));
   ctx.lineWidth = selected ? 2 : (light ? 1.6 : 1.2);
   ctx.stroke();
-
-  // Draw hop arcs at crossing points
-  if (crossings.length > 0) {
-    const bgColor = light ? '#f8fafc' : '#020617';
-    const hopR = HOP_RADIUS;
-    const innerWidth = selected ? 2 : (light ? 1.6 : 1.2);
-    for (const c of crossings) {
-      const perpAngle = c.angle - Math.PI / 2;
-
-      // Background-colored arc (wider) to cleanly mask the lower connector
-      ctx.beginPath();
-      ctx.arc(c.point.x, c.point.y, hopR, perpAngle, perpAngle + Math.PI);
-      ctx.strokeStyle = bgColor;
-      ctx.lineWidth = innerWidth + 5;
-      ctx.stroke();
-
-      // Connector-colored arc on top
-      ctx.beginPath();
-      ctx.arc(c.point.x, c.point.y, hopR, perpAngle, perpAngle + Math.PI);
-      ctx.strokeStyle = hexToRgba(color, selected ? 1.0 : (light ? 0.98 : 0.82));
-      ctx.lineWidth = innerWidth;
-      ctx.stroke();
-    }
-  }
 
 
 
@@ -119,7 +93,7 @@ export function renderConnector(
     const dots = getConnectorDots(connector.id);
     for (const dot of dots) {
       const t = ((dot.phase + time * 0.00024 * dot.speed) % 1 + 1) % 1;
-      const point = pointAlongPath(smoothPath, t);
+      const point = pointAlongPath(displayPath, t);
 
       // Bloom glow — smaller and dimmer in light mode
       const bloomRadius = dot.size * (light ? 4 : 8);
@@ -168,7 +142,7 @@ export function renderConnector(
         if (trailT < 0) {
           trailT += 1;
         }
-        const trailPoint = pointAlongPath(smoothPath, trailT);
+        const trailPoint = pointAlongPath(displayPath, trailT);
         const alpha = ((light ? 0.22 : 0.35) - trail * 0.045) * dot.bright;
         const trailSize = dot.size * (1 - trail * 0.1);
         if (alpha <= 0 || trailSize <= 0) {

@@ -6,7 +6,8 @@ import { seededRandom, hashString } from '@/lib/hash';
 import { isVisible } from '@/lib/visibility';
 import { nodeIconCatalog } from '@/lib/icons/nodeIcons';
 import { hexToRgba, darkenHex } from '@/lib/rendering/tokens';
-import { findPathCrossings, HOP_RADIUS } from '@/lib/geometry/crossings';
+import { findPathCrossings, insertHopsIntoPath } from '@/lib/geometry/crossings';
+import { buildConnectorSmoothPath } from '@/features/canvas/renderers/renderConnector';
 import type { CameraState, ConnectorEntity, DiagramDocument, FlowSource, FlowType, NodeEntity, Point, TagFilter } from '@/types/document';
 import { getDocScenarios, getDocFlowSources, getDocFlowTypes, flowTypeLabel } from '@/types/document';
 
@@ -64,38 +65,6 @@ function pts(points: Point[]): string {
 function hexComponents(hex: string): { r: number; g: number; b: number } {
   const v = Number.parseInt(hex.replace('#', ''), 16);
   return { r: (v >> 16) & 255, g: (v >> 8) & 255, b: v & 255 };
-}
-
-function svgSmoothPath(points: Point[], radius: number, skipFirst: boolean, skipLast: boolean): string {
-  if (points.length < 2) return '';
-  if (points.length === 2) return `M${points[0].x},${points[0].y} L${points[1].x},${points[1].y}`;
-
-  let d = `M${points[0].x},${points[0].y}`;
-  for (let i = 1; i < points.length - 1; i++) {
-    if ((skipFirst && i === 1) || (skipLast && i === points.length - 2)) {
-      d += ` L${points[i].x},${points[i].y}`;
-      continue;
-    }
-    const prev = points[i - 1];
-    const cur = points[i];
-    const next = points[i + 1];
-    const prevDx = cur.x - prev.x;
-    const prevDy = cur.y - prev.y;
-    const nextDx = cur.x - next.x;
-    const nextDy = cur.y - next.y;
-    const prevLen = Math.hypot(prevDx, prevDy);
-    const nextLen = Math.hypot(nextDx, nextDy);
-    const r = Math.min(radius, prevLen * 0.45, nextLen * 0.45);
-    if (r < 1) {
-      d += ` L${cur.x},${cur.y}`;
-      continue;
-    }
-    const start = { x: cur.x - (prevDx / prevLen) * r, y: cur.y - (prevDy / prevLen) * r };
-    const end = { x: cur.x - (nextDx / nextLen) * r, y: cur.y - (nextDy / nextLen) * r };
-    d += ` L${start.x},${start.y} Q${cur.x},${cur.y} ${end.x},${end.y}`;
-  }
-  d += ` L${points[points.length - 1].x},${points[points.length - 1].y}`;
-  return d;
 }
 
 /* ── Connector screen-space routing (mirrors canvas renderConnector) ─ */
@@ -207,14 +176,14 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
   for (const e of (document.texts ?? [])) if (isVisible(e.tags, tagFilter)) renderItems.push({ kind: 'text', entity: e });
   renderItems.sort((a, b) => a.entity.zIndex - b.entity.zIndex);
 
-  // Pre-compute smooth SVG paths for connector crossing detection
+  // Pre-compute smooth polyline paths for connector crossing detection
   const connectorScreenPaths = new Map<string, Point[]>();
   for (const item of renderItems) {
     if (item.kind !== 'connector') continue;
     const src = document.nodes.find((n) => n.id === item.entity.sourceId);
     const tgt = document.nodes.find((n) => n.id === item.entity.targetId);
     if (src && tgt) {
-      connectorScreenPaths.set(item.entity.id, buildConnectorScreenPath(item.entity, src, tgt, camera, viewport));
+      connectorScreenPaths.set(item.entity.id, buildConnectorSmoothPath(item.entity, src, tgt, camera, viewport));
     }
   }
 
@@ -304,8 +273,26 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
     if (!source || !target) continue;
 
     const rawPath = buildConnectorScreenPath(connector, source, target, camera, viewport);
-    const smoothD = svgSmoothPath(rawPath, 6, true, true);
     const color = light ? darkenHex(connector.color, 0.55) : connector.color;
+
+    // Compute crossings and integrate hops into the path
+    const smoothPath = connectorScreenPaths.get(connector.id);
+    let displayPath: Point[];
+    if (smoothPath) {
+      const crossings = renderedSvgPaths.flatMap((other) => findPathCrossings(smoothPath, other));
+      crossings.sort((a, b) => a.t - b.t);
+      displayPath = insertHopsIntoPath(smoothPath, crossings);
+      renderedSvgPaths.push(smoothPath);
+    } else {
+      displayPath = rawPath;
+    }
+
+    // Convert polyline to SVG d attribute
+    function polyToD(pts: Point[]): string {
+      if (pts.length === 0) return '';
+      return `M${pts[0].x},${pts[0].y}` + pts.slice(1).map(p => ` L${p.x},${p.y}`).join('');
+    }
+    const smoothD = polyToD(displayPath);
 
     // Tunnel clipping
     let tunnelClipId = '';
@@ -353,29 +340,6 @@ function buildSvgString(document: DiagramDocument, camera: CameraState, viewport
       svg.push(`<path id="${pathId}" d="${smoothD}" fill="none" stroke="${hexToRgba(color, light ? 0.98 : 0.82)}" stroke-width="${light ? 1.6 : 1.2}" />`);
     } else {
       svg.push(`<path d="${smoothD}" fill="none" stroke="${hexToRgba(color, light ? 0.98 : 0.82)}" stroke-width="${light ? 1.6 : 1.2}" />`);
-    }
-
-    // Crossing hop arcs
-    const rawScreenPath = connectorScreenPaths.get(connector.id);
-    if (rawScreenPath) {
-      const crossings = renderedSvgPaths.flatMap((other) => findPathCrossings(rawScreenPath, other));
-      crossings.sort((a, b) => a.t - b.t);
-      const bgColor = light ? '#f8fafc' : '#020617';
-      const hopR = HOP_RADIUS;
-      const innerWidth = light ? 1.6 : 1.2;
-      for (const c of crossings) {
-        // Semicircle arc endpoints
-        const perpAngle = c.angle - Math.PI / 2;
-        const ax1 = c.point.x + Math.cos(perpAngle) * hopR;
-        const ay1 = c.point.y + Math.sin(perpAngle) * hopR;
-        const ax2 = c.point.x + Math.cos(perpAngle + Math.PI) * hopR;
-        const ay2 = c.point.y + Math.sin(perpAngle + Math.PI) * hopR;
-        // Background-colored arc (wider) to cleanly mask the lower connector
-        svg.push(`<path d="M${ax1},${ay1} A${hopR},${hopR} 0 0,1 ${ax2},${ay2}" fill="none" stroke="${bgColor}" stroke-width="${innerWidth + 5}" />`);
-        // Connector-colored arc on top
-        svg.push(`<path d="M${ax1},${ay1} A${hopR},${hopR} 0 0,1 ${ax2},${ay2}" fill="none" stroke="${hexToRgba(color, light ? 0.98 : 0.82)}" stroke-width="${innerWidth}" />`);
-      }
-      renderedSvgPaths.push(rawScreenPath);
     }
 
     // Animated dots with <animateMotion> along the connector path
