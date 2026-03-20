@@ -54,6 +54,90 @@ export function findPathCrossings(pathA: Point[], pathB: Point[]): Crossing[] {
 }
 
 /**
+ * Insert semicircle hop bumps into a polyline at each crossing point.
+ * Returns a new path where the line physically detours over crossings.
+ */
+export function insertHopsIntoPath(path: Point[], crossings: Crossing[]): Point[] {
+  if (crossings.length === 0 || path.length < 2) return path;
+
+  // Cumulative distances along the polyline
+  const cumDist: number[] = [0];
+  for (let i = 1; i < path.length; i++) {
+    cumDist.push(cumDist[i - 1] + Math.hypot(path[i].x - path[i - 1].x, path[i].y - path[i - 1].y));
+  }
+  const totalLen = cumDist[cumDist.length - 1];
+
+  // Interpolate a point at cumulative distance d
+  function lerp(d: number): Point {
+    const cd = Math.max(0, Math.min(totalLen, d));
+    for (let i = 1; i < cumDist.length; i++) {
+      if (cumDist[i] >= cd - 1e-6) {
+        const seg = cumDist[i] - cumDist[i - 1];
+        if (seg < 1e-6) return { x: path[i].x, y: path[i].y };
+        const r = (cd - cumDist[i - 1]) / seg;
+        return {
+          x: path[i - 1].x + (path[i].x - path[i - 1].x) * r,
+          y: path[i - 1].y + (path[i].y - path[i - 1].y) * r,
+        };
+      }
+    }
+    return { x: path[path.length - 1].x, y: path[path.length - 1].y };
+  }
+
+  const out: Point[] = [];
+  let emitted = -1e-6; // distance up to last emitted original point
+
+  function pushOriginalUpTo(d: number) {
+    for (let i = 0; i < path.length; i++) {
+      if (cumDist[i] <= emitted + 1e-6) continue;
+      if (cumDist[i] >= d - 1e-6) break;
+      out.push(path[i]);
+      emitted = cumDist[i];
+    }
+  }
+
+  const ARC_STEPS = 12;
+
+  for (const c of crossings) {
+    const hStart = Math.max(0, c.t - HOP_RADIUS);
+    const hEnd = Math.min(totalLen, c.t + HOP_RADIUS);
+    if (hStart <= emitted + 1e-6) continue; // overlaps previous hop
+
+    pushOriginalUpTo(hStart);
+    const pStart = lerp(hStart);
+    out.push(pStart);
+
+    // Perpendicular direction — always arc upward (negative y)
+    const perp = c.angle - Math.PI / 2;
+    let px = Math.cos(perp);
+    let py = Math.sin(perp);
+    if (py > 0) { px = -px; py = -py; }
+
+    const pEnd = lerp(hEnd);
+    for (let s = 1; s < ARC_STEPS; s++) {
+      const f = s / ARC_STEPS;
+      const bump = Math.sin(Math.PI * f) * HOP_RADIUS;
+      out.push({
+        x: pStart.x + (pEnd.x - pStart.x) * f + px * bump,
+        y: pStart.y + (pEnd.y - pStart.y) * f + py * bump,
+      });
+    }
+    out.push(pEnd);
+    emitted = hEnd;
+  }
+
+  // Remaining original points
+  pushOriginalUpTo(totalLen + 1);
+  const last = path[path.length - 1];
+  const outLast = out[out.length - 1];
+  if (!outLast || Math.hypot(last.x - outLast.x, last.y - outLast.y) > 0.1) {
+    out.push(last);
+  }
+
+  return out;
+}
+
+/**
  * Segment-segment intersection. Returns the intersection point or null.
  * Uses parameterized form: P = a1 + t*(a2-a1), Q = b1 + u*(b2-b1).
  */
