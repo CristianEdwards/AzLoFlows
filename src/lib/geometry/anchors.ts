@@ -156,3 +156,28 @@ export function getScreenAnchorPoint(node: NodeEntity, anchorId: AnchorId, camer
 function lerp(a: Point, b: Point, t: number): Point {
   return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
 }
+
+/**
+ * Find the closest anchor to a screen-space point.
+ * This is critical for standing nodes where world-space anchor positions
+ * don't correspond to actual visual positions on screen.
+ */
+export function getClosestAnchorScreen(
+  node: NodeEntity,
+  screenPoint: Point,
+  camera: CameraState,
+  viewport: ViewportSize,
+): AnchorId {
+  const anchors = getNodeAnchors(node);
+  let best = anchors[0];
+  let bestDistance = Number.POSITIVE_INFINITY;
+  for (const anchor of anchors) {
+    const sp = getScreenAnchorPoint(node, anchor.id, camera, viewport);
+    const distance = Math.hypot(screenPoint.x - sp.x, screenPoint.y - sp.y);
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      best = anchor;
+    }
+  }
+  return best.id;
+}

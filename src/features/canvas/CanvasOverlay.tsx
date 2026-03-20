@@ -1,4 +1,4 @@
-import { getClosestAnchor, getNodeAnchors, getScreenAnchorPoint } from '@/lib/geometry/anchors';
+import { getClosestAnchorScreen, getNodeAnchors, getScreenAnchorPoint } from '@/lib/geometry/anchors';
 import { buildIsoPath, isoQuad, worldToScreen, type ViewportSize } from '@/lib/geometry/iso';
 import type { ResizeHandle } from '@/lib/geometry/resize';
 import type { AnchorId, CameraState, DiagramDocument, SelectionState } from '@/types/document';
@@ -81,7 +81,8 @@ export default function CanvasOverlay({ document, selection, camera, viewport, h
         if (!node) {
           return null;
         }
-        const anchorId = getClosestAnchor(node, connectorDraft.currentWorld);
+        const screenPt = worldToScreen(connectorDraft.currentWorld, camera, viewport);
+        const anchorId = getClosestAnchorScreen(node, screenPt, camera, viewport);
         const anchor = getNodeAnchors(node).find((item) => item.id === anchorId);
         return anchor ? { nodeId: node.id, anchorId, point: anchor.point } : null;
       })()
@@ -90,7 +91,8 @@ export default function CanvasOverlay({ document, selection, camera, viewport, h
     ? (() => {
         const node = document.nodes.find((item) => item.id === hoveredNodeId);
         if (!node) return null;
-        const anchorId = getClosestAnchor(node, reconnectDraft.currentWorld);
+        const screenPt = worldToScreen(reconnectDraft.currentWorld, camera, viewport);
+        const anchorId = getClosestAnchorScreen(node, screenPt, camera, viewport);
         const anchor = getNodeAnchors(node).find((item) => item.id === anchorId);
         return anchor ? { nodeId: node.id, anchorId, point: anchor.point } : null;
       })()
@@ -160,7 +162,7 @@ export default function CanvasOverlay({ document, selection, camera, viewport, h
             className="canvas-overlay__anchor-hit"
             cx={item.point.x}
             cy={item.point.y}
-            r="8"
+            r="14"
             onPointerDown={(event) => onAnchorPointerDown(item.nodeId, item.anchorId, event)}
           />
           <circle
