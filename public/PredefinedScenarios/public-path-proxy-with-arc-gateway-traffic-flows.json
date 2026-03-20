@@ -170,8 +170,8 @@
     {
       "id": "ea71de16-deae-46c8-b994-c1160d35c42e",
       "type": "node",
-      "x": 827.6299030366451,
-      "y": 608,
+      "x": 836.460912409457,
+      "y": 657.6508071626838,
       "width": 320,
       "height": 280,
       "title": "Internet",
@@ -193,7 +193,7 @@
       "fill": "#4f2b6b",
       "glowColor": "#bf5af2",
       "icon": "svgExpressRoute",
-      "zIndex": 153
+      "zIndex": 160
     },
     {
       "id": "d24ec785-cef5-4989-81ea-a858810e590b",
@@ -214,29 +214,14 @@
       ]
     },
     {
-      "id": "2d70bda7-309e-49d2-9aab-cc5c86fb30c8",
-      "type": "node",
-      "x": 1040,
-      "y": -360,
-      "width": 560,
-      "height": 960,
-      "title": "Azure Backbone",
-      "subtitle": "",
-      "fill": "#0a4152",
-      "glowColor": "#00e5ff",
-      "shape": "standingNode",
-      "textPosition": "top-center",
-      "zIndex": -8
-    },
-    {
       "id": "46e316c3-65d1-4413-8edb-41aaba09ea7f",
       "type": "node",
       "x": 1180,
-      "y": -366,
+      "y": -183.0978747374284,
       "width": 280,
       "height": 280,
       "title": "Azure Public Endpoints",
-      "subtitle": "Editable",
+      "subtitle": "",
       "fill": "#1a2a6b",
       "glowColor": "#536dfe",
       "shape": "standingNode",
@@ -246,12 +231,12 @@
     {
       "id": "e048a083-a7af-4375-a9d2-74f1fc553842",
       "type": "node",
-      "x": 1181,
-      "y": 56,
+      "x": 1180,
+      "y": 180.3478260869565,
       "width": 280,
       "height": 280,
       "title": "Azure Public Endpoints",
-      "subtitle": "Editable",
+      "subtitle": "",
       "fill": "#4f2b6b",
       "glowColor": "#bf5af2",
       "shape": "standingNode",
@@ -282,8 +267,8 @@
       "height": 920,
       "title": "Azure Local Cluster",
       "subtitle": "",
-      "fill": "#0a4a42",
-      "glowColor": "#00bfa5",
+      "fill": "#1c313a",
+      "glowColor": "#546e7a",
       "shape": "card",
       "textPosition": "bottom-left",
       "icon": "svgAzureLocalCluster",
@@ -292,8 +277,8 @@
     {
       "id": "04db091f-afa2-4d48-97ed-37f51832d2fb",
       "type": "node",
-      "x": 722,
-      "y": -835,
+      "x": 724.460912409457,
+      "y": -837,
       "width": 360,
       "height": 320,
       "title": "Intranet Services",
@@ -314,8 +299,8 @@
       "height": 120,
       "title": "DNS server",
       "subtitle": "",
-      "fill": "#1f3f77",
-      "glowColor": "#4d8dff",
+      "fill": "#1a2a6b",
+      "glowColor": "#536dfe",
       "icon": "dns",
       "zIndex": 93
     },
@@ -328,8 +313,8 @@
       "height": 120,
       "title": "AD",
       "subtitle": "",
-      "fill": "#1f3f77",
-      "glowColor": "#4d8dff",
+      "fill": "#1a2a6b",
+      "glowColor": "#536dfe",
       "icon": "svgKeyVault",
       "zIndex": 87
     },
@@ -337,7 +322,7 @@
       "id": "48b8f86b-d1fe-47fa-8c4f-8cd288b22696",
       "type": "node",
       "x": 1005,
-      "y": 344.3333333333335,
+      "y": 342,
       "width": 80,
       "height": 200,
       "title": "Arc gateway",
@@ -397,6 +382,21 @@
         "flow:custom-1773954442801",
         "flow:custom-1773954469190"
       ]
+    },
+    {
+      "id": "d34134f2-8c97-49c5-b37a-ec82d77eb77d",
+      "type": "node",
+      "x": 920,
+      "y": -320,
+      "width": 400,
+      "height": 920,
+      "title": "Azure Backbone",
+      "subtitle": "",
+      "fill": "#0e2e5e",
+      "glowColor": "#1a5ccc",
+      "shape": "card",
+      "textPosition": "bottom-center",
+      "zIndex": -9
     }
   ],
   "connectors": [
@@ -510,11 +510,16 @@
       "sourceId": "0bf0cb3c-e62c-4767-9595-7f5f90f66a01",
       "targetId": "46e316c3-65d1-4413-8edb-41aaba09ea7f",
       "sourceAnchor": "right-1",
-      "targetAnchor": "bottom-2",
+      "targetAnchor": "bottom-1",
       "color": "#4d8dff",
       "label": "Arc gw to Azure",
       "style": "animated",
-      "waypoints": [],
+      "waypoints": [
+        {
+          "x": 1120,
+          "y": -120
+        }
+      ],
       "zIndex": -5,
       "tags": [
         "type:azure-public-endpoint",
@@ -583,7 +588,7 @@
       "waypoints": [
         {
           "x": 680,
-          "y": -40
+          "y": -80
         }
       ],
       "zIndex": 21,
@@ -1075,15 +1080,15 @@
       "type": "connector",
       "sourceId": "48b8f86b-d1fe-47fa-8c4f-8cd288b22696",
       "targetId": "46e316c3-65d1-4413-8edb-41aaba09ea7f",
-      "sourceAnchor": "right-2",
+      "sourceAnchor": "top-2",
       "targetAnchor": "bottom-3",
       "color": "#536dfe",
       "label": "Arc gw 2 to Azure Public",
       "style": "animated",
       "waypoints": [
         {
-          "x": 1120,
-          "y": -200
+          "x": 1040,
+          "y": 0
         }
       ],
       "zIndex": 123,
@@ -1270,7 +1275,7 @@
       "sourceId": "8059ac6a-7b93-4b15-bdbf-569610952744",
       "targetId": "46e316c3-65d1-4413-8edb-41aaba09ea7f",
       "sourceAnchor": "top-4",
-      "targetAnchor": "bottom-4",
+      "targetAnchor": "bottom-2",
       "color": "#536dfe",
       "label": "VM Firewall to Azure Public Endpoint",
       "style": "animated",
@@ -1471,8 +1476,8 @@
     {
       "id": "a538418e-e643-4f3a-985e-4ff3a3b006a7",
       "type": "text",
-      "x": 1002,
-      "y": 84,
+      "x": 1112,
+      "y": 232,
       "label": "ExpressRoute \ntraffic",
       "fontSize": 21,
       "color": "#0d0d1a",
@@ -1662,8 +1667,8 @@
     {
       "id": "aad3f4e8-ab84-420a-8a65-659398bec4ff",
       "type": "text",
-      "x": 902,
-      "y": 320.3478260869565,
+      "x": 822,
+      "y": 336.3478260869565,
       "label": "VM Non allowed Arc gw \nAzure Public Endpoints",
       "fontSize": 21,
       "color": "#e7f6ff",
