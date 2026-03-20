@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import GlassPanel from '@/components/ui/GlassPanel';
 import { nodeIconList } from '@/lib/icons/nodeIcons';
 import { colorSwatches, textColorSwatches } from '@/features/palette/paletteData';
@@ -9,6 +9,9 @@ import { getConnectorStyleOptions, getSelectedEntity, useEditorStore } from '@/s
 import FlowTypeVisibilityDialog from './FlowTypeVisibilityDialog';
 
 function PickerDefEditor({ label, items, onChange }: { label: string; items: PickerDef[]; onChange: (next: PickerDef[]) => void }) {
+  const dragIndex = useRef<number | null>(null);
+  const [dropTarget, setDropTarget] = useState<number | null>(null);
+
   function updateItem(index: number, patch: Partial<PickerDef>) {
     const next = items.map((item, i) => (i === index ? { ...item, ...patch } : item));
     onChange(next);
@@ -20,11 +23,46 @@ function PickerDefEditor({ label, items, onChange }: { label: string; items: Pic
     const id = `custom-${Date.now()}`;
     onChange([...items, { id, label: 'New item' }]);
   }
+  function onDragStart(index: number) {
+    dragIndex.current = index;
+  }
+  function onDragOver(e: React.DragEvent, index: number) {
+    e.preventDefault();
+    setDropTarget(index);
+  }
+  function onDrop(index: number) {
+    const from = dragIndex.current;
+    if (from !== null && from !== index) {
+      const next = [...items];
+      const [moved] = next.splice(from, 1);
+      next.splice(index, 0, moved);
+      onChange(next);
+    }
+    dragIndex.current = null;
+    setDropTarget(null);
+  }
+  function onDragEnd() {
+    dragIndex.current = null;
+    setDropTarget(null);
+  }
   return (
     <div className="inspector-section" style={{ marginBottom: 8 }}>
       <span className="field__label" style={{ fontWeight: 600, fontSize: 11, opacity: 0.7, textTransform: 'uppercase', letterSpacing: 1 }}>{label}</span>
       {items.map((item, i) => (
-        <div key={i} style={{ display: 'flex', gap: 4, alignItems: 'center', marginTop: 3 }}>
+        <div
+          key={i}
+          draggable
+          onDragStart={() => onDragStart(i)}
+          onDragOver={(e) => onDragOver(e, i)}
+          onDrop={() => onDrop(i)}
+          onDragEnd={onDragEnd}
+          style={{
+            display: 'flex', gap: 4, alignItems: 'center', marginTop: 3,
+            borderTop: dropTarget === i ? '2px solid rgba(0,229,255,0.6)' : '2px solid transparent',
+            transition: 'border-color 0.15s',
+          }}
+        >
+          <span className="drag-grip" title="Drag to reorder" style={{ cursor: 'grab', opacity: 0.45, fontSize: 12, userSelect: 'none', lineHeight: 1 }}>⠿</span>
           <input
             style={{ flex: 1, minWidth: 0 }}
             value={item.label}
