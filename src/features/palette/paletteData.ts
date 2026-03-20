@@ -251,9 +251,13 @@ export const colorSwatches = [
   { id: 'cyan', value: palette.cyan, className: 'swatch--cyan' },
   { id: 'pink', value: palette.pink, className: 'swatch--pink' },
   { id: 'green', value: palette.green, className: 'swatch--green' },
+  { id: 'lightGreen', value: palette.lightGreen, className: 'swatch--light-green' },
   { id: 'darkGreen', value: palette.darkGreen, className: 'swatch--dark-green' },
+  { id: 'forestGreen', value: palette.forestGreen, className: 'swatch--forest-green' },
   { id: 'purple', value: palette.purple, className: 'swatch--purple' },
   { id: 'blue', value: palette.blue, className: 'swatch--blue' },
+  { id: 'skyBlue', value: palette.skyBlue, className: 'swatch--sky-blue' },
+  { id: 'darkBlue', value: palette.darkBlue, className: 'swatch--dark-blue' },
   { id: 'orange', value: palette.orange, className: 'swatch--orange' },
   { id: 'gold', value: palette.gold, className: 'swatch--gold' },
   { id: 'red', value: palette.red, className: 'swatch--red' },
@@ -262,6 +266,8 @@ export const colorSwatches = [
   { id: 'indigo', value: palette.indigo, className: 'swatch--indigo' },
   { id: 'coral', value: palette.coral, className: 'swatch--coral' },
   { id: 'lime', value: palette.lime, className: 'swatch--lime' },
+  { id: 'lightGrey', value: palette.lightGrey, className: 'swatch--light-grey' },
+  { id: 'darkGrey', value: palette.darkGrey, className: 'swatch--dark-grey' },
 ] as const;
 
 export const textColorSwatches = [
