@@ -777,9 +777,13 @@ select:focus-visible {
 .swatch--cyan { --swatch-color: #00e5ff; }
 .swatch--pink { --swatch-color: #ff0066; }
 .swatch--green { --swatch-color: #00ff88; }
+.swatch--light-green { --swatch-color: #66ffbb; }
 .swatch--dark-green { --swatch-color: #007744; }
+.swatch--forest-green { --swatch-color: #004d2e; }
 .swatch--purple { --swatch-color: #bf5af2; }
 .swatch--blue { --swatch-color: #4d8dff; }
+.swatch--sky-blue { --swatch-color: #80b3ff; }
+.swatch--dark-blue { --swatch-color: #1a5ccc; }
 .swatch--orange { --swatch-color: #ff8800; }
 .swatch--gold { --swatch-color: #ffb800; }
 .swatch--red { --swatch-color: #ff3355; }
@@ -788,6 +792,8 @@ select:focus-visible {
 .swatch--indigo { --swatch-color: #536dfe; }
 .swatch--coral { --swatch-color: #ff6e6e; }
 .swatch--lime { --swatch-color: #c6ff00; }
+.swatch--light-grey { --swatch-color: #b0bec5; }
+.swatch--dark-grey { --swatch-color: #546e7a; }
 
 .swatch.is-active {
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2), 0 0 18px var(--swatch-color);

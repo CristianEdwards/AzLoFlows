@@ -2,9 +2,13 @@ export const palette = {
   cyan: '#00e5ff',
   pink: '#ff0066',
   green: '#00ff88',
+  lightGreen: '#66ffbb',
   darkGreen: '#007744',
+  forestGreen: '#004d2e',
   purple: '#bf5af2',
   blue: '#4d8dff',
+  skyBlue: '#80b3ff',
+  darkBlue: '#1a5ccc',
   orange: '#ff8800',
   gold: '#ffb800',
   red: '#ff3355',
@@ -13,15 +17,21 @@ export const palette = {
   indigo: '#536dfe',
   coral: '#ff6e6e',
   lime: '#c6ff00',
+  lightGrey: '#b0bec5',
+  darkGrey: '#546e7a',
 } as const;
 
 export const companionPalette = {
   cyan: '#0a4152',
   pink: '#5a1330',
   green: '#0a5a36',
+  lightGreen: '#1a6b4a',
   darkGreen: '#1a8a5a',
+  forestGreen: '#0a3a1e',
   purple: '#4f2b6b',
   blue: '#1f3f77',
+  skyBlue: '#2a4f8a',
+  darkBlue: '#0e2e5e',
   orange: '#5b320f',
   gold: '#5e4710',
   red: '#5b1622',
@@ -30,15 +40,21 @@ export const companionPalette = {
   indigo: '#1a2a6b',
   coral: '#5b2222',
   lime: '#3a5200',
+  lightGrey: '#37474f',
+  darkGrey: '#1c313a',
 } as const;
 
 export const paletteOrder = [
   palette.cyan,
   palette.pink,
   palette.green,
+  palette.lightGreen,
   palette.darkGreen,
+  palette.forestGreen,
   palette.purple,
   palette.blue,
+  palette.skyBlue,
+  palette.darkBlue,
   palette.orange,
   palette.gold,
   palette.red,
@@ -47,6 +63,8 @@ export const paletteOrder = [
   palette.indigo,
   palette.coral,
   palette.lime,
+  palette.lightGrey,
+  palette.darkGrey,
 ];
 
 /** Map a bright glow color → its dark companion fill. */
@@ -60,20 +78,26 @@ export function companionFillForGlow(glow: string): string {
 
 /** Tailwind 800-tier colors for light-mode node fills. */
 export const palette800 = {
-  cyan:      '#155e75',   // cyan-800
-  pink:      '#9d174d',   // pink-800
-  green:     '#166534',   // green-800
-  darkGreen: '#065f46',   // emerald-800
-  purple:    '#6b21a8',   // purple-800
-  blue:      '#1e40af',   // blue-800
-  orange:    '#9a3412',   // orange-800
-  gold:      '#92400e',   // amber-800
-  red:       '#991b1b',   // red-800
-  teal:      '#115e59',   // teal-800
-  amber:     '#92400e',   // amber-800
-  indigo:    '#3730a3',   // indigo-800
-  coral:     '#9f1239',   // rose-800
-  lime:      '#3f6212',   // lime-800
+  cyan:       '#155e75',   // cyan-800
+  pink:       '#9d174d',   // pink-800
+  green:      '#166534',   // green-800
+  lightGreen: '#14532d',   // green-900
+  darkGreen:  '#065f46',   // emerald-800
+  forestGreen:'#064e3b',   // emerald-900
+  purple:     '#6b21a8',   // purple-800
+  blue:       '#1e40af',   // blue-800
+  skyBlue:    '#1e3a8a',   // blue-900
+  darkBlue:   '#1e3a8a',   // blue-900
+  orange:     '#9a3412',   // orange-800
+  gold:       '#92400e',   // amber-800
+  red:        '#991b1b',   // red-800
+  teal:       '#115e59',   // teal-800
+  amber:      '#92400e',   // amber-800
+  indigo:     '#3730a3',   // indigo-800
+  coral:      '#9f1239',   // rose-800
+  lime:       '#3f6212',   // lime-800
+  lightGrey:  '#455a64',   // blueGrey-700
+  darkGrey:   '#263238',   // blueGrey-900
 } as const;
 
 /** Map a bright glow color → its 800 tone for light-mode fills. */
