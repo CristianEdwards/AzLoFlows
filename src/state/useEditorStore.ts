@@ -5,6 +5,7 @@ import { snapToGrid } from '@/lib/geometry/grid';
 import { projectIso } from '@/lib/geometry/iso';
 import { resizeRectFromHandle, type ResizeHandle } from '@/lib/geometry/resize';
 import { containsArea, containsNode, containsPipe, containsText, type SelectionBounds } from '@/lib/geometry/selection';
+import { buildConnectorPath } from '@/lib/geometry/routing';
 import { companionPalette, hexToRgba, palette } from '@/lib/rendering/tokens';
 import { cloneDocument, withCommittedHistory, type HistoryState } from '@/state/history';
 import type {
@@ -85,6 +86,7 @@ interface EditorStore {
   addConnectorWaypoint: () => void;
   removeLastConnectorWaypoint: () => void;
   moveConnectorWaypoint: (index: number, point: Point) => void;
+  materializeConnectorRoute: () => void;
   resizeSelection: (handle: ResizeHandle, point: Point) => void;
   selectWithinRect: (bounds: SelectionBounds, additive?: boolean) => void;
   selectAtPoint: (point: Point, additive?: boolean) => void;
@@ -668,6 +670,31 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       }
       connector.waypoints[index] = state.snapEnabled ? snapToGrid(point) : point;
       return { document };
+    });
+  },
+  materializeConnectorRoute: () => {
+    set((state) => {
+      if (state.selection.type !== 'connector' || state.selection.ids.length !== 1) {
+        return state;
+      }
+      const document = cloneDocument(state.document);
+      const connector = document.connectors.find((item) => item.id === state.selection.ids[0]);
+      const source = connector ? document.nodes.find((node) => node.id === connector.sourceId) : null;
+      const target = connector ? document.nodes.find((node) => node.id === connector.targetId) : null;
+      if (!connector || !source || !target) {
+        return state;
+      }
+      const path = buildConnectorPath(connector, source, target, document.nodes);
+      const intermediates = path.slice(1, -1);
+      if (intermediates.length === 0) {
+        intermediates.push({ x: (path[0].x + path[path.length - 1].x) / 2, y: (path[0].y + path[path.length - 1].y) / 2 });
+      }
+      connector.waypoints = intermediates;
+      return {
+        document,
+        history: withCommittedHistory(state.history, state.document),
+        toasts: [...state.toasts, createToast('Route converted to editable waypoints', 'success')],
+      };
     });
   },
   resizeSelection: (handle, point) => {
