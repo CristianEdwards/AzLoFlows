@@ -781,6 +781,8 @@ select:focus-visible {
 .swatch--dark-green { --swatch-color: #007744; }
 .swatch--forest-green { --swatch-color: #004d2e; }
 .swatch--purple { --swatch-color: #bf5af2; }
+.swatch--dark-purple { --swatch-color: #7c3aed; }
+.swatch--light-purple { --swatch-color: #d8b4fe; }
 .swatch--blue { --swatch-color: #4d8dff; }
 .swatch--sky-blue { --swatch-color: #80b3ff; }
 .swatch--dark-blue { --swatch-color: #1a5ccc; }
