@@ -255,6 +255,8 @@ export const colorSwatches = [
   { id: 'darkGreen', value: palette.darkGreen, className: 'swatch--dark-green' },
   { id: 'forestGreen', value: palette.forestGreen, className: 'swatch--forest-green' },
   { id: 'purple', value: palette.purple, className: 'swatch--purple' },
+  { id: 'darkPurple', value: palette.darkPurple, className: 'swatch--dark-purple' },
+  { id: 'lightPurple', value: palette.lightPurple, className: 'swatch--light-purple' },
   { id: 'blue', value: palette.blue, className: 'swatch--blue' },
   { id: 'skyBlue', value: palette.skyBlue, className: 'swatch--sky-blue' },
   { id: 'darkBlue', value: palette.darkBlue, className: 'swatch--dark-blue' },

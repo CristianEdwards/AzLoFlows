@@ -6,6 +6,8 @@ export const palette = {
   darkGreen: '#007744',
   forestGreen: '#004d2e',
   purple: '#bf5af2',
+  darkPurple: '#7c3aed',
+  lightPurple: '#d8b4fe',
   blue: '#4d8dff',
   skyBlue: '#80b3ff',
   darkBlue: '#1a5ccc',
@@ -29,6 +31,8 @@ export const companionPalette = {
   darkGreen: '#1a8a5a',
   forestGreen: '#0a3a1e',
   purple: '#4f2b6b',
+  darkPurple: '#3b1a5e',
+  lightPurple: '#5e3d8a',
   blue: '#1f3f77',
   skyBlue: '#2a4f8a',
   darkBlue: '#0e2e5e',
@@ -52,6 +56,8 @@ export const paletteOrder = [
   palette.darkGreen,
   palette.forestGreen,
   palette.purple,
+  palette.darkPurple,
+  palette.lightPurple,
   palette.blue,
   palette.skyBlue,
   palette.darkBlue,
@@ -85,6 +91,8 @@ export const palette800 = {
   darkGreen:  '#065f46',   // emerald-800
   forestGreen:'#064e3b',   // emerald-900
   purple:     '#6b21a8',   // purple-800
+  darkPurple: '#4c1d95',   // violet-900
+  lightPurple:'#7e22ce',   // purple-700
   blue:       '#1e40af',   // blue-800
   skyBlue:    '#1e3a8a',   // blue-900
   darkBlue:   '#1e3a8a',   // blue-900
