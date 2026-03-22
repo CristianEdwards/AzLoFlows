@@ -105,6 +105,7 @@ export default function InspectorPanel() {
   const renameDocument = useEditorStore((state) => state.renameDocument);
   const addConnectorWaypoint = useEditorStore((state) => state.addConnectorWaypoint);
   const removeLastConnectorWaypoint = useEditorStore((state) => state.removeLastConnectorWaypoint);
+  const materializeConnectorRoute = useEditorStore((state) => state.materializeConnectorRoute);
   const setNodeArea = useEditorStore((state) => state.setNodeArea);
   const bringToFront = useEditorStore((state) => state.bringToFront);
   const sendToBack = useEditorStore((state) => state.sendToBack);
@@ -394,6 +395,7 @@ export default function InspectorPanel() {
               <input type="checkbox" checked={selectedConnector.tunnel ?? false} onChange={(event) => updateConnector(selectedConnector.id, { tunnel: event.target.checked })} />
             </label>
             <div className="toolbar-group toolbar-group--inspector">
+              <button className="ui-button" onClick={() => materializeConnectorRoute()}>Edit Path</button>
               <button className="ui-button" onClick={addConnectorWaypoint}>Add Bend</button>
               <button className="ui-button" onClick={removeLastConnectorWaypoint} disabled={selectedConnector.waypoints.length === 0}>Remove Bend</button>
             </div>
