@@ -1137,13 +1137,80 @@ select:focus-visible {
     gap: 8px;
     padding: 8px;
   }
+
+  /* Panels become fixed overlays, hidden by default */
   .app-shell__sidebar,
   .app-shell__inspector {
-    display: none;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    width: min(300px, 80vw);
+    z-index: 200;
+    overflow-y: auto;
+    transition: transform 0.25s ease;
+    padding: 12px;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+    background:
+      linear-gradient(168deg, rgba(255, 255, 255, 0.04) 0%, transparent 40%),
+      rgba(15, 23, 42, 0.95);
   }
+  .app-shell__sidebar {
+    left: 0;
+    transform: translateX(-100%);
+  }
+  .app-shell__sidebar.is-open {
+    transform: translateX(0);
+  }
+  .app-shell__inspector {
+    right: 0;
+    transform: translateX(100%);
+  }
+  .app-shell__inspector.is-open {
+    transform: translateX(0);
+  }
+
   .app-shell__main {
     min-height: 50vh;
   }
+
+  /* Backdrop */
+  .mobile-panel-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 199;
+    background: rgba(0, 0, 0, 0.4);
+  }
+
+  /* Toggle buttons */
+  .mobile-panel-toggle {
+    display: flex;
+    position: fixed;
+    bottom: 56px;
+    z-index: 201;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid rgba(51, 65, 85, 0.6);
+    border-radius: 12px;
+    background: rgba(15, 23, 42, 0.85);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    color: rgba(226, 232, 240, 0.9);
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+  .mobile-panel-toggle--left  { left: 12px; }
+  .mobile-panel-toggle--right { right: 12px; }
+  .mobile-panel-toggle:active {
+    background: rgba(15, 23, 42, 1);
+  }
+}
+
+/* Hide toggle buttons on desktop */
+@media (min-width: 1101px) {
+  .mobile-panel-toggle { display: none; }
+  .mobile-panel-backdrop { display: none; }
 }
 
 @media (max-width: 640px) {
