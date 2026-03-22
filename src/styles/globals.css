@@ -856,6 +856,7 @@ select:focus-visible {
   width: 100%;
   height: 100%;
   cursor: default;
+  touch-action: none;          /* prevent browser gestures on canvas (pan/pinch) */
 }
 
 .canvas-overlay {
@@ -1128,13 +1129,36 @@ select:focus-visible {
 @media (max-width: 1100px) {
   .app-shell {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+    grid-template-rows: auto minmax(0, 1fr) auto;
     grid-template-areas:
       'toolbar'
-      'sidebar'
       'main'
-      'inspector'
       'status';
+    gap: 8px;
+    padding: 8px;
+  }
+  .app-shell__sidebar,
+  .app-shell__inspector {
+    display: none;
+  }
+  .app-shell__main {
+    min-height: 50vh;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-shell {
+    gap: 4px;
+    padding: 4px;
+  }
+  .canvas-stage {
+    border-radius: 12px;
+  }
+  .scenario-picker,
+  .source-picker,
+  .type-picker {
+    max-width: calc(100vw - 24px);
+    overflow-x: auto;
   }
 }
 
