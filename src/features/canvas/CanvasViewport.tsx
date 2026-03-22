@@ -40,6 +40,9 @@ export default function CanvasViewport({ canvasRef, onCursorWorldChange, onViewp
   const containerRef = useRef<HTMLDivElement>(null);
   const interactionRef = useRef<InteractionState>({ mode: 'idle' });
   const spacePressedRef = useRef(false);
+  const activePointersRef = useRef<Map<number, { x: number; y: number }>>(new Map());
+  const pinchDistRef = useRef<number | null>(null);
+  const pinchCameraRef = useRef<{ x: number; y: number; zoom: number } | null>(null);
   const [viewport, setViewport] = useState<ViewportSize>({ width: 1000, height: 700 });
   const [marqueeRect, setMarqueeRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
@@ -225,6 +228,18 @@ export default function CanvasViewport({ canvasRef, onCursorWorldChange, onViewp
 
   function onPointerDown(event: React.PointerEvent<HTMLCanvasElement>) {
     setContextMenuPos(null);
+    // Track active pointers for multi-touch (pinch-to-zoom)
+    activePointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+    // If two fingers are down, start pinch gesture
+    if (activePointersRef.current.size === 2) {
+      const pts = [...activePointersRef.current.values()];
+      pinchDistRef.current = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y);
+      pinchCameraRef.current = { x: camera.x, y: camera.y, zoom: camera.zoom };
+      interactionRef.current = { mode: 'idle' };
+      return;
+    }
+
     // Blur any focused input so keyboard shortcuts (arrow keys, delete, etc.) work on the canvas
     if (window.document.activeElement instanceof HTMLElement && window.document.activeElement !== event.currentTarget) {
       window.document.activeElement.blur();
@@ -270,6 +285,19 @@ export default function CanvasViewport({ canvasRef, onCursorWorldChange, onViewp
   }
 
   function onPointerMove(event: React.PointerEvent<HTMLCanvasElement>) {
+    // Update tracked pointer position
+    activePointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+    // Handle pinch-to-zoom when two fingers are active
+    if (activePointersRef.current.size === 2 && pinchDistRef.current != null && pinchCameraRef.current != null) {
+      const pts = [...activePointersRef.current.values()];
+      const newDist = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y);
+      const scale = newDist / pinchDistRef.current;
+      const nextZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, pinchCameraRef.current.zoom * scale));
+      setCamera({ zoom: nextZoom });
+      return;
+    }
+
     const world = pointerToWorld(event);
     const screen = pointerToScreen(event);
     onCursorWorldChange(world);
@@ -450,6 +478,14 @@ export default function CanvasViewport({ canvasRef, onCursorWorldChange, onViewp
 
   function onPointerUp(event: React.PointerEvent<HTMLCanvasElement>) {
     event.currentTarget.releasePointerCapture(event.pointerId);
+
+    // Clean up multi-touch tracking
+    activePointersRef.current.delete(event.pointerId);
+    if (activePointersRef.current.size < 2) {
+      pinchDistRef.current = null;
+      pinchCameraRef.current = null;
+    }
+
     const screen = pointerToScreen(event);
     if (interactionRef.current.mode === 'connector') {
       const draft = interactionRef.current;
@@ -540,6 +576,11 @@ export default function CanvasViewport({ canvasRef, onCursorWorldChange, onViewp
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerLeave={(event) => {
+          activePointersRef.current.delete(event.pointerId);
+          if (activePointersRef.current.size < 2) {
+            pinchDistRef.current = null;
+            pinchCameraRef.current = null;
+          }
           const related = event.relatedTarget as Element | null;
           if (related?.closest?.('.canvas-overlay')) return;
           onCursorWorldChange(null);
